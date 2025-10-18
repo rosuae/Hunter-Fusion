@@ -22,17 +22,20 @@ public:
     void use() {
         ammo.travel();
         decreaseAmmo();
-        reload();
     }
 
 private:
     void setAmmo(int ammoAmount) { ammoamount = ammoAmount; }
-    void decreaseAmmo() { while (ammoamount > 0) ammoamount--; }
-
-public:
+    void decreaseAmmo() { if (reloada > 0) reloada--; }
     void reload() {
-        setAmmo(30);
+        if (reloada > 0) {
+            int needed = 30 - reloada;
+            int toReload = std::min(needed, ammoamount);
+            reloada += toReload;
+            ammoamount -= toReload;
+        }
     }
+
 };
 
 class Player {
@@ -58,7 +61,7 @@ class Enemy {
 
 public:
     Enemy(const std::string& n, const Weapon& f, float posx_, float posy_):
-    nume{n}, fists{f}, posX{posx_}, posY(posy_), health{100}, speed{100}{}
+    nume{n}, fists{f}, posX{posx_}, posY{posy_}, health{100}, speed{100}{}
 
     Enemy(const Enemy& other):
     nume{other.nume}, fists{other.fists}, posX{other.posX}, posY{other.posY}, health{other.health}, speed{other.speed}{}

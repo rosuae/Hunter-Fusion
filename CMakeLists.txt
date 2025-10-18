@@ -46,7 +46,7 @@ include(cmake/CopyHelper.cmake)
 # find_package(Threads REQUIRED)
 
 ###############################################################################
-
+include_directories(src)
 # NOTE: update executable name in .github/workflows/cmake.yml:25 when changing name here
 add_executable(${MAIN_EXECUTABLE_NAME}
     main.cpp
