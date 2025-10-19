@@ -68,10 +68,6 @@ public:
     health{100},
     posX{0},
     posY{0}{}
-    void attack() {
-        currWeapon.use();
-    }
-
     void isPlaying();
 };
 
