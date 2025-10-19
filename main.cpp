@@ -109,10 +109,6 @@ public:
     }
 
     ~Enemy() = default;
-
-    void attack() {
-        fists.use();
-    }
 };
 
 class Map {
