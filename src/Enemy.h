@@ -1,5 +1,6 @@
 #pragma once
 
+#include <iostream>
 #include <string>
 #include <Weapon.h>
 
@@ -10,11 +11,9 @@ class Enemy {
     int health, speed;
 
 public:
-    Enemy(const std::string& n, const Weapon& f, float posx_, float posy_):
-    nume{n}, fists{f}, posX{posx_}, posY{posy_}, health{100}, speed{100}{}
+    Enemy(const std::string& n, const Weapon& f, float posx_, float posy_);
 
-    Enemy(const Enemy& other):
-    nume{other.nume}, fists{other.fists}, posX{other.posX}, posY{other.posY}, health{other.health}, speed{other.speed}{}
+    Enemy(const Enemy& other);
 
     Enemy& operator=(const Enemy& other) {
         nume = other.nume;
@@ -28,7 +27,6 @@ public:
 
     ~Enemy() = default;
 
-    void attack() {
-        fists.use();
-    }
+protected:
+    void attack();
 };

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <iostream>
 #include <string>
 #include <vector>
 #include <Player.h>
@@ -12,10 +13,8 @@ class Map {
     std::vector<Enemy> enemies;
 
 public:
-    Map(const std::string& n, int sizex_, int sizey_, const Player& p):
-    MapNume{n}, sizeX{sizex_}, sizeY{sizey_}, MyPlayer{p}{}
+    Map(const std::string& n, int sizex_, int sizey_, const Player& p);
 
-    void addEnemy(const Enemy& enemy) {
-        enemies.push_back(enemy);
-    }
+protected:
+    void addEnemy(const Enemy& enemy);
 };

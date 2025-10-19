@@ -1,11 +1,14 @@
 #pragma once
+
+#include <iostream>
 #include <string>
 
 class Projectile {
     std::string nume;
-    int dmg;
+    int dmg, speed;
 
 public:
-    Projectile(const std::string& n, int d): nume{n}, dmg{d}{}
-    void travel();
+    Projectile(const std::string& n, int d);
+
+    static void travel();
 };
