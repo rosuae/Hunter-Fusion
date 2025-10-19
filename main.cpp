@@ -135,6 +135,14 @@ public:
 
 int main() {
     ///
+    Projectile ammo("ammo", 200);
+    Weapon Samus("samus", ammo);
+    Player player("Samus", Samus);
+
+    Map map("Map", 100, 100, player);
+    Enemy enemy("eyeball", Samus, 0, 0);
+    map.addEnemy(enemy);
+
     std::cout << "Hello, world!\n";
     std::array<int, 100> v{};
     int nr;
