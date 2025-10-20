@@ -29,17 +29,16 @@ public:
         out << " Nume munitie: " << p.nume << " " << "DMG: "<< p.dmg << "\n";
         return out;
     }
-
-    void travel();
 };
 
 class Weapon {
     std::string nume;
     Projectile ammo;
     int ammoamount;
-    float firerate, reloada;
+    float firerate;
+    int reloada;
 public:
-    Weapon(const std::string& n, Projectile& p, const int a):
+    Weapon(const std::string& n, const Projectile& p, int a):
     nume{n},
     ammo{p},
     ammoamount{a},
@@ -53,20 +52,33 @@ public:
         return out;
     }
 
-    void use() {
-        ammo.travel();
-        decreaseAmmo();
-        reload();
+    friend void reload(Weapon& w) {
+        if (w.ammoamount > 0) {
+            int needed = 30 - w.reloada;
+            int toReload = std::min(needed, w.ammoamount);
+            w.reloada += toReload;
+            w.ammoamount -= toReload;
+            std::cout << "\n Reloaded:  " << toReload << "\n";
+            std::cout << "Ammo Amount: " << w.ammoamount << "\n";
+        }
+        else
+            std::cout << "Out of ammo \n";
+    }
+
+    friend void use(Weapon& w) {
+        std::cout << "Before use: " << w.reloada << "\n";
+        if (w.reloada > 0){
+            w.reloada -= 1;
+            std::cout << "Fire! \n";
+        }
+        else {
+            std::cout << "Reloading...";
+            reload(w);
+        }
     }
 
 private:
-    void setAmmo(int w) { ammoamount = w;}
-    void decreaseAmmo() { while (ammoamount > 0) ammoamount--; }
-
-public:
-    void reload() {
-        setAmmo(30);
-    }
+    void setAmmo(const int w) { ammoamount = w;}
 };
 
 class Player {
@@ -166,15 +178,22 @@ public:
 int main() {
 
     Projectile ammo("PlasmaOrb", 200);
-    Weapon Samus("PlasmaGun", ammo, 120);
-    Player player("Samus", Samus);
+    Weapon PlasmaG("PlasmaGun", ammo, 120);
+    Player player("Samus", PlasmaG);
 
     Map map("Map", 100, 100, player);
-    Enemy enemy("Metroid", Samus, 0, 0);
+    Enemy enemy("Metroid", PlasmaG, 0, 0);
     map.addEnemy(enemy);
 
     std::cout << map;
 
+    using namespace std::chrono_literals;
+    int m = 150;
+    while (m) {
+        use(PlasmaG);
+        m--;
+        std::this_thread::sleep_for(300ms);
+    }
     /*//     std::cout << "Hello, world!\n";
     //     std::array<int, 100> v{};
     //     int nr;
