@@ -70,7 +70,8 @@ class Player {
     Weapon currWeapon;
     int health;
     float speed;
-    float posX, posY;
+    float posX, posY, gravity, velocity, maxJump;
+    bool isJumping;
     sf::Texture& texture;
     sf::Sprite sprite;
 
@@ -79,9 +80,13 @@ public:
     name{n},
     currWeapon{w},
     health{100},
-    speed{600.0f},
+    speed{400.0f},
     posX{250.0f},
     posY{250.0f},
+    gravity{1200.f},
+    velocity{0.0f},
+    maxJump{-700.f},
+    isJumping{false},
     texture {tex},
     sprite{texture}
     {
@@ -92,9 +97,24 @@ public:
         std::cout<<"Constructor Player \n";
     }
 
+
+    // void jump(float deltaTime) {
+    //     for (float i = 0.f; i <= maxJump; i += 1.0f) {
+    //         posY -= speed * deltaTime;
+    //         sprite.setPosition(sf::Vector2f(posX, posY));
+    //     }
+    //     for (float j = 0.f; j <= maxJump; j += 1.0f) {
+    //         posY += gravity * deltaTime;
+    //         sprite.setPosition(sf::Vector2f(posX, posY));
+    //     }
+    // }
+
     void PlayerMovement(float deltaTime) {
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::W)) {
-            posY -= speed * deltaTime;
+
+
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::W) && !isJumping) {
+            velocity = maxJump;
+            isJumping = true;
             std::cout<< "Pressed W \n";
         }
 
@@ -113,16 +133,23 @@ public:
             std::cout<< "Pressed D\n";
         }
 
-        if (posX < -10.0f)
+        velocity += gravity * deltaTime;
+        posY += velocity * deltaTime;
+
+        if (posX < 0.0f)
             posX = 768.0f;
-            else if (posX > 800.0f)
+
+        if (posX > 768.0f)
                 posX = 0.0f;
 
-        if (posY < -10.0f)
-            posY = 768.0f;
-            else if (posY > 800.0f)
-                posY = 0.0f;
+        if (posY < 0.0f)
+            posY = 0.0f;
 
+        if (posY >= 600.0f) {
+            posY = 600.f;
+            velocity = 0.f;
+            isJumping = false;
+        }
         sprite.setPosition(sf::Vector2f(posX, posY));
     }
 
