@@ -216,13 +216,13 @@ int main() {
 
     std::cout << map;
 
-    // using namespace std::chrono_literals;
-    // int m = 30;
-    // while (m) {
-    //     use(PlasmaG);
-    //     m--;
-    //     std::this_thread::sleep_for(300ms);
-    // }
+    using namespace std::chrono_literals;
+    int m = 1;
+    while (m) {
+        use(PlasmaG);
+        m--;
+        std::this_thread::sleep_for(300ms);
+    }
         /////////////////////////////////////////////////////////////////////////
         /// Observație: dacă aveți nevoie să citiți date de intrare de la tastatură,
         /// dați exemple de date de intrare folosind fișierul tastatura.txt
