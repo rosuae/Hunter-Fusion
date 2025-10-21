@@ -137,16 +137,16 @@ public:
         posY += velocity * deltaTime;
 
         if (posX < 0.0f)
-            posX = 768.0f;
+            posX = 1024.0f;
 
-        if (posX > 768.0f)
+        if (posX > 1024.0f)
                 posX = 0.0f;
 
         if (posY < 0.0f)
             posY = 0.0f;
 
-        if (posY >= 600.0f) {
-            posY = 600.f;
+        if (posY >= 520.0f) {
+            posY = 520.f;
             velocity = 0.f;
             isJumping = false;
         }
@@ -252,7 +252,7 @@ int main() {
 
     sf::Sprite bck(backround);
     bck.setPosition(sf::Vector2f(0.f, 0.f));
-    bck.scale(sf::Vector2f(3.f, 3.f));
+    bck.scale(sf::Vector2f(4.f, 4.f));
 
     Player player("Samus", PlasmaG, texture);
 
@@ -302,7 +302,7 @@ int main() {
         sf::RenderWindow window;
         ///////////////////////////////////////////////////////////////////////////
         /// NOTE: sync with env variable APP_WINDOW from .github/workflows/cmake.yml:31
-        window.create(sf::VideoMode({768, 768}), "Hunter Fusion", sf::Style::Default);
+        window.create(sf::VideoMode({1024, 768}), "Hunter Fusion", sf::Style::Default);
         ///////////////////////////////////////////////////////////////////////////
         std::cout << "Fereastra a fost creată\n";
         ///////////////////////////////////////////////////////////////////////////
