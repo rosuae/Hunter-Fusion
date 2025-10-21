@@ -6,18 +6,6 @@
 
 #include <SFML/Graphics.hpp>
 
-//////////////////////////////////////////////////////////////////////
-/// This class is used to test that the memory leak checks work as expected even when using a GUI
-class SomeClass {
-public:
-    explicit SomeClass(int) {}
-};
-
-SomeClass *getC() {
-    return new SomeClass{2};
-}
-//////////////////////////////////////////////////////////////////////
-
 class Projectile {
     std::string nume;
     int dmg;
@@ -35,14 +23,14 @@ class Weapon {
     std::string nume;
     Projectile ammo;
     int ammoamount;
-    double firerate;
+    float firerate;
     int reloada;
 public:
     Weapon(const std::string& n, const Projectile& p, int a):
     nume{n},
     ammo{p},
     ammoamount{a},
-    firerate{0.1},
+    firerate{0.1f},
     reloada{30} {
         std::cout<<"Constructor weapon \n";
     }
@@ -76,23 +64,20 @@ public:
             reload(w);
         }
     }
-
-private:
-    void setAmmo(const int w) { ammoamount = w;}
 };
 
 class Player {
     std::string name;
     Weapon currWeapon;
     int health;
-    double posX, posY;
+    float posX, posY;
 public:
     Player(const std::string& n, const Weapon& w):
     name{n},
     currWeapon{w},
     health{100},
-    posX{0},
-    posY{0} {
+    posX{0.0f},
+    posY{0.0f} {
         std::cout<<"Constructor Player \n";
     }
 
@@ -105,11 +90,11 @@ public:
 class Enemy {
     std::string nume;
     Weapon fists;
-    double posX, posY;
+    float posX, posY;
     int health, speed;
 
 public:
-    Enemy(const std::string& n, const Weapon& f, double posx_, double posy_):
+    Enemy(const std::string& n, const Weapon& f, float posx_, float posy_):
     nume{n},
     fists{f},
     posX{posx_},
@@ -182,7 +167,7 @@ int main() {
     Player player("Samus", PlasmaG);
 
     Map map("Map", 100, 100, player);
-    Enemy enemy("Metroid", PlasmaG, 0, 0);
+    Enemy enemy("Metroid", PlasmaG, 0.0f, 0.0f);
     map.addEnemy(enemy);
 
     std::cout << map;
