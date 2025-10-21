@@ -1,13 +1,8 @@
 # Metroid: Hunter Fusion
 
-Sci-Fi 2D Platformer, inspired by Metroid Series.
-### Folosiți template-ul corespunzător grupei voastre!
+Metroid: Hunter Fusion este un platformer realizat în C++, cu structură pe camere interconectate. Jocul va utiliza biblioteca SFML pentru randare, input și sunet. Elementele principale includ un engine simplu cu sistem de randare pe bază de tilemap și sprites, fizică 2D (gravitație, viteză, coliziuni), cameră dinamică ce urmărește jucătorul și încărcare modulară a nivelurilor.
 
-| Laborant  | Link template                                |
-|-----------|----------------------------------------------|
-| Dragoș B  | https://github.com/Ionnier/oop-template      |
-| Tiberiu M | https://github.com/MaximTiberiu/oop-template |
-| Marius MC | https://github.com/mcmarius/oop-template     |
+Gameplay-ul se bazează pe controlul unui personaj care poate merge, sări, trage proiectile și obține upgrade-uri precum dublu-salt sau dash. Structura de nivel este împărțită în camere conectate prin uși, iar deplasarea este limitată inițial de abilitățile jucătorului. Vor exista inamici cu comportament de bază (patrulare, urmărire, atac), proiectile, precum și bătălii cu boși ce utilizează atacuri scriptate. Sistemele implementate vor include coliziuni precise, "health system" și damage, spawn de entități și colectabile.
 
 ### Important!
 
