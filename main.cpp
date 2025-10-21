@@ -35,7 +35,7 @@ class Weapon {
     std::string nume;
     Projectile ammo;
     int ammoamount;
-    float firerate;
+    double firerate;
     int reloada;
 public:
     Weapon(const std::string& n, const Projectile& p, int a):
@@ -85,7 +85,7 @@ class Player {
     std::string name;
     Weapon currWeapon;
     int health;
-    float posX, posY;
+    double posX, posY;
 public:
     Player(const std::string& n, const Weapon& w):
     name{n},
@@ -105,11 +105,11 @@ public:
 class Enemy {
     std::string nume;
     Weapon fists;
-    float posX, posY;
+    double posX, posY;
     int health, speed;
 
 public:
-    Enemy(const std::string& n, const Weapon& f, float posx_, float posy_):
+    Enemy(const std::string& n, const Weapon& f, double posx_, double posy_):
     nume{n},
     fists{f},
     posX{posx_},
