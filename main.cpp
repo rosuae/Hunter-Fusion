@@ -79,7 +79,7 @@ public:
     name{n},
     currWeapon{w},
     health{100},
-    speed{400.0f},
+    speed{600.0f},
     posX{250.0f},
     posY{250.0f},
     texture {tex},
@@ -87,7 +87,7 @@ public:
     {
         sprite.setPosition(sf::Vector2f(posX, posY));
 
-        sprite.scale(sf::Vector2f(2.f, 2.f));
+        sprite.scale(sf::Vector2f(1.f, 1.f));
 
         std::cout<<"Constructor Player \n";
     }
@@ -112,6 +112,16 @@ public:
             posX += speed * deltaTime;
             std::cout<< "Pressed D\n";
         }
+
+        if (posX < -10.0f)
+            posX = 768.0f;
+            else if (posX > 800.0f)
+                posX = 0.0f;
+
+        if (posY < -10.0f)
+            posY = 768.0f;
+            else if (posY > 800.0f)
+                posY = 0.0f;
 
         sprite.setPosition(sf::Vector2f(posX, posY));
     }
@@ -208,6 +218,15 @@ int main() {
     if (!texture.loadFromFile("../assets/textures/samustest.png"))
         std::cout << "Eroare la deschidere fisier \n";
 
+    sf::Texture backround;
+    if (!backround.loadFromFile("../assets/textures/map/background.bmp")){
+        std::cout << "Eroare la deschidere fisier background";
+    }
+
+    sf::Sprite bck(backround);
+    bck.setPosition(sf::Vector2f(0.f, 0.f));
+    bck.scale(sf::Vector2f(3.f, 3.f));
+
     Player player("Samus", PlasmaG, texture);
 
     Map map("Map", 1000, 1000, player);
@@ -256,7 +275,7 @@ int main() {
         sf::RenderWindow window;
         ///////////////////////////////////////////////////////////////////////////
         /// NOTE: sync with env variable APP_WINDOW from .github/workflows/cmake.yml:31
-        window.create(sf::VideoMode({1280, 720}), "Hunter Fusion", sf::Style::Default);
+        window.create(sf::VideoMode({768, 768}), "Hunter Fusion", sf::Style::Default);
         ///////////////////////////////////////////////////////////////////////////
         std::cout << "Fereastra a fost creată\n";
         ///////////////////////////////////////////////////////////////////////////
@@ -286,6 +305,7 @@ int main() {
 
             window.clear(sf::Color(0, 50, 80));
 
+            window.draw(bck);
             player.draw(window);
 
             window.display();
