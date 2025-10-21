@@ -1,5 +1,4 @@
 #include <iostream>
-#include <array>
 #include <chrono>
 #include <thread>
 #include <vector>
@@ -70,19 +69,59 @@ class Player {
     std::string name;
     Weapon currWeapon;
     int health;
+    float speed;
     float posX, posY;
+    sf::Texture& texture;
+    sf::Sprite sprite;
+
 public:
-    Player(const std::string& n, const Weapon& w):
+    Player(const std::string& n, const Weapon& w, sf::Texture& tex):
     name{n},
     currWeapon{w},
     health{100},
-    posX{0.0f},
-    posY{0.0f} {
+    speed{400.0f},
+    posX{250.0f},
+    posY{250.0f},
+    texture {tex},
+    sprite{texture}
+    {
+        sprite.setPosition(sf::Vector2f(posX, posY));
+
+        sprite.scale(sf::Vector2f(2.f, 2.f));
+
         std::cout<<"Constructor Player \n";
     }
 
+    void PlayerMovement(float deltaTime) {
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::W)) {
+            posY -= speed * deltaTime;
+            std::cout<< "Pressed W \n";
+        }
+
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::S)) {
+            posY += speed * deltaTime;
+            std::cout<< "Pressed S\n";
+        }
+
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A)) {
+            posX -= speed * deltaTime;
+            std::cout<< "Pressed A\n";
+        }
+
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D)) {
+            posX += speed * deltaTime;
+            std::cout<< "Pressed D\n";
+        }
+
+        sprite.setPosition(sf::Vector2f(posX, posY));
+    }
+
+    void draw(sf::RenderWindow& window) {
+        window.draw(sprite);
+    }
+
     friend std::ostream& operator<< (std::ostream& out, const Player& p) {
-        out << " Nume player: " << p.name << " Viata: " << p.health<< " Pos X: " << p.posX << " Pos Y: " << p.posY << p.currWeapon;
+        out << " Nume player: " << p.name << " Viata: " << p.health<< " Pos X: " << p.posX << " Pos Y: " << p.posY << "Player speed: " << p.speed << p.currWeapon;
         return out;
     }
 };
@@ -164,116 +203,94 @@ int main() {
 
     Projectile ammo("PlasmaOrb", 200);
     Weapon PlasmaG("PlasmaGun", ammo, 120);
-    Player player("Samus", PlasmaG);
 
-    Map map("Map", 100, 100, player);
+    sf::Texture texture;
+    if (!texture.loadFromFile("../assets/textures/samustest.png"))
+        std::cout << "Eroare la deschidere fisier \n";
+
+    Player player("Samus", PlasmaG, texture);
+
+    Map map("Map", 1000, 1000, player);
     Enemy enemy("Metroid", PlasmaG, 0.0f, 0.0f);
     map.addEnemy(enemy);
 
     std::cout << map;
 
-    using namespace std::chrono_literals;
-    int m = 150;
-    while (m) {
-        use(PlasmaG);
-        m--;
-        std::this_thread::sleep_for(300ms);
+    // using namespace std::chrono_literals;
+    // int m = 30;
+    // while (m) {
+    //     use(PlasmaG);
+    //     m--;
+    //     std::this_thread::sleep_for(300ms);
+    // }
+        /////////////////////////////////////////////////////////////////////////
+        /// Observație: dacă aveți nevoie să citiți date de intrare de la tastatură,
+        /// dați exemple de date de intrare folosind fișierul tastatura.txt
+        /// Trebuie să aveți în fișierul tastatura.txt suficiente date de intrare
+        /// (în formatul impus de voi) astfel încât execuția programului să se încheie.
+        /// De asemenea, trebuie să adăugați în acest fișier date de intrare
+        /// pentru cât mai multe ramuri de execuție.
+        /// Dorim să facem acest lucru pentru a automatiza testarea codului, fără să
+        /// mai pierdem timp de fiecare dată să introducem de la zero aceleași date de intrare.
+        ///
+        /// Pe GitHub Actions (bife), fișierul tastatura.txt este folosit
+        /// pentru a simula date introduse de la tastatură.
+        /// Bifele verifică dacă programul are erori de compilare, erori de memorie și memory leaks.
+        ///
+        /// Dacă nu puneți în tastatura.txt suficiente date de intrare, îmi rezerv dreptul să vă
+        /// testez codul cu ce date de intrare am chef și să nu pun notă dacă găsesc vreun bug.
+        /// Impun această cerință ca să învățați să faceți un demo și să arătați părțile din
+        /// program care merg (și să le evitați pe cele care nu merg).
+        ///
+        /////////////////////////////////////////////////////////////////////////
+        ///////////////////////////////////////////////////////////////////////////
+        /// Pentru date citite din fișier, NU folosiți tastatura.txt. Creați-vă voi
+        /// alt fișier propriu cu ce alt nume doriți.
+        /// Exemplu:
+        /// std::ifstream fis("date.txt");
+        /// for(int i = 0; i < nr2; ++i)
+        ///     fis >> v2[i];
+        ///
+        ///////////////////////////////////////////////////////////////////////////
+
+        sf::RenderWindow window;
+        ///////////////////////////////////////////////////////////////////////////
+        /// NOTE: sync with env variable APP_WINDOW from .github/workflows/cmake.yml:31
+        window.create(sf::VideoMode({1280, 720}), "Hunter Fusion", sf::Style::Default);
+        ///////////////////////////////////////////////////////////////////////////
+        std::cout << "Fereastra a fost creată\n";
+        ///////////////////////////////////////////////////////////////////////////
+        /// NOTE: mandatory use one of vsync or FPS limit (not both)            ///
+        /// This is needed so we do not burn the GPU                            ///
+        window.setVerticalSyncEnabled(true);                                    ///
+        /// window.setFramerateLimit(60);                                       ///
+        ///////////////////////////////////////////////////////////////////////////
+
+        sf::Clock clock;
+        bool shouldExit = false;
+
+        while(window.isOpen()) {
+            float deltaTime = clock.restart().asSeconds();
+
+            if(sf::Keyboard::isKeyPressed(sf::Keyboard::Scancode::Escape)) {
+                shouldExit = true;
+            }
+
+            if(shouldExit) {
+                window.close();
+                std::cout << "Fereastra a fost inchisa (shouldExit == true)\n";
+                break;
+            }
+
+            player.PlayerMovement(deltaTime);
+
+            window.clear(sf::Color(0, 50, 80));
+
+            player.draw(window);
+
+            window.display();
+        }
+
+        std::cout << "Programul a terminat executia\n";
+        return 0;
     }
-    /*//     std::cout << "Hello, world!\n";
-    //     std::array<int, 100> v{};
-    //     int nr;
-    //     std::cout << "Introduceți nr: ";
-    //     /////////////////////////////////////////////////////////////////////////
-    //     /// Observație: dacă aveți nevoie să citiți date de intrare de la tastatură,
-    //     /// dați exemple de date de intrare folosind fișierul tastatura.txt
-    //     /// Trebuie să aveți în fișierul tastatura.txt suficiente date de intrare
-    //     /// (în formatul impus de voi) astfel încât execuția programului să se încheie.
-    //     /// De asemenea, trebuie să adăugați în acest fișier date de intrare
-    //     /// pentru cât mai multe ramuri de execuție.
-    //     /// Dorim să facem acest lucru pentru a automatiza testarea codului, fără să
-    //     /// mai pierdem timp de fiecare dată să introducem de la zero aceleași date de intrare.
-    //     ///
-    //     /// Pe GitHub Actions (bife), fișierul tastatura.txt este folosit
-    //     /// pentru a simula date introduse de la tastatură.
-    //     /// Bifele verifică dacă programul are erori de compilare, erori de memorie și memory leaks.
-    //     ///
-    //     /// Dacă nu puneți în tastatura.txt suficiente date de intrare, îmi rezerv dreptul să vă
-    //     /// testez codul cu ce date de intrare am chef și să nu pun notă dacă găsesc vreun bug.
-    //     /// Impun această cerință ca să învățați să faceți un demo și să arătați părțile din
-    //     /// program care merg (și să le evitați pe cele care nu merg).
-    //     ///
-    //     /////////////////////////////////////////////////////////////////////////
-    //     std::cin >> nr;
-    //     /////////////////////////////////////////////////////////////////////////
-    //     for(int i = 0; i < nr; ++i) {
-    //         std::cout << "v[" << i << "] = ";
-    //         std::cin >> v[i];
-    //     }
-    //     std::cout << "\n\n";
-    //     std::cout << "Am citit de la tastatură " << nr << " elemente:\n";
-    //     for(int i = 0; i < nr; ++i) {
-    //         std::cout << "- " << v[i] << "\n";
-    //     }
-    //     ///////////////////////////////////////////////////////////////////////////
-    //     /// Pentru date citite din fișier, NU folosiți tastatura.txt. Creați-vă voi
-    //     /// alt fișier propriu cu ce alt nume doriți.
-    //     /// Exemplu:
-    //     /// std::ifstream fis("date.txt");
-    //     /// for(int i = 0; i < nr2; ++i)
-    //     ///     fis >> v2[i];
-    //     ///
-    //     ///////////////////////////////////////////////////////////////////////////
-    //
-    //     SomeClass *c = getC();
-    //     std::cout << c << "\n";
-    //     delete c;  // comentarea acestui rând ar trebui să ducă la semnalarea unui mem leak
-    //
-    //     sf::RenderWindow window;
-    //     ///////////////////////////////////////////////////////////////////////////
-    //     /// NOTE: sync with env variable APP_WINDOW from .github/workflows/cmake.yml:31
-    //     window.create(sf::VideoMode({1920, 1080}), "Hunter Fusion", sf::Style::Default);
-    //     ///////////////////////////////////////////////////////////////////////////
-    //     std::cout << "Fereastra a fost creată\n";
-    //     ///////////////////////////////////////////////////////////////////////////
-    //     /// NOTE: mandatory use one of vsync or FPS limit (not both)            ///
-    //     /// This is needed so we do not burn the GPU                            ///
-    //     window.setVerticalSyncEnabled(true);                                    ///
-    //     /// window.setFramerateLimit(60);                                       ///
-    //     ///////////////////////////////////////////////////////////////////////////
-    //
-    //     while(window.isOpen()) {
-    //         bool shouldExit = false;
-    //
-    //         while(const std::optional event = window.pollEvent()) {
-    //             if (event->is<sf::Event::Closed>()) {
-    //                 window.close();
-    //                 std::cout << "Fereastra a fost închisă\n";
-    //             }
-    //             else if (event->is<sf::Event::Resized>()) {
-    //                 std::cout << "New width: " << window.getSize().x << '\n'
-    //                           << "New height: " << window.getSize().y << '\n';
-    //             }
-    //             else if (event->is<sf::Event::KeyPressed>()) {
-    //                 const auto* keyPressed = event->getIf<sf::Event::KeyPressed>();
-    //                 std::cout << "Received key " << (keyPressed->scancode == sf::Keyboard::Scancode::X ? "X" : "(other)") << "\n";
-    //                 if(keyPressed->scancode == sf::Keyboard::Scancode::Escape) {
-    //                     shouldExit = true;
-    //                 }
-    //             }
-    //         }
-    //         if(shouldExit) {
-    //             window.close();
-    //             std::cout << "Fereastra a fost închisă (shouldExit == true)\n";
-    //             break;
-    //         }
-    //         using namespace std::chrono_literals;
-    //         std::this_thread::sleep_for(300ms);
-    //
-    //         window.clear();
-    //         window.display();
-    //     }
-    //
-    //     std::cout << "Programul a terminat execuția\n";
-    //     return 0;
-    // }*/
-}
