@@ -80,19 +80,19 @@ public:
     name{n},
     currWeapon{w},
     health{100},
-    speed{500.0f},
+    speed{900.0f},
     posX{250.0f},
     posY{250.0f},
-    gravity{1800.f},
+    gravity{3000.f},
     velocity{0.0f},
-    maxJump{-900.f},
+    maxJump{-1100.f},
     isJumping{false},
     texture {tex},
     sprite{texture}
     {
         sprite.setPosition(sf::Vector2f(posX, posY));
 
-        sprite.scale(sf::Vector2f(1.f, 1.f));
+        sprite.scale(sf::Vector2f(.7f, .7f));
 
         std::cout<<"Constructor Player \n";
     }
@@ -137,16 +137,16 @@ public:
         posY += velocity * deltaTime;
 
         if (posX < 0.0f)
-            posX = 1024.0f;
+            posX = 1920.0f;
 
-        if (posX > 1024.0f)
+        if (posX > 1920.0f)
                 posX = 0.0f;
 
         if (posY < 0.0f)
             posY = 0.0f;
 
-        if (posY >= 520.0f) {
-            posY = 520.f;
+        if (posY >= 712.0f) {
+            posY = 712.f;
             velocity = 0.f;
             isJumping = false;
         }
@@ -246,13 +246,13 @@ int main() {
         std::cout << "Eroare la deschidere fisier \n";
 
     sf::Texture backround;
-    if (!backround.loadFromFile("../assets/textures/map/background.bmp")){
+    if (!backround.loadFromFile("../assets/textures/map/background.png")){
         std::cout << "Eroare la deschidere fisier background";
     }
 
     sf::Sprite bck(backround);
     bck.setPosition(sf::Vector2f(0.f, 0.f));
-    bck.scale(sf::Vector2f(4.f, 4.f));
+    bck.scale(sf::Vector2f(1.66f, 2.f));
 
     Player player("Samus", PlasmaG, texture);
 
@@ -300,9 +300,14 @@ int main() {
         ///////////////////////////////////////////////////////////////////////////
 
         sf::RenderWindow window;
+        const sf::VideoMode desktop = sf::VideoMode::getDesktopMode();
+        const unsigned int width = desktop.size.x;
+        const unsigned int height = desktop.size.y;
+
+        window.create(sf::VideoMode({width, height}, desktop.bitsPerPixel), "Hunter Fusion", sf::Style::Default, sf::State::Fullscreen);
         ///////////////////////////////////////////////////////////////////////////
         /// NOTE: sync with env variable APP_WINDOW from .github/workflows/cmake.yml:31
-        window.create(sf::VideoMode({1024, 768}), "Hunter Fusion", sf::Style::Default);
+        // window.create(sf::VideoMode({1920, 1080}), "Hunter Fusion", sf::Style::Default);
         ///////////////////////////////////////////////////////////////////////////
         std::cout << "Fereastra a fost creată\n";
         ///////////////////////////////////////////////////////////////////////////
