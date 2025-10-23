@@ -276,7 +276,7 @@ int main() {
     Weapon PlasmaG("PlasmaGun", ammo, 120);
 
     sf::Texture backround;
-    if (!backround.loadFromFile("../assets/textures/map/background.png")){
+    if (!backround.loadFromFile("assets/textures/map/background.png")){
         std::cout << "Eroare la deschidere fisier background";
     }
 
@@ -285,14 +285,14 @@ int main() {
     bck.scale(sf::Vector2f(1.66f, 2.f));
 
     sf::Texture texture;
-        if (!texture.loadFromFile("../assets/textures/samustest.png"))
+        if (!texture.loadFromFile("assets/textures/samustest.png"))
             std::cout << "Eroare la deschidere fisier \n";
 
     Player player("Samus", PlasmaG, texture);
     Map map("Map", 1000, 1000, player);
 
     sf::Texture textureE;
-    if (!textureE.loadFromFile("../assets/textures/samustleft.png"))
+    if (!textureE.loadFromFile("assets/textures/samustleft.png"))
         std::cout << "Eroare la deschidere fisier \n";
 
     Enemy enemy("Metroid", PlasmaG, 1500.0f, 200.0f, textureE);
