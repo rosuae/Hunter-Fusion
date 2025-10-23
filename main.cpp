@@ -352,6 +352,8 @@ int main() {
         window.setVerticalSyncEnabled(true);                                    ///
         /// window.setFramerateLimit(60);                                       ///
         ///////////////////////////////////////////////////////////////////////////
+        sf::View camera(sf::FloatRect(sf::Vector2f(0.f, 0.f), sf::Vector2f(static_cast<float>(width), static_cast<float>(height))));
+        window.setView(camera);
 
         sf::Clock clock;
         bool shouldExit = false;
@@ -371,6 +373,11 @@ int main() {
 
             player.PlayerMovement(deltaTime);
             enemy.enemyMovement(player.getPos(), deltaTime);
+
+            sf::Vector2f Ppos(player.getPos());
+            camera.setCenter(sf::Vector2f(Ppos.x, static_cast<float>(height) / 2.f));
+            window.setView(camera);
+
             window.clear(sf::Color(0, 50, 80));
 
             window.draw(bck);
