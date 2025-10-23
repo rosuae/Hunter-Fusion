@@ -223,9 +223,10 @@ public:
             posX += speed * deltaTime;
         }
 
-        posY -= gravity * deltaTime;
+        posY += gravity * deltaTime;
 
-        posY = 812.f;
+        if (posY >= 812.f)
+            posY = 812.f;
 
         sprite.setPosition(sf::Vector2f(posX, posY));
     }
@@ -294,7 +295,7 @@ int main() {
     if (!textureE.loadFromFile("../assets/textures/samustleft.png"))
         std::cout << "Eroare la deschidere fisier \n";
 
-    Enemy enemy("Metroid", PlasmaG, 1500.0f, 1500.0f, textureE);
+    Enemy enemy("Metroid", PlasmaG, 1500.0f, 200.0f, textureE);
     map.addEnemy(enemy);
 
     using namespace std::chrono_literals;
