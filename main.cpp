@@ -91,7 +91,7 @@ public:
     sprite{texture}
     {
         sprite.setPosition(sf::Vector2f(posX, posY));
-
+        sprite.setOrigin(sf::Vector2f(static_cast<float>(texture.getSize().x) / 2.f, static_cast<float>(texture.getSize().y)));
         sprite.scale(sf::Vector2f(.7f, .7f));
         std::cout<<"Constructor Player \n";
     }
@@ -132,8 +132,8 @@ public:
         if (posY < 0.0f)
             posY = 0.0f;
 
-        if (posY >= 712.0f) {
-            posY = 712.f;
+        if (posY >= 1000.0f) {
+            posY = 1000.f;
             velocity = 0.f;
             isJumping = false;
         }
@@ -177,7 +177,7 @@ public:
     texture{tex},
     sprite{texture} {
         sprite.setPosition(sf::Vector2f(posX, posY));
-
+        sprite.setOrigin(sf::Vector2f(static_cast<float>(texture.getSize().x) / 2.f, static_cast<float>(texture.getSize().y)));
         sprite.setScale(sf::Vector2f(.7f, .7f));
         std::cout<<"Constructor Enemy \n";
     }
@@ -225,8 +225,8 @@ public:
 
         posY += gravity * deltaTime;
 
-        if (posY >= 812.f)
-            posY = 812.f;
+        if (posY >= 1000.f)
+            posY = 1000.f;
 
         sprite.setPosition(sf::Vector2f(posX, posY));
     }
