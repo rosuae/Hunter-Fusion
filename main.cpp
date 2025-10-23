@@ -93,21 +93,8 @@ public:
         sprite.setPosition(sf::Vector2f(posX, posY));
 
         sprite.scale(sf::Vector2f(.7f, .7f));
-
         std::cout<<"Constructor Player \n";
     }
-
-
-    // void jump(float deltaTime) {
-    //     for (float i = 0.f; i <= maxJump; i += 1.0f) {
-    //         posY -= speed * deltaTime;
-    //         sprite.setPosition(sf::Vector2f(posX, posY));
-    //     }
-    //     for (float j = 0.f; j <= maxJump; j += 1.0f) {
-    //         posY += gravity * deltaTime;
-    //         sprite.setPosition(sf::Vector2f(posX, posY));
-    //     }
-    // }
 
     void PlayerMovement(float deltaTime) {
 
@@ -157,6 +144,10 @@ public:
         window.draw(sprite);
     }
 
+    sf::Vector2f getPos() {
+        return {posX, posY};
+    }
+
     friend std::ostream& operator<< (std::ostream& out, const Player& p) {
         out << " Nume player: " << p.name << " Viata: " << p.health<< " Pos X: " << p.posX << " Pos Y: " << p.posY << "Player speed: " << p.speed << p.currWeapon;
         return out;
@@ -167,16 +158,29 @@ class Enemy {
     std::string nume;
     Weapon fists;
     float posX, posY;
-    int health, speed;
+    int health;
+    float gravity, speed;
+    bool alive;
+    sf::Texture texture;
+    sf::Sprite sprite;
 
 public:
-    Enemy(const std::string& n, const Weapon& f, float posx_, float posy_):
+    Enemy(const std::string& n, const Weapon& f, float posx_, float posy_, sf::Texture& tex):
     nume{n},
     fists{f},
     posX{posx_},
     posY(posy_),
     health{100},
-    speed{100}{std::cout<<"Constructor Enemy \n";}
+    gravity{3000.f},
+    speed{300.f},
+    alive{true},
+    texture{tex},
+    sprite{texture} {
+        sprite.setPosition(sf::Vector2f(posX, posY));
+
+        sprite.setScale(sf::Vector2f(.7f, .7f));
+        std::cout<<"Constructor Enemy \n";
+    }
 
     Enemy (const Enemy& other):
     nume{other.nume},
@@ -184,7 +188,12 @@ public:
     posX{other.posX},
     posY{other.posY},
     health{other.health},
-    speed{other.speed} {
+    gravity{other.gravity},
+    speed{other.speed},
+    alive{other.alive},
+    texture{other.texture},
+    sprite{other.sprite}
+    {
         std::cout<<"Constructor de copiere\n";
     }
 
@@ -195,11 +204,35 @@ public:
         posY = other.posY;
         health = other.health;
         speed = other.speed;
+        gravity = other.gravity;
+        alive = other.alive;
+        texture = other.texture;
+        sprite = other.sprite;
         std::cout<<"S-a folosit supraincarcarea op= pentru clasa Enemy \n";
         return *this;
     }
 
     ~Enemy() = default;
+
+    void enemyMovement(sf::Vector2f playerpos, float deltaTime) {
+
+        if (posX >= playerpos.x) {
+            posX -= speed * deltaTime;
+        }
+        if (posX <= playerpos.x) {
+            posX += speed * deltaTime;
+        }
+
+        posY -= gravity * deltaTime;
+
+        posY = 812.f;
+
+        sprite.setPosition(sf::Vector2f(posX, posY));
+    }
+
+    void loadEnemy(sf::RenderWindow& window) {
+            window.draw(sprite);
+    }
 
     friend std::ostream& operator<< (std::ostream& out, const Enemy& e) {
         out << " Nume inamic: " << e.nume << " Pos X: " << e.posX << " Pos Y: " << e.posY << " Viata inamic: " << e.health << " Viteza imanic: " << e.speed << " " << e.fists;
@@ -241,10 +274,6 @@ int main() {
     Projectile ammo("PlasmaOrb", 200);
     Weapon PlasmaG("PlasmaGun", ammo, 120);
 
-    sf::Texture texture;
-    if (!texture.loadFromFile("../assets/textures/samustest.png"))
-        std::cout << "Eroare la deschidere fisier \n";
-
     sf::Texture backround;
     if (!backround.loadFromFile("../assets/textures/map/background.png")){
         std::cout << "Eroare la deschidere fisier background";
@@ -254,13 +283,19 @@ int main() {
     bck.setPosition(sf::Vector2f(0.f, 0.f));
     bck.scale(sf::Vector2f(1.66f, 2.f));
 
+    sf::Texture texture;
+        if (!texture.loadFromFile("../assets/textures/samustest.png"))
+            std::cout << "Eroare la deschidere fisier \n";
+
     Player player("Samus", PlasmaG, texture);
-
     Map map("Map", 1000, 1000, player);
-    Enemy enemy("Metroid", PlasmaG, 0.0f, 0.0f);
-    map.addEnemy(enemy);
 
-    std::cout << map;
+    sf::Texture textureE;
+    if (!textureE.loadFromFile("../assets/textures/samustleft.png"))
+        std::cout << "Eroare la deschidere fisier \n";
+
+    Enemy enemy("Metroid", PlasmaG, 1500.0f, 1500.0f, textureE);
+    map.addEnemy(enemy);
 
     using namespace std::chrono_literals;
     int m = 1;
@@ -334,11 +369,12 @@ int main() {
             }
 
             player.PlayerMovement(deltaTime);
-
+            enemy.enemyMovement(player.getPos(), deltaTime);
             window.clear(sf::Color(0, 50, 80));
 
             window.draw(bck);
             player.draw(window);
+            enemy.loadEnemy(window);
 
             window.display();
         }
