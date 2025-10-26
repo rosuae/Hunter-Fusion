@@ -2,19 +2,58 @@
 #include <chrono>
 #include <thread>
 #include <vector>
-
+#include <cmath>
 #include <SFML/Graphics.hpp>
 
 class Projectile {
     std::string nume;
     int dmg;
+    sf::Vector2f position;
+    float speed;
+    sf::Texture texture;
+    sf::Sprite sprite;
 
 public:
-    Projectile(const std::string& n, int d): nume{n}, dmg{d}{ std::cout<<"Constructor proiectil \n";}
+    Projectile(const std::string& n, int d, sf::Texture& tex, sf::Vector2f playerPos):
+    nume{n},
+    dmg{d},
+    position{playerPos},
+    speed{1000.f},
+    texture{tex},
+    sprite{texture}
+    {
+        sprite.setOrigin(sf::Vector2f(static_cast<float>(texture.getSize().x), static_cast<float>(texture.getSize().y) / 2.f));
+        sprite.scale(sf::Vector2f(0.3f, 0.3f));
+        std::cout<<"Constructor proiectil \n";
+    }
 
     friend std::ostream& operator<< (std::ostream& out, const Projectile& p) {
         out << " Nume munitie: " << p.nume << " " << "DMG: "<< p.dmg << "\n";
         return out;
+    }
+
+    void projectileTravel (float deltaTime, sf::Vector2f playerPos, sf::RenderWindow& window) {
+        sf::Vector2i localPosition = sf::Mouse::getPosition(window);
+        sf::Vector2f worldPosition = window.mapPixelToCoords(localPosition);
+
+        float dirX = worldPosition.x - playerPos.x;
+        float dirY = worldPosition.y - playerPos.y;
+
+        float length = std::sqrt(dirX * dirX + dirY * dirY);
+
+        if (length != 0) {
+            dirX /= length;
+            dirY /= length;
+        }
+
+        position.x += dirX * speed * deltaTime;
+        position.y += dirY * speed * deltaTime;
+
+        sprite.setPosition(sf::Vector2f (position.x, position.y));
+    }
+
+    void drawProjectile(sf::RenderWindow& window) {
+        window.draw(sprite);
     }
 };
 
@@ -67,7 +106,6 @@ public:
 
 class Player {
     std::string name;
-    Weapon currWeapon;
     int health;
     float speed;
     float posX, posY, gravity, velocity, maxJump;
@@ -76,13 +114,12 @@ class Player {
     sf::Sprite sprite;
 
 public:
-    Player(const std::string& n, const Weapon& w, sf::Texture& tex):
+    Player(const std::string& n, sf::Texture& tex):
     name{n},
-    currWeapon{w},
     health{100},
     speed{900.0f},
-    posX{250.0f},
-    posY{250.0f},
+    posX{900.0f},
+    posY{900.0f},
     gravity{3000.f},
     velocity{0.0f},
     maxJump{-1100.f},
@@ -149,7 +186,7 @@ public:
     }
 
     friend std::ostream& operator<< (std::ostream& out, const Player& p) {
-        out << " Nume player: " << p.name << " Viata: " << p.health<< " Pos X: " << p.posX << " Pos Y: " << p.posY << "Player speed: " << p.speed << p.currWeapon;
+        out << " Nume player: " << p.name << " Viata: " << p.health<< " Pos X: " << p.posX << " Pos Y: " << p.posY << "Player speed: " << p.speed;
         return out;
     }
 };
@@ -272,7 +309,17 @@ public:
 
 int main() {
 
-    Projectile ammo("PlasmaOrb", 200);
+    sf::Texture projectileTex;
+    if (projectileTex.loadFromFile("assets/textures/projectile.png"))
+        std::cout << "Eroare la incarcarea texturei pentru Projectile";
+
+    sf::Texture texture;
+        if (!texture.loadFromFile("assets/textures/samustest.png"))
+            std::cout << "Eroare la deschidere fisier \n";
+
+    Player player("Samus", texture);
+
+    Projectile ammo("PlasmaOrb", 200, projectileTex, player.getPos());
     Weapon PlasmaG("PlasmaGun", ammo, 120);
 
     sf::Texture backround;
@@ -284,11 +331,7 @@ int main() {
     bck.setPosition(sf::Vector2f(0.f, 0.f));
     bck.scale(sf::Vector2f(1.66f, 2.f));
 
-    sf::Texture texture;
-        if (!texture.loadFromFile("assets/textures/samustest.png"))
-            std::cout << "Eroare la deschidere fisier \n";
 
-    Player player("Samus", PlasmaG, texture);
     Map map("Map", 1000, 1000, player);
 
     sf::Texture textureE;
@@ -375,10 +418,11 @@ int main() {
 
             player.PlayerMovement(deltaTime);
             enemy.enemyMovement(player.getPos(), deltaTime);
+            ammo.projectileTravel(deltaTime, player.getPos(), window);
 
             sf::Vector2f targetPos = player.getPos();
             cameraPos.x += (targetPos.x - cameraPos.x) * cameraSpeed * deltaTime;
-            cameraPos.y = static_cast<float>(height) / 2.0f;
+            cameraPos.y += (targetPos.y - cameraPos.y - static_cast<float>(height) / 3.f) * cameraSpeed * deltaTime;
 
             camera.setCenter(cameraPos);
             window.setView(camera);
@@ -388,6 +432,7 @@ int main() {
             window.draw(bck);
             player.draw(window);
             enemy.loadEnemy(window);
+            ammo.drawProjectile(window);
 
             window.display();
         }
