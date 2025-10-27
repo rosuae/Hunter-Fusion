@@ -474,7 +474,7 @@ int main() {
             window.draw(bck);
             enemy.loadEnemy(window);
 
-            for (auto& proj : projectiles) {
+            for (const auto& proj : projectiles) {
                 proj.drawProjectile(window);
             }
             player.draw(window);
