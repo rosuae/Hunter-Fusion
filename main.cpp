@@ -3,6 +3,7 @@
 #include <thread>
 #include <vector>
 #include <cmath>
+#include <random>
 #include <SFML/Graphics.hpp>
 
 class Projectile {
@@ -53,6 +54,14 @@ public:
 
     void drawProjectile(sf::RenderWindow& window) const{
         window.draw(sprite);
+    }
+
+    sf::FloatRect getBounds() const {
+        return sprite.getGlobalBounds();
+    }
+
+    int getDamage() const {
+        return dmg;
     }
 
     bool isOutOfBounds(float maxX, float maxY) const {
@@ -113,6 +122,10 @@ public:
         }
     }
 
+    [[nodiscard]]int getDmg() const{
+        return projectileDmg;
+    }
+
     [[nodiscard]]bool canFire() const {
         return reloada > 0;
     }
@@ -123,7 +136,7 @@ class Player {
     int health;
     float speed;
     float posX, posY, gravity, velocity, maxJump;
-    bool isJumping;
+    bool isJumping, isalive = true;
     bool facingRight = true;
     sf::Texture& texture;
     sf::Sprite sprite;
@@ -151,29 +164,25 @@ public:
     void PlayerMovement(float deltaTime) {
 
 
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::W) && !isJumping) {
+        if ((sf::Keyboard::isKeyPressed(sf::Keyboard::Key::W) || sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Space)) && !isJumping) {
             velocity = maxJump;
             isJumping = true;
-            std::cout<< "Pressed W \n";
         }
 
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::S)) {
             posY += speed * deltaTime;
-            std::cout<< "Pressed S\n";
         }
 
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A)) {
             posX -= speed * deltaTime;
             facingRight = false;
             sprite.setScale(sf::Vector2f(-.7f, .7f));
-            std::cout<< "Pressed A\n";
         }
 
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D)) {
             posX += speed * deltaTime;
             facingRight = true;
             sprite.setScale(sf::Vector2f(.7f, .7f));
-            std::cout<< "Pressed D\n";
         }
 
         velocity += gravity * deltaTime;
@@ -215,6 +224,26 @@ public:
         return {posX + offsetX, posY + offsetY};
     }
 
+    void takeDamage (int damageAmount) {
+        health -= damageAmount;
+        if (health <= 0) {
+            health = 0;
+            isalive = false;
+            std::cout << "GAME OVER \n";
+        }
+        else {
+            std::cout << "Player ul a primit " << damageAmount << " dmg, ramanand cu " << health << " viata \n";
+        }
+    }
+
+    sf::FloatRect getBounds () const {
+        return sprite.getGlobalBounds();
+    }
+
+    bool isAlive() const {
+        return isalive;
+    }
+
     friend std::ostream& operator<< (std::ostream& out, const Player& p) {
         out << " Nume player: " << p.name << " Viata: " << p.health<< " Pos X: " << p.posX << " Pos Y: " << p.posY << "Player speed: " << p.speed;
         return out;
@@ -228,7 +257,7 @@ class Enemy {
     int health;
     float gravity, speed;
     bool alive;
-    sf::Texture texture;
+    sf::Texture& texture;
     sf::Sprite sprite;
 
 public:
@@ -237,7 +266,7 @@ public:
     fists{f},
     posX{posx_},
     posY(posy_),
-    health{100},
+    health{250},
     gravity{3000.f},
     speed{300.f},
     alive{true},
@@ -302,6 +331,30 @@ public:
             window.draw(sprite);
     }
 
+    void takeDamage(int damageAmount) {
+        health -= damageAmount;
+        if (health <= 0) {
+            health = 0;
+            alive = false;
+            std::cout << "inamic invins \n";
+        }
+        else {
+            std::cout << "a primit " << damageAmount << " dmg, mai are " << health << "\n";
+        }
+    }
+
+    sf::FloatRect getBounds() const{
+        return sprite.getGlobalBounds();
+    }
+
+    int getContactDamage() const {
+        return fists.getDmg();
+    }
+
+    bool isAlive() const{
+        return alive;
+    }
+
     friend std::ostream& operator<< (std::ostream& out, const Enemy& e) {
         out << " Nume inamic: " << e.nume << " Pos X: " << e.posX << " Pos Y: " << e.posY << " Viata inamic: " << e.health << " Viteza imanic: " << e.speed << " " << e.fists;
         return out;
@@ -311,11 +364,11 @@ public:
 class Map {
     std::string MapNume;
     int sizeX, sizeY;
-    Player MyPlayer;
+    Player& MyPlayer;
     std::vector<Enemy> enemies;
 
 public:
-    Map(const std::string& n, int sizex_, int sizey_, const Player& p):
+    Map(const std::string& n, int sizex_, int sizey_, Player& p):
     MapNume{n},
     sizeX{sizex_},
     sizeY{sizey_},
@@ -335,7 +388,15 @@ public:
     void addEnemy(const Enemy& enemy) {
         enemies.push_back(enemy);
     }
+
+    std::vector<Enemy>& getEnemies() {
+        return enemies;
+    }
 };
+
+bool intersects(const sf::FloatRect& rect1, const sf::FloatRect& rect2) {
+    return rect1.findIntersection(rect2).has_value();
+}
 
 int main() {
 
@@ -349,7 +410,7 @@ int main() {
 
     Player player("Samus", texture);
 
-    Weapon PlasmaG("PlasmaGun", "PlasmaOrb", 100, projectileTex,120);
+    Weapon PlasmaG("PlasmaGun", "PlasmaOrb", 25, projectileTex,120);
 
     sf::Texture backround;
     if (!backround.loadFromFile("assets/textures/map/background.png")){
@@ -367,17 +428,16 @@ int main() {
     if (!textureE.loadFromFile("assets/textures/samustleft.png"))
         std::cout << "Eroare la deschidere fisier \n";
 
-    Enemy enemy("Metroid", PlasmaG, 1500.0f, 200.0f, textureE);
-    map.addEnemy(enemy);
+    Weapon fists ("fists", "melee", 20, projectileTex, 1000);
 
-    using namespace std::chrono_literals;
-    int m = 1;
-    while (m) {
-        PlasmaG.use();
-        m--;
-        std::this_thread::sleep_for(300ms);
-    }
-        ///////////////////////////////////////////////////////////////////////////
+    Enemy enemy("Metroid", fists, 300.0f, 10.0f, textureE);
+    Enemy enemy0 ("BigEye", fists, 760.f, 293.f, textureE);
+    Enemy enemy1 ("Wings", fists, 1700.f, 200.f, textureE);
+    map.addEnemy(enemy);
+    map.addEnemy(enemy0);
+    map.addEnemy(enemy1);
+
+    ///////////////////////////////////////////////////////////////////////////
         /// Pentru date citite din fișier, NU folosiți tastatura.txt. Creați-vă voi
         /// alt fișier propriu cu ce alt nume doriți.
         /// Exemplu:
@@ -410,6 +470,8 @@ int main() {
         sf::Vector2f cameraPos = player.getPos();
 
         sf::Clock clock;
+        sf::Clock playerDamageCooldown;
+
         std::vector<Projectile> projectiles;
 
         while(window.isOpen()) {
@@ -425,10 +487,14 @@ int main() {
                     if (keyPress->scancode == sf::Keyboard::Scancode::Escape) {
                         window.close();
                     }
+
+                    if (keyPress->scancode == sf::Keyboard::Scancode::R) {
+                        PlasmaG.reload();
+                    }
                 }
 
                 if (const auto* mousePress = event->getIf<sf::Event::MouseButtonPressed>()) {
-                    if (mousePress->button == sf::Mouse::Button::Left && PlasmaG.canFire()) {
+                    if (mousePress->button == sf::Mouse::Button::Left && PlasmaG.canFire() && player.isAlive()) {
                         sf::Vector2i mousePixel = sf::Mouse::getPosition(window);
                         sf::Vector2f mouseWorld = window.mapPixelToCoords(mousePixel);
 
@@ -436,48 +502,80 @@ int main() {
                         PlasmaG.use();
                     }
                 }
+            }
 
-                if (const auto* keyPress = event->getIf<sf::Event::KeyPressed>()) {
-                    if (keyPress->scancode == sf::Keyboard::Scancode::R) {
-                        PlasmaG.reload();
-                    }
+            if (player.isAlive()) {
+                player.PlayerMovement(deltaTime);
+            }
+
+            for (auto& en : map.getEnemies()) {
+                if (en.isAlive()) {
+                    en.enemyMovement(player.getPos(), deltaTime);
                 }
             }
-
-            if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)) {
-                std::cout << "Click stanga" << std::endl;
-            }
-            else if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Right)) {
-                std::cout << "Click dreapta" << std::endl;
-            }
-
-            player.PlayerMovement(deltaTime);
-            enemy.enemyMovement(player.getPos(), deltaTime);
 
             for (auto& proj : projectiles) {
                 proj.projectileTravel(deltaTime);
             }
 
-            std::erase_if(projectiles, [](const Projectile& p) {
-                return p.isOutOfBounds(5000.f, 5000.f);
+            std::vector<Projectile*> projectilesToRemove;
+            for (auto& proj : projectiles) {
+                for (auto& en : map.getEnemies()) {
+                    if (en.isAlive() && intersects(proj.getBounds(), en.getBounds())) {
+                        en.takeDamage(proj.getDamage());
+                        projectilesToRemove.push_back(&proj);
+                        break;
+                    }
+                }
+            }
+
+            int totalDamageThisFrame = 0;
+            for (auto& en : map.getEnemies()) {
+                if (en.isAlive() && player.isAlive() && intersects(player.getBounds(), en.getBounds())) {
+                    totalDamageThisFrame += en.getContactDamage();
+                }
+            }
+
+            if (totalDamageThisFrame > 0 && playerDamageCooldown.getElapsedTime().asSeconds() > 1.f) {
+                player.takeDamage(totalDamageThisFrame);
+                playerDamageCooldown.restart();
+            }
+
+            std::erase_if(projectiles, [&](const Projectile& p) {
+                bool shouldRemove = false;
+                for (const auto* toRemove : projectilesToRemove) {
+                    if (&p == toRemove) {
+                        shouldRemove = true;
+                        break;
+                    }
+                }
+                return shouldRemove || p.isOutOfBounds(1920.f, 1080.f);
+            });
+
+            std::erase_if(map.getEnemies(), [](const Enemy& en) {
+                return !en.isAlive();
             });
 
             sf::Vector2f targetPos = player.getPos();
             cameraPos.x += (targetPos.x - cameraPos.x) * cameraSpeed * deltaTime;
             cameraPos.y += (targetPos.y - cameraPos.y - static_cast<float>(height) / 3.f) * cameraSpeed * deltaTime;
-
             camera.setCenter(cameraPos);
             window.setView(camera);
 
             window.clear(sf::Color(0,20,20));
-
             window.draw(bck);
-            enemy.loadEnemy(window);
 
             for (const auto& proj : projectiles) {
                 proj.drawProjectile(window);
             }
-            player.draw(window);
+
+            if (player.isAlive()) {
+                player.draw(window);
+            }
+
+            for (const auto& en : map.getEnemies()) {
+                    en.loadEnemy(window);
+            }
 
             window.display();
         }
