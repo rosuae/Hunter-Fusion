@@ -9,21 +9,32 @@ class Projectile {
     std::string nume;
     int dmg;
     sf::Vector2f position;
+    sf::Vector2f direction;
     float speed;
-    sf::Texture texture;
     sf::Sprite sprite;
 
 public:
-    Projectile(const std::string& n, int d, sf::Texture& tex, sf::Vector2f playerPos):
+    Projectile(const std::string& n, int d, const sf::Texture& tex, sf::Vector2f playerPos, sf::Vector2f targetPos):
     nume{n},
     dmg{d},
     position{playerPos},
     speed{1000.f},
-    texture{tex},
-    sprite{texture}
+    sprite{tex}
     {
-        sprite.setOrigin(sf::Vector2f(static_cast<float>(texture.getSize().x), static_cast<float>(texture.getSize().y) / 2.f));
-        sprite.scale(sf::Vector2f(0.3f, 0.3f));
+
+        float dirX = targetPos.x - playerPos.x;
+        float dirY = targetPos.y - playerPos.y;
+        float length = std::sqrt(dirX * dirX + dirY * dirY);
+
+        if (length != 0) {
+            direction.x = dirX / length;
+            direction.y = dirY / length;
+        } else {
+            direction = sf::Vector2f(1.f, 0.f);
+        }
+
+        sprite.setOrigin(sf::Vector2f(static_cast<float>(tex.getSize().x), static_cast<float>(tex.getSize().y) / 2.f));
+        sprite.scale(sf::Vector2f(1.5f, 1.5f));
         std::cout<<"Constructor proiectil \n";
     }
 
@@ -32,75 +43,78 @@ public:
         return out;
     }
 
-    void projectileTravel (float deltaTime, sf::Vector2f playerPos, sf::RenderWindow& window) {
-        sf::Vector2i localPosition = sf::Mouse::getPosition(window);
-        sf::Vector2f worldPosition = window.mapPixelToCoords(localPosition);
+    void projectileTravel (float deltaTime) {
 
-        float dirX = worldPosition.x - playerPos.x;
-        float dirY = worldPosition.y - playerPos.y;
+        position.x += direction.x * speed * deltaTime;
+        position.y += direction.y * speed * deltaTime;
 
-        float length = std::sqrt(dirX * dirX + dirY * dirY);
-
-        if (length != 0) {
-            dirX /= length;
-            dirY /= length;
-        }
-
-        position.x += dirX * speed * deltaTime;
-        position.y += dirY * speed * deltaTime;
-
-        sprite.setPosition(sf::Vector2f (position.x, position.y));
+        sprite.setPosition(position);
     }
 
-    void drawProjectile(sf::RenderWindow& window) {
+    void drawProjectile(sf::RenderWindow& window) const{
         window.draw(sprite);
+    }
+
+    bool isOutOfBounds(float maxX, float maxY) const {
+        return position.x < -100 || position.x > maxX + 100 || position.y < -100 || position.y > maxY + 100;
     }
 };
 
 class Weapon {
     std::string nume;
-    Projectile ammo;
+    std::string projectileName;
+    int projectileDmg;
+    sf::Texture* projectileTex;
     int ammoamount;
     float firerate;
     int reloada;
 public:
-    Weapon(const std::string& n, const Projectile& p, int a):
+    Weapon(const std::string& n, const std::string& projName, int projDmg, sf::Texture& tex, int a):
     nume{n},
-    ammo{p},
+    projectileName{projName},
+    projectileDmg{projDmg},
+    projectileTex{&tex},
     ammoamount{a},
     firerate{0.1f},
     reloada{30} {
         std::cout<<"Constructor weapon \n";
     }
 
+    Projectile createProjectile(sf::Vector2f playerPos, sf::Vector2f targetPos) {
+        return {projectileName, projectileDmg, *projectileTex, playerPos, targetPos};
+    }
+
     friend std::ostream& operator<< (std::ostream& out, const Weapon& w) {
-        out << " Numar total munitie: " << w.ammoamount << " Firerate: " << w.firerate << " Nume arma: " << w.nume << " Munitie per reload: " << w.reloada << " " << w.ammo;
+        out << " Numar total munitie: " << w.ammoamount << " Firerate: " << w.firerate << " Nume arma: " << w.nume << " Munitie per reload: " << w.reloada;
         return out;
     }
 
-    friend void reload(Weapon& w) {
-        if (w.ammoamount > 0) {
-            int needed = 30 - w.reloada;
-            int toReload = std::min(needed, w.ammoamount);
-            w.reloada += toReload;
-            w.ammoamount -= toReload;
+    void reload() {
+        if (ammoamount > 0) {
+            int needed = 30 - reloada;
+            int toReload = std::min(needed, ammoamount);
+            reloada += toReload;
+            ammoamount -= toReload;
             std::cout << "\n Reloaded:  " << toReload << "\n";
-            std::cout << "Ammo Amount: " << w.ammoamount << "\n";
+            std::cout << "Ammo Amount: " << ammoamount << "\n";
         }
         else
             std::cout << "Out of ammo \n";
     }
 
-    friend void use(Weapon& w) {
-        std::cout << "Before use: " << w.reloada << "\n";
-        if (w.reloada > 0){
-            w.reloada -= 1;
+    void use() {
+        std::cout << "Before use: " << reloada << "\n";
+        if (reloada > 0){
+            reloada -= 1;
             std::cout << "Fire! \n";
         }
         else {
-            std::cout << "Reloading...";
-            reload(w);
+            std::cout << "press r to reload";
         }
+    }
+
+    [[nodiscard]]bool canFire() const {
+        return reloada > 0;
     }
 };
 
@@ -110,6 +124,7 @@ class Player {
     float speed;
     float posX, posY, gravity, velocity, maxJump;
     bool isJumping;
+    bool facingRight = true;
     sf::Texture& texture;
     sf::Sprite sprite;
 
@@ -149,11 +164,15 @@ public:
 
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A)) {
             posX -= speed * deltaTime;
+            facingRight = false;
+            sprite.setScale(sf::Vector2f(-.7f, .7f));
             std::cout<< "Pressed A\n";
         }
 
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D)) {
             posX += speed * deltaTime;
+            facingRight = true;
+            sprite.setScale(sf::Vector2f(.7f, .7f));
             std::cout<< "Pressed D\n";
         }
 
@@ -177,12 +196,23 @@ public:
         sprite.setPosition(sf::Vector2f(posX, posY));
     }
 
-    void draw(sf::RenderWindow& window) {
+    void draw(sf::RenderWindow& window) const{
         window.draw(sprite);
     }
 
-    sf::Vector2f getPos() {
+    sf::Vector2f getPos() const{
         return {posX, posY};
+    }
+
+    sf::Vector2f getWeaponTipPos() const {
+        float offsetX = 30.f;
+        float offsetY = -180.f;
+
+        if (!facingRight) {
+            offsetX = -offsetX;
+        }
+
+        return {posX + offsetX, posY + offsetY};
     }
 
     friend std::ostream& operator<< (std::ostream& out, const Player& p) {
@@ -268,7 +298,7 @@ public:
         sprite.setPosition(sf::Vector2f(posX, posY));
     }
 
-    void loadEnemy(sf::RenderWindow& window) {
+    void loadEnemy(sf::RenderWindow& window) const{
             window.draw(sprite);
     }
 
@@ -319,8 +349,7 @@ int main() {
 
     Player player("Samus", texture);
 
-    Projectile ammo("PlasmaOrb", 200, projectileTex, player.getPos());
-    Weapon PlasmaG("PlasmaGun", ammo, 120);
+    Weapon PlasmaG("PlasmaGun", "PlasmaOrb", 100, projectileTex,120);
 
     sf::Texture backround;
     if (!backround.loadFromFile("assets/textures/map/background.png")){
@@ -344,30 +373,10 @@ int main() {
     using namespace std::chrono_literals;
     int m = 1;
     while (m) {
-        use(PlasmaG);
+        PlasmaG.use();
         m--;
         std::this_thread::sleep_for(300ms);
     }
-        /////////////////////////////////////////////////////////////////////////
-        /// Observație: dacă aveți nevoie să citiți date de intrare de la tastatură,
-        /// dați exemple de date de intrare folosind fișierul tastatura.txt
-        /// Trebuie să aveți în fișierul tastatura.txt suficiente date de intrare
-        /// (în formatul impus de voi) astfel încât execuția programului să se încheie.
-        /// De asemenea, trebuie să adăugați în acest fișier date de intrare
-        /// pentru cât mai multe ramuri de execuție.
-        /// Dorim să facem acest lucru pentru a automatiza testarea codului, fără să
-        /// mai pierdem timp de fiecare dată să introducem de la zero aceleași date de intrare.
-        ///
-        /// Pe GitHub Actions (bife), fișierul tastatura.txt este folosit
-        /// pentru a simula date introduse de la tastatură.
-        /// Bifele verifică dacă programul are erori de compilare, erori de memorie și memory leaks.
-        ///
-        /// Dacă nu puneți în tastatura.txt suficiente date de intrare, îmi rezerv dreptul să vă
-        /// testez codul cu ce date de intrare am chef și să nu pun notă dacă găsesc vreun bug.
-        /// Impun această cerință ca să învățați să faceți un demo și să arătați părțile din
-        /// program care merg (și să le evitați pe cele care nu merg).
-        ///
-        /////////////////////////////////////////////////////////////////////////
         ///////////////////////////////////////////////////////////////////////////
         /// Pentru date citite din fișier, NU folosiți tastatura.txt. Creați-vă voi
         /// alt fișier propriu cu ce alt nume doriți.
@@ -399,26 +408,59 @@ int main() {
         window.setView(camera);
 
         sf::Vector2f cameraPos = player.getPos();
-        float cameraSpeed = 5.0f;
+
         sf::Clock clock;
-        bool shouldExit = false;
+        std::vector<Projectile> projectiles;
 
         while(window.isOpen()) {
             float deltaTime = clock.restart().asSeconds();
+            float cameraSpeed = 5.0f;
 
-            if(sf::Keyboard::isKeyPressed(sf::Keyboard::Scancode::Escape)) {
-                shouldExit = true;
+            while (const std::optional<sf::Event> event = window.pollEvent()) {
+                if (event->is<sf::Event::Closed>()) {
+                    window.close();
+                }
+
+                if (const auto* keyPress = event->getIf<sf::Event::KeyPressed>()) {
+                    if (keyPress->scancode == sf::Keyboard::Scancode::Escape) {
+                        window.close();
+                    }
+                }
+
+                if (const auto* mousePress = event->getIf<sf::Event::MouseButtonPressed>()) {
+                    if (mousePress->button == sf::Mouse::Button::Left && PlasmaG.canFire()) {
+                        sf::Vector2i mousePixel = sf::Mouse::getPosition(window);
+                        sf::Vector2f mouseWorld = window.mapPixelToCoords(mousePixel);
+
+                        projectiles.push_back(PlasmaG.createProjectile(player.getWeaponTipPos(), mouseWorld));
+                        PlasmaG.use();
+                    }
+                }
+
+                if (const auto* keyPress = event->getIf<sf::Event::KeyPressed>()) {
+                    if (keyPress->scancode == sf::Keyboard::Scancode::R) {
+                        PlasmaG.reload();
+                    }
+                }
             }
 
-            if(shouldExit) {
-                window.close();
-                std::cout << "Fereastra a fost inchisa (shouldExit == true)\n";
-                break;
+            if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)) {
+                std::cout << "Click stanga" << std::endl;
+            }
+            else if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Right)) {
+                std::cout << "Click dreapta" << std::endl;
             }
 
             player.PlayerMovement(deltaTime);
             enemy.enemyMovement(player.getPos(), deltaTime);
-            ammo.projectileTravel(deltaTime, player.getPos(), window);
+
+            for (auto& proj : projectiles) {
+                proj.projectileTravel(deltaTime);
+            }
+
+            std::erase_if(projectiles, [](const Projectile& p) {
+                return p.isOutOfBounds(5000.f, 5000.f);
+            });
 
             sf::Vector2f targetPos = player.getPos();
             cameraPos.x += (targetPos.x - cameraPos.x) * cameraSpeed * deltaTime;
@@ -430,9 +472,12 @@ int main() {
             window.clear(sf::Color(0,20,20));
 
             window.draw(bck);
-            player.draw(window);
             enemy.loadEnemy(window);
-            ammo.drawProjectile(window);
+
+            for (auto& proj : projectiles) {
+                proj.drawProjectile(window);
+            }
+            player.draw(window);
 
             window.display();
         }
