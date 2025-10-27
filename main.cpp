@@ -530,7 +530,7 @@ int main() {
             }
 
             int totalDamageThisFrame = 0;
-            for (auto& en : map.getEnemies()) {
+            for (const auto& en : map.getEnemies()) {
                 if (en.isAlive() && player.isAlive() && intersects(player.getBounds(), en.getBounds())) {
                     totalDamageThisFrame += en.getContactDamage();
                 }
