@@ -140,6 +140,7 @@ class Player {
     bool facingRight = true;
     sf::Texture& texture;
     sf::Sprite sprite;
+    sf::RectangleShape damageOverlay;
 
 public:
     Player(const std::string& n, sf::Texture& tex):
@@ -154,10 +155,11 @@ public:
     isJumping{false},
     texture {tex},
     sprite{texture}
-    {
+    {   damageOverlay.setSize(sf::Vector2f(1920.f, 1080.f));
+        damageOverlay.setFillColor(sf::Color(255, 0, 0, 0));
         sprite.setPosition(sf::Vector2f(posX, posY));
         sprite.setOrigin(sf::Vector2f(static_cast<float>(texture.getSize().x) / 2.f, static_cast<float>(texture.getSize().y)));
-        sprite.scale(sf::Vector2f(.7f, .7f));
+        sprite.scale(sf::Vector2f(.5f, .5f));
         std::cout<<"Constructor Player \n";
     }
 
@@ -176,13 +178,13 @@ public:
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A)) {
             posX -= speed * deltaTime;
             facingRight = false;
-            sprite.setScale(sf::Vector2f(-.7f, .7f));
+            sprite.setScale(sf::Vector2f(-.5f, .5f));
         }
 
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D)) {
             posX += speed * deltaTime;
             facingRight = true;
-            sprite.setScale(sf::Vector2f(.7f, .7f));
+            sprite.setScale(sf::Vector2f(.5f, .5f));
         }
 
         velocity += gravity * deltaTime;
@@ -206,6 +208,11 @@ public:
     }
 
     void draw(sf::RenderWindow& window) const{
+        sf::RectangleShape healthbar(sf::Vector2f(100.f, 10.f));
+        healthbar.setPosition(sf::Vector2f(posX - 50.f, posY - 250.f));
+        healthbar.setFillColor(sf::Color::Green);
+        healthbar.setSize(sf::Vector2f(static_cast<float>(health), 10.f));
+        window.draw(healthbar);
         window.draw(sprite);
     }
 
@@ -234,6 +241,22 @@ public:
         else {
             std::cout << "Player ul a primit " << damageAmount << " dmg, ramanand cu " << health << " viata \n";
         }
+    }
+
+    void resetDamageEffect() {
+        damageOverlay.setFillColor(sf::Color(255, 0, 0, 0));
+    }
+
+    void alphaDamageEffect(int alpha) {
+        damageOverlay.setFillColor(sf::Color(255, 0, 0, alpha));
+    }
+
+    void drawDamageEffect(sf::RenderWindow& window) const{
+        const sf::View currentView = window.getView();
+
+        window.setView(window.getDefaultView());
+        window.draw(damageOverlay);
+        window.setView(currentView);
     }
 
     sf::FloatRect getBounds () const {
@@ -398,10 +421,15 @@ bool intersects(const sf::FloatRect& rect1, const sf::FloatRect& rect2) {
     return rect1.findIntersection(rect2).has_value();
 }
 
+int randomInt(int min, int max) {
+    static std::mt19937 gen(std::random_device{}());
+    return std::uniform_int_distribution(min, max)(gen);
+}
+
 int main() {
 
     sf::Texture projectileTex;
-    if (projectileTex.loadFromFile("assets/textures/projectile.png"))
+    if (!projectileTex.loadFromFile("assets/textures/projectile.png"))
         std::cout << "Eroare la incarcarea texturei pentru Projectile";
 
     sf::Texture texture;
@@ -428,14 +456,15 @@ int main() {
     if (!textureE.loadFromFile("assets/textures/samustleft.png"))
         std::cout << "Eroare la deschidere fisier \n";
 
-    Weapon fists ("fists", "melee", 20, projectileTex, 1000);
+    Weapon fists ("fists", "melee", 10, projectileTex, 1000);
 
-    Enemy enemy("Metroid", fists, 300.0f, 10.0f, textureE);
-    Enemy enemy0 ("BigEye", fists, 760.f, 293.f, textureE);
-    Enemy enemy1 ("Wings", fists, 1700.f, 200.f, textureE);
-    map.addEnemy(enemy);
-    map.addEnemy(enemy0);
-    map.addEnemy(enemy1);
+    std::vector<std::string> enemyNames = {"Metroid", "BigEye", "Widngs", "Brutus"};
+    for (const auto& name : enemyNames) {
+        map.addEnemy({name, fists,
+                      static_cast<float>(randomInt(100, 1920)),
+                      static_cast<float>(randomInt(100, 400)),
+                      textureE});
+    }
 
     ///////////////////////////////////////////////////////////////////////////
         /// Pentru date citite din fișier, NU folosiți tastatura.txt. Creați-vă voi
@@ -458,12 +487,8 @@ int main() {
         // window.create(sf::VideoMode({1920, 1080}), "Hunter Fusion", sf::Style::Default);
         ///////////////////////////////////////////////////////////////////////////
         std::cout << "Fereastra a fost creată\n";
-        ///////////////////////////////////////////////////////////////////////////
-        /// NOTE: mandatory use one of vsync or FPS limit (not both)            ///
-        /// This is needed so we do not burn the GPU                            ///
-        window.setVerticalSyncEnabled(true);                                    ///
-        /// window.setFramerateLimit(60);                                       ///
-        ///////////////////////////////////////////////////////////////////////////
+
+        window.setVerticalSyncEnabled(true);
         sf::View camera(sf::FloatRect(sf::Vector2f(0.f, 0.f), sf::Vector2f(static_cast<float>(width), static_cast<float>(height))));
         window.setView(camera);
 
@@ -471,6 +496,8 @@ int main() {
 
         sf::Clock clock;
         sf::Clock playerDamageCooldown;
+        sf::Clock damageClock;
+        bool showDamageEffect = false;
 
         std::vector<Projectile> projectiles;
 
@@ -538,7 +565,22 @@ int main() {
 
             if (totalDamageThisFrame > 0 && playerDamageCooldown.getElapsedTime().asSeconds() > 1.f) {
                 player.takeDamage(totalDamageThisFrame);
+                showDamageEffect = true;
+                damageClock.restart();
                 playerDamageCooldown.restart();
+            }
+
+            if (showDamageEffect) {
+                float elapsed = damageClock.getElapsedTime().asSeconds();
+
+                if (elapsed < 0.3f) {
+                    int alpha = static_cast<int>(120 * (1.f - elapsed / 0.3f));
+                    player.alphaDamageEffect(alpha);
+                }
+                else {
+                    showDamageEffect = false;
+                    player.alphaDamageEffect(0);
+                }
             }
 
             std::erase_if(projectiles, [&](const Projectile& p) {
@@ -551,6 +593,14 @@ int main() {
                 }
                 return shouldRemove || p.isOutOfBounds(1920.f, 1080.f);
             });
+
+            for (const auto& en : map.getEnemies()) {
+                if (!en.isAlive())
+                    map.addEnemy({"Metroid", fists,
+                        static_cast<float> (randomInt(100, 1920)),
+                        static_cast<float> (randomInt(100, 400)),
+                        textureE});
+            }
 
             std::erase_if(map.getEnemies(), [](const Enemy& en) {
                 return !en.isAlive();
@@ -577,6 +627,7 @@ int main() {
                     en.loadEnemy(window);
             }
 
+            player.drawDamageEffect(window);
             window.display();
         }
 
