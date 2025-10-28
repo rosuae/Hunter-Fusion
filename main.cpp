@@ -579,7 +579,7 @@ int main() {
                 }
                 else {
                     showDamageEffect = false;
-                    player.alphaDamageEffect(0);
+                    player.resetDamageEffect();
                 }
             }
 
