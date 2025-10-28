@@ -4,6 +4,7 @@
 #include <vector>
 #include <cmath>
 #include <random>
+#include <fstream>
 #include <SFML/Graphics.hpp>
 
 class Projectile {
@@ -526,37 +527,57 @@ int randomInt(int min, int max) {
 
 int main() {
 
-    sf::Texture projectileTex;
-    if (!projectileTex.loadFromFile("assets/textures/projectile.png"))
-        std::cout << "Eroare la incarcarea texturei pentru Projectile";
+    std::ifstream fin("date.txt");
 
-    sf::Texture texture;
-    if (!texture.loadFromFile("assets/textures/samustest.png"))
-        std::cout << "Eroare la deschidere fisier \n";
+    if (!fin.is_open()) {
+        std::cout << "Eroare la deschiderea fisierului date.txt\n";
+        return 1;
+    }
+
+    std::string projectileTexPath, playerTexPath, backgroundPath, enemyTexPath;
+    fin >> projectileTexPath >> playerTexPath >> backgroundPath >> enemyTexPath;
+
+    sf::Texture projectileTex;
+    if (!projectileTex.loadFromFile(projectileTexPath))
+        std::cout << "Eroare la incarcarea texturii pentru Projectile: " << projectileTexPath << "\n";
+
+    sf::Texture playerTex;
+    if (!playerTex.loadFromFile(playerTexPath))
+        std::cout << "Eroare la deschidere fisier: " << playerTexPath << "\n";
 
     sf::Texture backround;
-    if (!backround.loadFromFile("assets/textures/map/background.bmp"))
-        std::cout << "Eroare la deschidere fisier background";
+    if (!backround.loadFromFile(backgroundPath))
+        std::cout << "Eroare la deschidere fisier background: " << backgroundPath << "\n";
 
-    sf::Texture textureE;
-    if (!textureE.loadFromFile("assets/textures/samustleft.png"))
-        std::cout << "Eroare la deschidere fisier \n";
+    sf::Texture enemyTex;
+    if (!enemyTex.loadFromFile(enemyTexPath))
+        std::cout << "Eroare la deschidere fisier: " << enemyTexPath << "\n";
 
     sf::Sprite bck(backround);
     bck.setPosition(sf::Vector2f(-100.f, -200.f));
     bck.scale(sf::Vector2f(8.f, 8.f));
 
-    Player player("Samus", texture);
-    Weapon PlasmaG("PlasmaGun", "PlasmaOrb", 25, projectileTex,120);
-    Map map("Map", 1000, 1000, player);
-    Weapon fists ("fists", "melee", 10, projectileTex, 1000);
+    std::string playerName, playerWeapon, projectileName, mapName, enemyWeapon, enemyProj;
+    fin >> playerName >> playerWeapon >> projectileName >> mapName >> enemyWeapon >> enemyProj;
 
-    std::vector<std::string> enemyNames = {"Metroid", "BigEye", "Widngs", "Brutus"};
+    Player player(playerName, playerTex);
+    Weapon PlasmaG(playerWeapon, projectileName, 25, projectileTex, 120);
+    Map map(mapName, 1000, 1000, player);
+    Weapon fists(enemyWeapon, enemyProj, 10, projectileTex, 1000);
+
+    std::vector<std::string> enemyNames;
+    std::string enemyName;
+    while (fin >> enemyName) {
+        enemyNames.push_back(enemyName);
+    }
+
+    fin.close();
+
     for (const auto& name : enemyNames) {
         map.addEnemy({name, fists,
                       static_cast<float>(randomInt(100, 1920)),
                       static_cast<float>(randomInt(100, 400)),
-                      textureE});
+                      enemyTex});
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -675,7 +696,7 @@ int main() {
                     map.addEnemy({"Metroid", fists,
                         static_cast<float> (randomInt(100, 1920)),
                         static_cast<float> (randomInt(100, 400)),
-                        textureE});
+                        enemyTex});
             }
 
             std::erase_if(map.getEnemies(), [](const Enemy& en) {
