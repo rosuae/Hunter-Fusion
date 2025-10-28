@@ -13,16 +13,9 @@ class Projectile {
     sf::Vector2f direction;
     float speed;
     sf::Sprite sprite;
+    bool active;
 
-public:
-    Projectile(const std::string& n, int d, const sf::Texture& tex, sf::Vector2f playerPos, sf::Vector2f targetPos):
-    nume{n},
-    dmg{d},
-    position{playerPos},
-    speed{1000.f},
-    sprite{tex}
-    {
-
+    void calculateDirection(sf::Vector2f playerPos, sf::Vector2f targetPos) {
         float dirX = targetPos.x - playerPos.x;
         float dirY = targetPos.y - playerPos.y;
         float length = std::sqrt(dirX * dirX + dirY * dirY);
@@ -33,9 +26,31 @@ public:
         } else {
             direction = sf::Vector2f(1.f, 0.f);
         }
+    }
 
-        sprite.setOrigin(sf::Vector2f(static_cast<float>(tex.getSize().x), static_cast<float>(tex.getSize().y) / 2.f));
+    void setupSprite(const sf::Texture& tex) {
+        sprite.setOrigin(sf::Vector2f(static_cast<float>(tex.getSize().x),
+                                      static_cast<float>(tex.getSize().y) / 2.f));
         sprite.scale(sf::Vector2f(1.5f, 1.5f));
+    }
+
+    void updatePosition(float deltaTime) {
+        position.x += direction.x * speed * deltaTime;
+        position.y += direction.y * speed * deltaTime;
+        sprite.setPosition(position);
+    }
+
+public:
+    Projectile(const std::string& n, int d, const sf::Texture& tex, sf::Vector2f playerPos, sf::Vector2f targetPos):
+    nume{n},
+    dmg{d},
+    position{playerPos},
+    speed{1000.f},
+    sprite{tex},
+    active{true}
+    {
+        calculateDirection(playerPos, targetPos);
+        setupSprite(tex);
         std::cout<<"Constructor proiectil \n";
     }
 
@@ -45,11 +60,15 @@ public:
     }
 
     void projectileTravel (float deltaTime) {
+        updatePosition(deltaTime);
+    }
 
-        position.x += direction.x * speed * deltaTime;
-        position.y += direction.y * speed * deltaTime;
+    void deactivate() {
+        active = false;
+    }
 
-        sprite.setPosition(position);
+    bool isActive() const {
+        return active;
     }
 
     void drawProjectile(sf::RenderWindow& window) const{
@@ -67,6 +86,10 @@ public:
     bool isOutOfBounds(float maxX, float maxY) const {
         return position.x < -100 || position.x > maxX + 100 || position.y < -100 || position.y > maxY + 100;
     }
+
+    bool shouldBeRemoved(float maxX, float maxY) const {
+        return !active || isOutOfBounds(maxX, maxY);
+    }
 };
 
 class Weapon {
@@ -77,6 +100,22 @@ class Weapon {
     int ammoamount;
     float firerate;
     int reloada;
+    std::vector<Projectile> projectiles;
+
+    [[nodiscard]]int calculateReloadAmount() const {
+        int needed = 30 - reloada;
+        return std::min(needed, ammoamount);
+    }
+
+    [[nodiscard]]bool hasAmmoToReload() const {
+        return ammoamount > 0 && reloada < 30;
+    }
+
+    void transferAmmo(int amount) {
+        reloada += amount;
+        ammoamount -= amount;
+    }
+
 public:
     Weapon(const std::string& n, const std::string& projName, int projDmg, sf::Texture& tex, int a):
     nume{n},
@@ -89,37 +128,20 @@ public:
         std::cout<<"Constructor weapon \n";
     }
 
-    Projectile createProjectile(sf::Vector2f playerPos, sf::Vector2f targetPos) {
-        return {projectileName, projectileDmg, *projectileTex, playerPos, targetPos};
-    }
-
     friend std::ostream& operator<< (std::ostream& out, const Weapon& w) {
         out << " Numar total munitie: " << w.ammoamount << " Firerate: " << w.firerate << " Nume arma: " << w.nume << " Munitie per reload: " << w.reloada;
         return out;
     }
 
     void reload() {
-        if (ammoamount > 0) {
-            int needed = 30 - reloada;
-            int toReload = std::min(needed, ammoamount);
-            reloada += toReload;
-            ammoamount -= toReload;
+        if (hasAmmoToReload()) {
+            int toReload = calculateReloadAmount();
+            transferAmmo(toReload);
             std::cout << "\n Reloaded:  " << toReload << "\n";
             std::cout << "Ammo Amount: " << ammoamount << "\n";
         }
         else
             std::cout << "Out of ammo \n";
-    }
-
-    void use() {
-        std::cout << "Before use: " << reloada << "\n";
-        if (reloada > 0){
-            reloada -= 1;
-            std::cout << "Fire! \n";
-        }
-        else {
-            std::cout << "press r to reload";
-        }
     }
 
     [[nodiscard]]int getDmg() const{
@@ -129,6 +151,38 @@ public:
     [[nodiscard]]bool canFire() const {
         return reloada > 0;
     }
+
+    void updateProjectiles(float deltaTime) {
+        for (auto& proj : projectiles) {
+            if (proj.isActive()) {
+                proj.projectileTravel(deltaTime);
+            }
+        }
+
+        std::erase_if(projectiles, [](const Projectile& p) {
+            return p.shouldBeRemoved(1920.f, 1080.f);
+        });
+    }
+
+    std::vector<Projectile>& getProjectiles() {
+        return projectiles;
+    }
+
+    void fire(sf::Vector2f playerPos, sf::Vector2f targetPos) {
+        if (canFire()) {
+            projectiles.emplace_back(projectileName, projectileDmg, *projectileTex, playerPos, targetPos);
+            reloada -= 1;
+            std::cout << "Fire! \n";
+        } else {
+            std::cout << "press r to reload\n";
+        }
+    }
+
+    void drawProjectiles(sf::RenderWindow& window) const {
+        for (const auto& proj : projectiles) {
+            proj.drawProjectile(window);
+        }
+    }
 };
 
 class Player {
@@ -136,11 +190,52 @@ class Player {
     int health;
     float speed;
     float posX, posY, gravity, velocity, maxJump;
-    bool isJumping, isalive = true;
-    bool facingRight = true;
+    bool isJumping, isalive = true, isHit_ = false, facingRight = true;
+
     sf::Texture& texture;
     sf::Sprite sprite;
     sf::RectangleShape damageOverlay;
+
+    void applyGravity(float deltaTime) {
+        velocity += gravity * deltaTime;
+        posY += velocity * deltaTime;
+    }
+
+    void handleGroundCollision() {
+        if (posY >= 1000.0f) {
+            posY = 1000.f;
+            velocity = 0.f;
+            isJumping = false;
+        }
+    }
+
+    void handleScreenBarriers() {
+        if (posX < 0.0f)
+            posX = 1920.0f;
+        if (posX > 1920.0f)
+            posX = 0.0f;
+        if (posY < 0.0f)
+            posY = 0.0f;
+    }
+
+    float calculateWeaponOffsetX() const {
+        return facingRight ? 30.f : -30.f;
+    }
+
+    void updateSpriteDirection() {
+        if (facingRight)
+            sprite.setScale(sf::Vector2f(.5f, .5f));
+        else
+            sprite.setScale(sf::Vector2f(-.5f, .5f));
+    }
+
+    void checkDeath() {
+        if (health <= 0) {
+            health = 0;
+            isalive = false;
+            std::cout << "GAME OVER \n";
+        }
+    }
 
 public:
     Player(const std::string& n, sf::Texture& tex):
@@ -157,6 +252,7 @@ public:
     sprite{texture}
     {   damageOverlay.setSize(sf::Vector2f(1920.f, 1080.f));
         damageOverlay.setFillColor(sf::Color(255, 0, 0, 0));
+
         sprite.setPosition(sf::Vector2f(posX, posY));
         sprite.setOrigin(sf::Vector2f(static_cast<float>(texture.getSize().x) / 2.f, static_cast<float>(texture.getSize().y)));
         sprite.scale(sf::Vector2f(.5f, .5f));
@@ -166,7 +262,8 @@ public:
     void PlayerMovement(float deltaTime) {
 
 
-        if ((sf::Keyboard::isKeyPressed(sf::Keyboard::Key::W) || sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Space)) && !isJumping) {
+        if ((sf::Keyboard::isKeyPressed(sf::Keyboard::Key::W) ||
+            sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Space)) && !isJumping) {
             velocity = maxJump;
             isJumping = true;
         }
@@ -178,40 +275,28 @@ public:
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A)) {
             posX -= speed * deltaTime;
             facingRight = false;
-            sprite.setScale(sf::Vector2f(-.5f, .5f));
         }
 
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D)) {
             posX += speed * deltaTime;
             facingRight = true;
-            sprite.setScale(sf::Vector2f(.5f, .5f));
         }
 
-        velocity += gravity * deltaTime;
-        posY += velocity * deltaTime;
+        applyGravity(deltaTime);
+        handleGroundCollision();
+        handleScreenBarriers();
+        updateSpriteDirection();
 
-        if (posX < 0.0f)
-            posX = 1920.0f;
-
-        if (posX > 1920.0f)
-                posX = 0.0f;
-
-        if (posY < 0.0f)
-            posY = 0.0f;
-
-        if (posY >= 1000.0f) {
-            posY = 1000.f;
-            velocity = 0.f;
-            isJumping = false;
-        }
         sprite.setPosition(sf::Vector2f(posX, posY));
     }
 
     void draw(sf::RenderWindow& window) const{
         sf::RectangleShape healthbar(sf::Vector2f(100.f, 10.f));
+
         healthbar.setPosition(sf::Vector2f(posX - 50.f, posY - 250.f));
         healthbar.setFillColor(sf::Color::Green);
         healthbar.setSize(sf::Vector2f(static_cast<float>(health), 10.f));
+
         window.draw(healthbar);
         window.draw(sprite);
     }
@@ -221,26 +306,26 @@ public:
     }
 
     sf::Vector2f getWeaponTipPos() const {
-        float offsetX = 30.f;
+        float offsetX = calculateWeaponOffsetX();
         float offsetY = -180.f;
-
-        if (!facingRight) {
-            offsetX = -offsetX;
-        }
 
         return {posX + offsetX, posY + offsetY};
     }
 
     void takeDamage (int damageAmount) {
         health -= damageAmount;
-        if (health <= 0) {
-            health = 0;
-            isalive = false;
-            std::cout << "GAME OVER \n";
-        }
-        else {
+        checkDeath();
+        if (isalive) {
             std::cout << "Player ul a primit " << damageAmount << " dmg, ramanand cu " << health << " viata \n";
         }
+    }
+
+    bool isHit () const{
+        return isHit_;
+    }
+
+    void setHit (const bool ok) {
+        isHit_ = ok;
     }
 
     void resetDamageEffect() {
@@ -283,13 +368,40 @@ class Enemy {
     sf::Texture& texture;
     sf::Sprite sprite;
 
+    void moveTowardsPlayer(sf::Vector2f playerPos, float deltaTime) {
+        if (posX >= playerPos.x) {
+            posX -= speed * deltaTime;
+        }
+        if (posX <= playerPos.x) {
+            posX += speed * deltaTime;
+        }
+    }
+
+    void applyGravity(float deltaTime) {
+        posY += gravity * deltaTime;
+        if (posY >= 1000.f)
+            posY = 1000.f;
+    }
+
+    void updateSpritePosition() {
+        sprite.setPosition(sf::Vector2f(posX, posY));
+    }
+
+    void checkDeath() {
+        if (health <= 0) {
+            health = 0;
+            alive = false;
+            std::cout << "inamic invins \n";
+        }
+    }
+
 public:
     Enemy(const std::string& n, const Weapon& f, float posx_, float posy_, sf::Texture& tex):
     nume{n},
     fists{f},
     posX{posx_},
     posY(posy_),
-    health{250},
+    health{50},
     gravity{3000.f},
     speed{300.f},
     alive{true},
@@ -334,36 +446,21 @@ public:
     ~Enemy() = default;
 
     void enemyMovement(sf::Vector2f playerpos, float deltaTime) {
-
-        if (posX >= playerpos.x) {
-            posX -= speed * deltaTime;
-        }
-        if (posX <= playerpos.x) {
-            posX += speed * deltaTime;
-        }
-
-        posY += gravity * deltaTime;
-
-        if (posY >= 1000.f)
-            posY = 1000.f;
-
-        sprite.setPosition(sf::Vector2f(posX, posY));
-    }
-
-    void loadEnemy(sf::RenderWindow& window) const{
-            window.draw(sprite);
+        moveTowardsPlayer(playerpos, deltaTime);
+        applyGravity(deltaTime);
+        updateSpritePosition();
     }
 
     void takeDamage(int damageAmount) {
         health -= damageAmount;
-        if (health <= 0) {
-            health = 0;
-            alive = false;
-            std::cout << "inamic invins \n";
-        }
-        else {
+        checkDeath();
+        if (alive) {
             std::cout << "a primit " << damageAmount << " dmg, mai are " << health << "\n";
         }
+    }
+
+    void loadEnemy(sf::RenderWindow& window) const{
+            window.draw(sprite);
     }
 
     sf::FloatRect getBounds() const{
@@ -391,6 +488,7 @@ class Map {
     std::vector<Enemy> enemies;
 
 public:
+
     Map(const std::string& n, int sizex_, int sizey_, Player& p):
     MapNume{n},
     sizeX{sizex_},
@@ -433,29 +531,24 @@ int main() {
         std::cout << "Eroare la incarcarea texturei pentru Projectile";
 
     sf::Texture texture;
-        if (!texture.loadFromFile("assets/textures/samustest.png"))
-            std::cout << "Eroare la deschidere fisier \n";
-
-    Player player("Samus", texture);
-
-    Weapon PlasmaG("PlasmaGun", "PlasmaOrb", 25, projectileTex,120);
+    if (!texture.loadFromFile("assets/textures/samustest.png"))
+        std::cout << "Eroare la deschidere fisier \n";
 
     sf::Texture backround;
-    if (!backround.loadFromFile("assets/textures/map/background.png")){
+    if (!backround.loadFromFile("assets/textures/map/background.bmp"))
         std::cout << "Eroare la deschidere fisier background";
-    }
-
-    sf::Sprite bck(backround);
-    bck.setPosition(sf::Vector2f(0.f, 0.f));
-    bck.scale(sf::Vector2f(1.66f, 2.f));
-
-
-    Map map("Map", 1000, 1000, player);
 
     sf::Texture textureE;
     if (!textureE.loadFromFile("assets/textures/samustleft.png"))
         std::cout << "Eroare la deschidere fisier \n";
 
+    sf::Sprite bck(backround);
+    bck.setPosition(sf::Vector2f(-100.f, -200.f));
+    bck.scale(sf::Vector2f(8.f, 8.f));
+
+    Player player("Samus", texture);
+    Weapon PlasmaG("PlasmaGun", "PlasmaOrb", 25, projectileTex,120);
+    Map map("Map", 1000, 1000, player);
     Weapon fists ("fists", "melee", 10, projectileTex, 1000);
 
     std::vector<std::string> enemyNames = {"Metroid", "BigEye", "Widngs", "Brutus"};
@@ -484,22 +577,17 @@ int main() {
         window.create(sf::VideoMode({width, height}, desktop.bitsPerPixel), "Hunter Fusion", sf::Style::Default, sf::State::Fullscreen);
         ///////////////////////////////////////////////////////////////////////////
         /// NOTE: sync with env variable APP_WINDOW from .github/workflows/cmake.yml:31
-        // window.create(sf::VideoMode({1920, 1080}), "Hunter Fusion", sf::Style::Default);
         ///////////////////////////////////////////////////////////////////////////
         std::cout << "Fereastra a fost creată\n";
-
         window.setVerticalSyncEnabled(true);
+
         sf::View camera(sf::FloatRect(sf::Vector2f(0.f, 0.f), sf::Vector2f(static_cast<float>(width), static_cast<float>(height))));
         window.setView(camera);
-
         sf::Vector2f cameraPos = player.getPos();
 
         sf::Clock clock;
         sf::Clock playerDamageCooldown;
         sf::Clock damageClock;
-        bool showDamageEffect = false;
-
-        std::vector<Projectile> projectiles;
 
         while(window.isOpen()) {
             float deltaTime = clock.restart().asSeconds();
@@ -525,8 +613,7 @@ int main() {
                         sf::Vector2i mousePixel = sf::Mouse::getPosition(window);
                         sf::Vector2f mouseWorld = window.mapPixelToCoords(mousePixel);
 
-                        projectiles.push_back(PlasmaG.createProjectile(player.getWeaponTipPos(), mouseWorld));
-                        PlasmaG.use();
+                        PlasmaG.fire(player.getWeaponTipPos(), mouseWorld);
                     }
                 }
             }
@@ -541,16 +628,15 @@ int main() {
                 }
             }
 
-            for (auto& proj : projectiles) {
-                proj.projectileTravel(deltaTime);
-            }
+            PlasmaG.updateProjectiles(deltaTime);
 
-            std::vector<Projectile*> projectilesToRemove;
-            for (auto& proj : projectiles) {
+            for (auto& proj : PlasmaG.getProjectiles()) {
+                if (!proj.isActive()) continue;
+
                 for (auto& en : map.getEnemies()) {
                     if (en.isAlive() && intersects(proj.getBounds(), en.getBounds())) {
                         en.takeDamage(proj.getDamage());
-                        projectilesToRemove.push_back(&proj);
+                        proj.deactivate();
                         break;
                     }
                 }
@@ -565,12 +651,12 @@ int main() {
 
             if (totalDamageThisFrame > 0 && playerDamageCooldown.getElapsedTime().asSeconds() > 1.f) {
                 player.takeDamage(totalDamageThisFrame);
-                showDamageEffect = true;
+                player.setHit(true);
                 damageClock.restart();
                 playerDamageCooldown.restart();
             }
 
-            if (showDamageEffect) {
+            if (player.isHit()) {
                 float elapsed = damageClock.getElapsedTime().asSeconds();
 
                 if (elapsed < 0.3f) {
@@ -578,21 +664,11 @@ int main() {
                     player.alphaDamageEffect(alpha);
                 }
                 else {
-                    showDamageEffect = false;
+                    player.setHit(false);
                     player.resetDamageEffect();
                 }
             }
 
-            std::erase_if(projectiles, [&](const Projectile& p) {
-                bool shouldRemove = false;
-                for (const auto* toRemove : projectilesToRemove) {
-                    if (&p == toRemove) {
-                        shouldRemove = true;
-                        break;
-                    }
-                }
-                return shouldRemove || p.isOutOfBounds(1920.f, 1080.f);
-            });
 
             for (const auto& en : map.getEnemies()) {
                 if (!en.isAlive())
@@ -612,12 +688,10 @@ int main() {
             camera.setCenter(cameraPos);
             window.setView(camera);
 
-            window.clear(sf::Color(0,20,20));
+            window.clear(sf::Color::Black);
             window.draw(bck);
 
-            for (const auto& proj : projectiles) {
-                proj.drawProjectile(window);
-            }
+            PlasmaG.drawProjectiles(window);
 
             if (player.isAlive()) {
                 player.draw(window);
@@ -630,7 +704,5 @@ int main() {
             player.drawDamageEffect(window);
             window.display();
         }
-
-        std::cout << "Programul a terminat executia\n";
         return 0;
     }
