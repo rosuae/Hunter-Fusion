@@ -5,7 +5,9 @@
 #include <cmath>
 #include <random>
 #include <fstream>
+#include <list>
 #include <SFML/Graphics.hpp>
+#include <SFML/Audio.hpp>
 
 class Projectile {
     std::string nume;
@@ -134,10 +136,14 @@ public:
         return out;
     }
 
-    void reload() {
+    void reload(std::list<sf::Sound>& sounds, const sf::SoundBuffer& buffer) {
         if (hasAmmoToReload()) {
             int toReload = calculateReloadAmount();
             transferAmmo(toReload);
+
+            sounds.emplace_back(buffer);
+            sounds.back().play();
+
             std::cout << "\n Reloaded:  " << toReload << "\n";
             std::cout << "Ammo Amount: " << ammoamount << "\n";
         }
@@ -169,10 +175,14 @@ public:
         return projectiles;
     }
 
-    void fire(sf::Vector2f playerPos, sf::Vector2f targetPos) {
+    void fire(sf::Vector2f playerPos, sf::Vector2f targetPos, std::list<sf::Sound>& sounds, const sf::SoundBuffer& buffer) {
         if (canFire()) {
             projectiles.emplace_back(projectileName, projectileDmg, *projectileTex, playerPos, targetPos);
             reloada -= 1;
+
+            sounds.emplace_back(buffer);
+            sounds.back().play();
+
             std::cout << "Fire! \n";
         } else {
             std::cout << "press r to reload\n";
@@ -260,13 +270,15 @@ public:
         std::cout<<"Constructor Player \n";
     }
 
-    void PlayerMovement(float deltaTime) {
-
+    void PlayerMovement(float deltaTime, std::list<sf::Sound>& sounds, const sf::SoundBuffer& buffer) {
 
         if ((sf::Keyboard::isKeyPressed(sf::Keyboard::Key::W) ||
             sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Space)) && !isJumping) {
             velocity = maxJump;
             isJumping = true;
+
+            sounds.emplace_back(buffer);
+            sounds.back().play();
         }
 
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::S)) {
@@ -388,9 +400,13 @@ class Enemy {
         sprite.setPosition(sf::Vector2f(posX, posY));
     }
 
-    void checkDeath() {
+    void checkDeath(std::list<sf::Sound>& sounds, const sf::SoundBuffer& buffer) {
         if (health <= 0) {
             health = 0;
+
+            sounds.emplace_back(buffer);
+            sounds.back().play();
+
             alive = false;
             std::cout << "inamic invins \n";
         }
@@ -402,7 +418,7 @@ public:
     fists{f},
     posX{posx_},
     posY(posy_),
-    health{50},
+    health{100},
     gravity{3000.f},
     speed{300.f},
     alive{true},
@@ -430,6 +446,10 @@ public:
     }
 
     Enemy& operator= (const Enemy& other) {
+        if (this == &other) {
+            return *this;
+        }
+
         nume = other.nume;
         fists = other.fists;
         posX = other.posX;
@@ -452,9 +472,13 @@ public:
         updateSpritePosition();
     }
 
-    void takeDamage(int damageAmount) {
+    void takeDamage(int damageAmount, std::list<sf::Sound>& sounds, const sf::SoundBuffer& buffer, const sf::SoundBuffer& buffer1) {
         health -= damageAmount;
-        checkDeath();
+
+        sounds.emplace_back(buffer);
+        sounds.back().play();
+
+        checkDeath(sounds, buffer1);
         if (alive) {
             std::cout << "a primit " << damageAmount << " dmg, mai are " << health << "\n";
         }
@@ -596,6 +620,33 @@ int main() {
         window.setView(camera);
         sf::Vector2f cameraPos = player.getPos();
 
+    sf::SoundBuffer shootBuffer;
+    if (!shootBuffer.loadFromFile("assets/sound/shoot.wav")) {
+        std::cout << "Eroare la incarcarea sunetului\n";
+    }
+
+    sf::SoundBuffer jumpBuffer;
+    if (!jumpBuffer.loadFromFile("assets/sound/jump.wav")) {
+        std::cout << "Eroare la incarcarea sunetului\n";
+    }
+
+    sf::SoundBuffer reloadBuffer;
+    if (!reloadBuffer.loadFromFile("assets/sound/reload.wav")) {
+        std::cout << "Eroare la incarcarea sunetului\n";
+    }
+
+    sf::SoundBuffer enemyDeathBuffer;
+    if (!enemyDeathBuffer.loadFromFile("assets/sound/enemydeath.wav")) {
+        std::cout << "Eroare la incarcarea sunetului\n";
+    }
+
+    sf::SoundBuffer enemyDamageBuffer;
+    if (!enemyDamageBuffer.loadFromFile("assets/sound/enemydamage.wav")) {
+        std::cout << "Eroare la incarcarea sunetului\n";
+    }
+
+    std::list<sf::Sound> playingSounds;
+
         sf::Clock clock;
         sf::Clock playerDamageCooldown;
         sf::Clock damageClock;
@@ -615,7 +666,7 @@ int main() {
                     }
 
                     if (keyPress->scancode == sf::Keyboard::Scancode::R) {
-                        PlasmaG.reload();
+                        PlasmaG.reload(playingSounds, reloadBuffer);
                     }
                 }
 
@@ -624,13 +675,13 @@ int main() {
                         sf::Vector2i mousePixel = sf::Mouse::getPosition(window);
                         sf::Vector2f mouseWorld = window.mapPixelToCoords(mousePixel);
 
-                        PlasmaG.fire(player.getWeaponTipPos(), mouseWorld);
+                        PlasmaG.fire(player.getWeaponTipPos(), mouseWorld, playingSounds, shootBuffer);
                     }
                 }
             }
 
             if (player.isAlive()) {
-                player.PlayerMovement(deltaTime);
+                player.PlayerMovement(deltaTime, playingSounds, jumpBuffer);
             }
 
             for (auto& en : map.getEnemies()) {
@@ -646,7 +697,7 @@ int main() {
 
                 for (auto& en : map.getEnemies()) {
                     if (en.isAlive() && intersects(proj.getBounds(), en.getBounds())) {
-                        en.takeDamage(proj.getDamage());
+                        en.takeDamage(proj.getDamage(), playingSounds, enemyDamageBuffer, enemyDeathBuffer);
                         proj.deactivate();
                         break;
                     }
@@ -718,6 +769,11 @@ int main() {
             }
 
             player.drawDamageEffect(window);
+
+            playingSounds.remove_if([](const sf::Sound& Sound_) {
+            return Sound_.getStatus() == sf::Sound::Status::Stopped;
+            });
+
             window.display();
         }
         return 0;
