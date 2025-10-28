@@ -4,24 +4,18 @@ Metroid: Hunter Fusion este un platformer realizat în C++, cu structură pe cam
 
 Gameplay-ul se bazează pe controlul unui personaj care poate merge, sări, trage proiectile și obține upgrade-uri precum dublu-salt sau dash. Structura de nivel este împărțită în camere conectate prin uși, iar deplasarea este limitată inițial de abilitățile jucătorului. Vor exista inamici cu comportament de bază (patrulare, urmărire, atac), proiectile, precum și bătălii cu boși ce utilizează atacuri scriptate. Sistemele implementate vor include coliziuni precise, "health system" și damage, spawn de entități și colectabile.
 
-### Important!
+## Controls:
+- `A,S,D` Movement.
+- `W / Space` Jump.
+- `Left-Click` Shoot.
+- `R` Reload.
+- `Escape` Exit Game.
 
-Aveți voie cu cod generat de modele de limbaj la care nu ați contribuit semnificativ doar dacă documentați riguros acest proces.
-Codul generat pus "ca să fie"/pe care nu îl înțelegeți se punctează doar pentru puncte bonus, doar în contextul
-în care oferă funcționalități ajutătoare și doar dacă are sens.
-
-Codul din proiect trebuie să poată fi ușor de înțeles și de modificat de către altcineva. Pentru detalii, veniți la ore.
-
-O cerință nu se consideră îndeplinită dacă este realizată doar prin cod generat.
-
-- **Fără cod de umplutură/fără sens!**
-- **Fără copy-paste!**
-- **Fără variabile globale!**
-- **Fără atribute publice!**
-- **Pentru T2 și T3, fără date în cod!** Datele vor fi citite din fișier, aveți exemple destule.
-- **Obligatoriu** fișiere cu date mai multe din care să citiți, obligatoriu cu biblioteci externe: fișiere (local sau server) sau baze de date
-- obligatoriu (TBD) să integrați cel puțin două biblioteci externe pe lângă cele pentru stocare
-
+## Assets:
+### Sprites:
+- *Player:* https://www.spriters-resource.com/browser_games/supermariobroscrossover/asset/177036/
+- *Enemies:* https://www.spriters-resource.com/snes/smetroid/asset/1725/
+- *Background* https://www.spriters-resource.com/snes/smetroid/asset/65181/
 ### Tema 0
 
 - [x] Nume proiect (poate fi schimbat ulterior)
@@ -42,7 +36,7 @@ O cerință nu se consideră îndeplinită dacă este realizată doar prin cod g
 - [x] scenariu de utilizare **cu sens** a claselor definite:
   - crearea de obiecte și apelarea tuturor funcțiilor membru publice în main
   - vor fi adăugate în fișierul `tastatura.txt` DOAR exemple de date de intrare de la tastatură (dacă există); dacă aveți nevoie de date din fișiere, creați alte fișiere separat
-- [ ] minim 50-55% din codul propriu să fie C++, `.gitattributes` configurat corect
+- [x] minim 50-55% din codul propriu să fie C++, `.gitattributes` configurat corect
 - [ ] tag de `git`: de exemplu `v0.1`
 - [ ] serviciu de integrare continuă (CI) cu **toate bifele**; exemplu: GitHub Actions
 - [ ] code review #1 2 proiecte

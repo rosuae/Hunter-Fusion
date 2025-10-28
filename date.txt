@@ -1,7 +1,7 @@
 assets/textures/projectile.png
 assets/textures/samustest.png
 assets/textures/map/background.bmp
-assets/textures/samustleft.png
+assets/textures/enemy.png
 Samus
 PlasmaGun
 PlasmaOrb

@@ -361,7 +361,7 @@ public:
 
 class Enemy {
     std::string nume;
-    Weapon fists;
+    Weapon* fists;
     float posX, posY;
     int health;
     float gravity, speed;
@@ -397,7 +397,7 @@ class Enemy {
     }
 
 public:
-    Enemy(const std::string& n, const Weapon& f, float posx_, float posy_, sf::Texture& tex):
+    Enemy(const std::string& n, Weapon* f, float posx_, float posy_, sf::Texture& tex):
     nume{n},
     fists{f},
     posX{posx_},
@@ -469,7 +469,7 @@ public:
     }
 
     int getContactDamage() const {
-        return fists.getDmg();
+        return fists->getDmg();
     }
 
     bool isAlive() const{
@@ -477,7 +477,7 @@ public:
     }
 
     friend std::ostream& operator<< (std::ostream& out, const Enemy& e) {
-        out << " Nume inamic: " << e.nume << " Pos X: " << e.posX << " Pos Y: " << e.posY << " Viata inamic: " << e.health << " Viteza imanic: " << e.speed << " " << e.fists;
+        out << " Nume inamic: " << e.nume << " Pos X: " << e.posX << " Pos Y: " << e.posY << " Viata inamic: " << e.health << " Viteza imanic: " << e.speed << " " << *(e.fists);
         return out;
     }
 };
@@ -574,21 +574,11 @@ int main() {
     fin.close();
 
     for (const auto& name : enemyNames) {
-        map.addEnemy({name, fists,
+        map.addEnemy({name, &fists,
                       static_cast<float>(randomInt(100, 1920)),
                       static_cast<float>(randomInt(100, 400)),
                       enemyTex});
     }
-
-    ///////////////////////////////////////////////////////////////////////////
-        /// Pentru date citite din fișier, NU folosiți tastatura.txt. Creați-vă voi
-        /// alt fișier propriu cu ce alt nume doriți.
-        /// Exemplu:
-        /// std::ifstream fis("date.txt");
-        /// for(int i = 0; i < nr2; ++i)
-        ///     fis >> v2[i];
-        ///
-        ///////////////////////////////////////////////////////////////////////////
 
         sf::RenderWindow window;
         const sf::VideoMode desktop = sf::VideoMode::getDesktopMode();
@@ -690,18 +680,23 @@ int main() {
                 }
             }
 
-
+            int enemiesToSpawn = 0;
             for (const auto& en : map.getEnemies()) {
-                if (!en.isAlive())
-                    map.addEnemy({"Metroid", fists,
-                        static_cast<float> (randomInt(100, 1920)),
-                        static_cast<float> (randomInt(100, 400)),
-                        enemyTex});
+                if (!en.isAlive()) {
+                    enemiesToSpawn++;
+                }
             }
 
             std::erase_if(map.getEnemies(), [](const Enemy& en) {
                 return !en.isAlive();
             });
+
+            for (int i = 0; i < enemiesToSpawn; ++i) {
+                    map.addEnemy({"Metroid", &fists,
+                        static_cast<float> (randomInt(100, 1920)),
+                        static_cast<float> (randomInt(100, 400)),
+                        enemyTex});
+            }
 
             sf::Vector2f targetPos = player.getPos();
             cameraPos.x += (targetPos.x - cameraPos.x) * cameraSpeed * deltaTime;
