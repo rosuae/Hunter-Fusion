@@ -5,8 +5,10 @@ Metroid: Hunter Fusion este un platformer realizat în C++, cu structură pe cam
 Gameplay-ul se bazează pe controlul unui personaj care poate merge, sări, trage proiectile și obține upgrade-uri precum dublu-salt sau dash. Structura de nivel este împărțită în camere conectate prin uși, iar deplasarea este limitată inițial de abilitățile jucătorului. Vor exista inamici cu comportament de bază (patrulare, urmărire, atac), proiectile, precum și bătălii cu boși ce utilizează atacuri scriptate. Sistemele implementate vor include coliziuni precise, "health system" și damage, spawn de entități și colectabile.
 
 ## Controls:
-- `A,S,D` Movement.
+- `A,D` Move Left / Right.
+- `S` Fast fall.
 - `W / Space` Jump.
+- `Mouse` Aim.
 - `Left-Click` Shoot.
 - `R` Reload.
 - `Escape` Exit Game.

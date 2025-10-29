@@ -44,8 +44,8 @@ class Projectile {
     }
 
 public:
-    Projectile(const std::string& n, int d, const sf::Texture& tex, sf::Vector2f playerPos, sf::Vector2f targetPos):
-    nume{n},
+    Projectile(std::string n, int d, const sf::Texture& tex, sf::Vector2f playerPos, sf::Vector2f targetPos):
+    nume{std::move(n)},
     dmg{d},
     position{playerPos},
     speed{1000.f},
@@ -56,6 +56,8 @@ public:
         setupSprite(tex);
         std::cout<<"Constructor proiectil \n";
     }
+
+    ~Projectile() { std::cout << "S a apelat destructor projectile \n";}
 
     friend std::ostream& operator<< (std::ostream& out, const Projectile& p) {
         out << " Nume munitie: " << p.nume << " " << "DMG: "<< p.dmg << "\n";
@@ -120,9 +122,9 @@ class Weapon {
     }
 
 public:
-    Weapon(const std::string& n, const std::string& projName, int projDmg, sf::Texture& tex, int a):
-    nume{n},
-    projectileName{projName},
+    Weapon(std::string n, std::string projName, int projDmg, sf::Texture& tex, int a):
+    nume{std::move (n)},
+    projectileName{std::move(projName)},
     projectileDmg{projDmg},
     projectileTex{&tex},
     ammoamount{a},
@@ -130,6 +132,8 @@ public:
     reloada{30} {
         std::cout<<"Constructor weapon \n";
     }
+
+    ~Weapon() { std::cout << "S a apelat destructor Weapon \n";}
 
     friend std::ostream& operator<< (std::ostream& out, const Weapon& w) {
         out << " Numar total munitie: " << w.ammoamount << " Firerate: " << w.firerate << " Nume arma: " << w.nume << " Munitie per reload: " << w.reloada;
@@ -249,15 +253,15 @@ class Player {
     }
 
 public:
-    Player(const std::string& n, sf::Texture& tex):
-    name{n},
+    Player(std::string n, sf::Texture& tex):
+    name{std::move(n)},
     health{100},
     speed{900.0f},
     posX{900.0f},
     posY{900.0f},
-    gravity{3000.f},
+    gravity{2000.f},
     velocity{0.0f},
-    maxJump{-1100.f},
+    maxJump{-1000.f},
     isJumping{false},
     texture {tex},
     sprite{texture}
@@ -269,6 +273,8 @@ public:
         sprite.scale(sf::Vector2f(.5f, .5f));
         std::cout<<"Constructor Player \n";
     }
+
+    ~Player() { std::cout << "S a apelat destructor Player \n";}
 
     void PlayerMovement(float deltaTime, std::list<sf::Sound>& sounds, const sf::SoundBuffer& buffer) {
 
@@ -413,8 +419,8 @@ class Enemy {
     }
 
 public:
-    Enemy(const std::string& n, Weapon* f, float posx_, float posy_, sf::Texture& tex):
-    nume{n},
+    Enemy(std::string n, Weapon* f, float posx_, float posy_, sf::Texture& tex):
+    nume{std::move(n)},
     fists{f},
     posX{posx_},
     posY(posy_),
@@ -464,7 +470,7 @@ public:
         return *this;
     }
 
-    ~Enemy() = default;
+    ~Enemy() {std::cout << "S a apelat destructor Enemy \n";}
 
     void enemyMovement(sf::Vector2f playerpos, float deltaTime) {
         moveTowardsPlayer(playerpos, deltaTime);
@@ -514,13 +520,15 @@ class Map {
 
 public:
 
-    Map(const std::string& n, int sizex_, int sizey_, Player& p):
-    MapNume{n},
+    Map(std::string n, int sizex_, int sizey_, Player& p):
+    MapNume{std::move(n)},
     sizeX{sizex_},
     sizeY{sizey_},
     MyPlayer{p} {
         std::cout<<"Constructor Map\n";
     }
+
+    ~Map() { std::cout << "S a apelat destructor Map \n";}
 
     friend std::ostream& operator<< (std::ostream& out, const Map& m) {
         out << " Nume harta: " << m.MapNume << " Latime harta: " << m.sizeX << " Lungime harta: " << m.sizeY << " " << m.MyPlayer;
@@ -561,21 +569,24 @@ int main() {
     std::string projectileTexPath, playerTexPath, backgroundPath, enemyTexPath;
     fin >> projectileTexPath >> playerTexPath >> backgroundPath >> enemyTexPath;
 
+    std::string enemyDmgSPath, enemyDeathSPath, jumpSPath, reloadSPath, shootSPath;
+    fin >> enemyDmgSPath >> enemyDeathSPath >> jumpSPath >> reloadSPath >> shootSPath;
+
     sf::Texture projectileTex;
     if (!projectileTex.loadFromFile(projectileTexPath))
         std::cout << "Eroare la incarcarea texturii pentru Projectile: " << projectileTexPath << "\n";
 
     sf::Texture playerTex;
     if (!playerTex.loadFromFile(playerTexPath))
-        std::cout << "Eroare la deschidere fisier: " << playerTexPath << "\n";
+        std::cout << "Eroare la deschidere textura: " << playerTexPath << "\n";
 
     sf::Texture backround;
     if (!backround.loadFromFile(backgroundPath))
-        std::cout << "Eroare la deschidere fisier background: " << backgroundPath << "\n";
+        std::cout << "Eroare la deschidere textura background: " << backgroundPath << "\n";
 
     sf::Texture enemyTex;
     if (!enemyTex.loadFromFile(enemyTexPath))
-        std::cout << "Eroare la deschidere fisier: " << enemyTexPath << "\n";
+        std::cout << "Eroare la deschidere textura: " << enemyTexPath << "\n";
 
     sf::Sprite bck(backround);
     bck.setPosition(sf::Vector2f(-100.f, -200.f));
@@ -588,6 +599,31 @@ int main() {
     Weapon PlasmaG(playerWeapon, projectileName, 25, projectileTex, 120);
     Map map(mapName, 1000, 1000, player);
     Weapon fists(enemyWeapon, enemyProj, 10, projectileTex, 1000);
+
+    sf::SoundBuffer shootBuffer;
+    if (!shootBuffer.loadFromFile(shootSPath)) {
+        std::cout << "Eroare la incarcarea sunetului\n";
+    }
+
+    sf::SoundBuffer jumpBuffer;
+    if (!jumpBuffer.loadFromFile(jumpSPath)) {
+        std::cout << "Eroare la incarcarea sunetului\n";
+    }
+
+    sf::SoundBuffer reloadBuffer;
+    if (!reloadBuffer.loadFromFile(reloadSPath)) {
+        std::cout << "Eroare la incarcarea sunetului\n";
+    }
+
+    sf::SoundBuffer enemyDeathBuffer;
+    if (!enemyDeathBuffer.loadFromFile(enemyDeathSPath)) {
+        std::cout << "Eroare la incarcarea sunetului\n";
+    }
+
+    sf::SoundBuffer enemyDamageBuffer;
+    if (!enemyDamageBuffer.loadFromFile(enemyDmgSPath)) {
+        std::cout << "Eroare la incarcarea sunetului\n";
+    }
 
     std::vector<std::string> enemyNames;
     std::string enemyName;
@@ -620,161 +656,136 @@ int main() {
         window.setView(camera);
         sf::Vector2f cameraPos = player.getPos();
 
-    sf::SoundBuffer shootBuffer;
-    if (!shootBuffer.loadFromFile("assets/sound/shoot.wav")) {
-        std::cout << "Eroare la incarcarea sunetului\n";
-    }
-
-    sf::SoundBuffer jumpBuffer;
-    if (!jumpBuffer.loadFromFile("assets/sound/jump.wav")) {
-        std::cout << "Eroare la incarcarea sunetului\n";
-    }
-
-    sf::SoundBuffer reloadBuffer;
-    if (!reloadBuffer.loadFromFile("assets/sound/reload.wav")) {
-        std::cout << "Eroare la incarcarea sunetului\n";
-    }
-
-    sf::SoundBuffer enemyDeathBuffer;
-    if (!enemyDeathBuffer.loadFromFile("assets/sound/enemydeath.wav")) {
-        std::cout << "Eroare la incarcarea sunetului\n";
-    }
-
-    sf::SoundBuffer enemyDamageBuffer;
-    if (!enemyDamageBuffer.loadFromFile("assets/sound/enemydamage.wav")) {
-        std::cout << "Eroare la incarcarea sunetului\n";
-    }
-
     std::list<sf::Sound> playingSounds;
 
-        sf::Clock clock;
-        sf::Clock playerDamageCooldown;
-        sf::Clock damageClock;
+    sf::Clock clock;
+    sf::Clock playerDamageCooldown;
+    sf::Clock damageClock;
 
-        while(window.isOpen()) {
-            float deltaTime = clock.restart().asSeconds();
-            float cameraSpeed = 5.0f;
+    while(window.isOpen()) {
+        float deltaTime = clock.restart().asSeconds();
+        float cameraSpeed = 5.0f;
 
-            while (const std::optional<sf::Event> event = window.pollEvent()) {
-                if (event->is<sf::Event::Closed>()) {
+        while (const std::optional<sf::Event> event = window.pollEvent()) {
+            if (event->is<sf::Event::Closed>()) {
+                window.close();
+            }
+
+            if (const auto* keyPress = event->getIf<sf::Event::KeyPressed>()) {
+                if (keyPress->scancode == sf::Keyboard::Scancode::Escape) {
                     window.close();
                 }
 
-                if (const auto* keyPress = event->getIf<sf::Event::KeyPressed>()) {
-                    if (keyPress->scancode == sf::Keyboard::Scancode::Escape) {
-                        window.close();
-                    }
-
-                    if (keyPress->scancode == sf::Keyboard::Scancode::R) {
-                        PlasmaG.reload(playingSounds, reloadBuffer);
-                    }
-                }
-
-                if (const auto* mousePress = event->getIf<sf::Event::MouseButtonPressed>()) {
-                    if (mousePress->button == sf::Mouse::Button::Left && PlasmaG.canFire() && player.isAlive()) {
-                        sf::Vector2i mousePixel = sf::Mouse::getPosition(window);
-                        sf::Vector2f mouseWorld = window.mapPixelToCoords(mousePixel);
-
-                        PlasmaG.fire(player.getWeaponTipPos(), mouseWorld, playingSounds, shootBuffer);
-                    }
+                if (keyPress->scancode == sf::Keyboard::Scancode::R) {
+                    PlasmaG.reload(playingSounds, reloadBuffer);
                 }
             }
 
-            if (player.isAlive()) {
-                player.PlayerMovement(deltaTime, playingSounds, jumpBuffer);
+            if (const auto* mousePress = event->getIf<sf::Event::MouseButtonPressed>()) {
+                if (mousePress->button == sf::Mouse::Button::Left && PlasmaG.canFire() && player.isAlive()) {
+                    sf::Vector2i mousePixel = sf::Mouse::getPosition(window);
+                    sf::Vector2f mouseWorld = window.mapPixelToCoords(mousePixel);
+
+                    PlasmaG.fire(player.getWeaponTipPos(), mouseWorld, playingSounds, shootBuffer);
+                }
             }
+        }
+
+        if (player.isAlive()) {
+            player.PlayerMovement(deltaTime, playingSounds, jumpBuffer);
+        }
+
+        for (auto& en : map.getEnemies()) {
+            if (en.isAlive()) {
+                en.enemyMovement(player.getPos(), deltaTime);
+            }
+        }
+
+        PlasmaG.updateProjectiles(deltaTime);
+
+        for (auto& proj : PlasmaG.getProjectiles()) {
+            if (!proj.isActive()) continue;
 
             for (auto& en : map.getEnemies()) {
-                if (en.isAlive()) {
-                    en.enemyMovement(player.getPos(), deltaTime);
+                if (en.isAlive() && intersects(proj.getBounds(), en.getBounds())) {
+                    en.takeDamage(proj.getDamage(), playingSounds, enemyDamageBuffer, enemyDeathBuffer);
+                    proj.deactivate();
+                    break;
                 }
             }
-
-            PlasmaG.updateProjectiles(deltaTime);
-
-            for (auto& proj : PlasmaG.getProjectiles()) {
-                if (!proj.isActive()) continue;
-
-                for (auto& en : map.getEnemies()) {
-                    if (en.isAlive() && intersects(proj.getBounds(), en.getBounds())) {
-                        en.takeDamage(proj.getDamage(), playingSounds, enemyDamageBuffer, enemyDeathBuffer);
-                        proj.deactivate();
-                        break;
-                    }
-                }
-            }
-
-            int totalDamageThisFrame = 0;
-            for (const auto& en : map.getEnemies()) {
-                if (en.isAlive() && player.isAlive() && intersects(player.getBounds(), en.getBounds())) {
-                    totalDamageThisFrame += en.getContactDamage();
-                }
-            }
-
-            if (totalDamageThisFrame > 0 && playerDamageCooldown.getElapsedTime().asSeconds() > 1.f) {
-                player.takeDamage(totalDamageThisFrame);
-                player.setHit(true);
-                damageClock.restart();
-                playerDamageCooldown.restart();
-            }
-
-            if (player.isHit()) {
-                float elapsed = damageClock.getElapsedTime().asSeconds();
-
-                if (elapsed < 0.3f) {
-                    int alpha = static_cast<int>(120 * (1.f - elapsed / 0.3f));
-                    player.alphaDamageEffect(alpha);
-                }
-                else {
-                    player.setHit(false);
-                    player.resetDamageEffect();
-                }
-            }
-
-            int enemiesToSpawn = 0;
-            for (const auto& en : map.getEnemies()) {
-                if (!en.isAlive()) {
-                    enemiesToSpawn++;
-                }
-            }
-
-            std::erase_if(map.getEnemies(), [](const Enemy& en) {
-                return !en.isAlive();
-            });
-
-            for (int i = 0; i < enemiesToSpawn; ++i) {
-                    map.addEnemy({"Metroid", &fists,
-                        static_cast<float> (randomInt(100, 1920)),
-                        static_cast<float> (randomInt(100, 400)),
-                        enemyTex});
-            }
-
-            sf::Vector2f targetPos = player.getPos();
-            cameraPos.x += (targetPos.x - cameraPos.x) * cameraSpeed * deltaTime;
-            cameraPos.y += (targetPos.y - cameraPos.y - static_cast<float>(height) / 3.f) * cameraSpeed * deltaTime;
-            camera.setCenter(cameraPos);
-            window.setView(camera);
-
-            window.clear(sf::Color::Black);
-            window.draw(bck);
-
-            PlasmaG.drawProjectiles(window);
-
-            if (player.isAlive()) {
-                player.draw(window);
-            }
-
-            for (const auto& en : map.getEnemies()) {
-                    en.loadEnemy(window);
-            }
-
-            player.drawDamageEffect(window);
-
-            playingSounds.remove_if([](const sf::Sound& Sound_) {
-            return Sound_.getStatus() == sf::Sound::Status::Stopped;
-            });
-
-            window.display();
         }
-        return 0;
+
+        int totalDamageThisFrame = 0;
+        for (const auto& en : map.getEnemies()) {
+            if (en.isAlive() && player.isAlive() && intersects(player.getBounds(), en.getBounds())) {
+                totalDamageThisFrame += en.getContactDamage();
+            }
+        }
+
+        if (totalDamageThisFrame > 0 && playerDamageCooldown.getElapsedTime().asSeconds() > 1.f) {
+            player.takeDamage(totalDamageThisFrame);
+            player.setHit(true);
+            damageClock.restart();
+            playerDamageCooldown.restart();
+        }
+
+        if (player.isHit()) {
+            float elapsed = damageClock.getElapsedTime().asSeconds();
+
+            if (elapsed < 0.3f) {
+                int alpha = static_cast<int>(120 * (1.f - elapsed / 0.3f));
+                player.alphaDamageEffect(alpha);
+            }
+            else {
+                player.setHit(false);
+                player.resetDamageEffect();
+            }
+        }
+
+        int enemiesToSpawn = 0;
+        for (const auto& en : map.getEnemies()) {
+            if (!en.isAlive()) {
+                enemiesToSpawn += 2;
+            }
+        }
+
+        std::erase_if(map.getEnemies(), [](const Enemy& en) {
+            return !en.isAlive();
+        });
+
+        for (int i = 0; i < enemiesToSpawn; ++i) {
+                map.addEnemy({"Metroid", &fists,
+                    static_cast<float> (randomInt(100, 1920)),
+                    static_cast<float> (randomInt(100, 400)),
+                    enemyTex});
+        }
+
+        sf::Vector2f targetPos = player.getPos();
+        cameraPos.x += (targetPos.x - cameraPos.x) * cameraSpeed * deltaTime;
+        cameraPos.y += (targetPos.y - cameraPos.y - static_cast<float>(height) / 3.f) * cameraSpeed * deltaTime;
+        camera.setCenter(cameraPos);
+        window.setView(camera);
+
+        window.clear(sf::Color::Black);
+        window.draw(bck);
+
+        PlasmaG.drawProjectiles(window);
+
+        if (player.isAlive()) {
+            player.draw(window);
+        }
+
+        for (const auto& en : map.getEnemies()) {
+                en.loadEnemy(window);
+        }
+
+        player.drawDamageEffect(window);
+
+        playingSounds.remove_if([](const sf::Sound& Sound_) {
+        return Sound_.getStatus() == sf::Sound::Status::Stopped;
+        });
+
+        window.display();
     }
+    return 0;
+}
