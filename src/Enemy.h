@@ -11,7 +11,7 @@ class Enemy {
     float posX, posY, gravity, speed;
     bool alive;
     Weapon* fists;
-    sf::Texture& texture;
+    sf::Texture texture;
     sf::Sprite sprite;
 
     void moveTowardsPlayer(sf::Vector2f playerPos, float deltaTime);
@@ -20,7 +20,7 @@ class Enemy {
     void checkDeath(std::list<sf::Sound>& sounds, const sf::SoundBuffer& buffer);
 
 public:
-    Enemy(std::string n, Weapon* f, float posx_, float posy_, sf::Texture& tex);
+    Enemy(std::string n, Weapon* f, float posx_, float posy_, const std::string& texturePath);
 
     void loadEnemy(sf::RenderWindow& window) const;
     void enemyMovement(sf::Vector2f playerpos, float deltaTime);
@@ -46,6 +46,7 @@ public:
         fists = other.fists;
         texture = other.texture;
         sprite = other.sprite;
+        sprite.setTexture(texture);
         std::cout<<"S-a folosit supraincarcarea op= pentru clasa Enemy \n";
         return *this;
     }

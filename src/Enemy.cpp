@@ -31,7 +31,7 @@ void Enemy::checkDeath(std::list<sf::Sound>& sounds, const sf::SoundBuffer& buff
     }
 }
 
-Enemy::Enemy(std::string n, Weapon* f, float posx_, float posy_, sf::Texture& tex):
+Enemy::Enemy(std::string n, Weapon* f, float posx_, float posy_, const std::string& texturePath):
     nume{std::move(n)},
     health{100},
     posX{posx_},
@@ -40,8 +40,11 @@ Enemy::Enemy(std::string n, Weapon* f, float posx_, float posy_, sf::Texture& te
     speed{300.f},
     alive{true},
     fists{f},
-    texture{tex},
+    texture{texturePath},
     sprite{texture} {
+    if (!texture.loadFromFile(texturePath))
+        std::cout << "Eroare la incarcarea texturii Enemy";
+
     sprite.setPosition(sf::Vector2f(posX, posY));
     sprite.setOrigin(sf::Vector2f(static_cast<float>(texture.getSize().x) / 2.f, static_cast<float>(texture.getSize().y)));
     sprite.setScale(sf::Vector2f(.7f, .7f));
@@ -82,6 +85,7 @@ fists{other.fists},
 texture{other.texture},
 sprite{other.sprite}
 {
+    sprite.setTexture(texture);
     std::cout<<"Constructor de copiere\n";
 }
 

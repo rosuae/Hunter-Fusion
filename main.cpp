@@ -35,21 +35,9 @@ int main() {
     std::string enemyDmgSPath, enemyDeathSPath, jumpSPath, reloadSPath, shootSPath;
     fin >> enemyDmgSPath >> enemyDeathSPath >> jumpSPath >> reloadSPath >> shootSPath;
 
-    sf::Texture projectileTex;
-    if (!projectileTex.loadFromFile(projectileTexPath))
-        std::cout << "Eroare la incarcarea texturii pentru Projectile: " << projectileTexPath << "\n";
-
-    sf::Texture playerTex;
-    if (!playerTex.loadFromFile(playerTexPath))
-        std::cout << "Eroare la deschidere textura: " << playerTexPath << "\n";
-
     sf::Texture backround;
     if (!backround.loadFromFile(backgroundPath))
         std::cout << "Eroare la deschidere textura background: " << backgroundPath << "\n";
-
-    sf::Texture enemyTex;
-    if (!enemyTex.loadFromFile(enemyTexPath))
-        std::cout << "Eroare la deschidere textura: " << enemyTexPath << "\n";
 
     sf::Sprite bck(backround);
     bck.setPosition(sf::Vector2f(-100.f, -200.f));
@@ -58,10 +46,10 @@ int main() {
     std::string playerName, playerWeapon, projectileName, mapName, enemyWeapon, enemyProj;
     fin >> playerName >> playerWeapon >> projectileName >> mapName >> enemyWeapon >> enemyProj;
 
-    Player player(playerName, playerTex);
-    Weapon PlasmaG(playerWeapon, projectileName, 25, projectileTex, 120);
+    Player player(playerName, playerTexPath);
+    Weapon PlasmaG(playerWeapon, projectileName, 25, projectileTexPath, 120);
     Map map(mapName, 1000, 1000, player);
-    Weapon fists(enemyWeapon, enemyProj, 10, projectileTex, 1000);
+    Weapon fists(enemyWeapon, enemyProj, 10, projectileTexPath, 1000);
 
     sf::SoundBuffer shootBuffer;
     if (!shootBuffer.loadFromFile(shootSPath)) {
@@ -100,7 +88,7 @@ int main() {
         map.addEnemy({name, &fists,
                       static_cast<float>(randomInt(100, 1920)),
                       static_cast<float>(randomInt(100, 400)),
-                      enemyTex});
+                      enemyTexPath});
     }
 
         sf::RenderWindow window;
@@ -109,9 +97,6 @@ int main() {
         const unsigned int height = desktop.size.y;
 
         window.create(sf::VideoMode({width, height}, desktop.bitsPerPixel), "Hunter Fusion", sf::Style::Default, sf::State::Fullscreen);
-        ///////////////////////////////////////////////////////////////////////////
-        /// NOTE: sync with env variable APP_WINDOW from .github/workflows/cmake.yml:31
-        ///////////////////////////////////////////////////////////////////////////
         std::cout << "Fereastra a fost creată\n";
         window.setVerticalSyncEnabled(true);
 
@@ -220,7 +205,7 @@ int main() {
                 map.addEnemy({"Metroid", &fists,
                     static_cast<float> (randomInt(100, 1920)),
                     static_cast<float> (randomInt(100, 400)),
-                    enemyTex});
+                    enemyTexPath});
         }
 
         sf::Vector2f targetPos = player.getPos();

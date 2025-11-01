@@ -19,7 +19,7 @@ class Weapon {
     int projectileDmg;
     float firerate;
     std::vector<Projectile> projectiles;
-    sf::Texture* projectileTex;
+    sf::Texture projectileTex;
 
     [[nodiscard]]int calculateReloadAmount() const;
     [[nodiscard]]bool hasAmmoToReload() const;
@@ -27,7 +27,7 @@ class Weapon {
     void transferAmmo(int amount);
 
 public:
-    Weapon(std::string n, std::string projName, int projDmg, sf::Texture& tex, int a);
+    Weapon(std::string n, std::string projName, int projDmg, const std::string& texturePath, int a);
 
     friend std::ostream& operator<< (std::ostream& out, const Weapon& w) {
         out << " Numar total munitie: " << w.ammoamount << " Firerate: " << w.firerate << " Nume arma: " << w.nume << " Munitie per reload: " << w.reloada;

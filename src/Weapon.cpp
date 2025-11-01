@@ -14,21 +14,22 @@ void Weapon::transferAmmo(int amount) {
     ammoamount -= amount;
 }
 
-Weapon::Weapon(std::string n, std::string projName, int projDmg, sf::Texture& tex, int a):
+Weapon::Weapon(std::string n, std::string projName, int projDmg, const std::string& texturePath, int a):
     nume{std::move (n)},
     projectileName{std::move(projName)},
     reloada{30},
     ammoamount{a},
     projectileDmg{projDmg},
-    firerate{0.1f},
-    projectileTex{&tex}
-     {
+    firerate{0.1f}
+    {
+    if (!projectileTex.loadFromFile(texturePath))
+        std::cout << "Eroare la incarcarea texturii Projectile";
     std::cout<<"Constructor weapon \n";
 }
 
 void Weapon::fire(sf::Vector2f playerPos, sf::Vector2f targetPos, std::list<sf::Sound>& sounds, const sf::SoundBuffer& buffer) {
     if (canFire()) {
-        projectiles.emplace_back(projectileName, projectileDmg, *projectileTex, playerPos, targetPos);
+        projectiles.emplace_back(projectileName, projectileDmg, projectileTex, playerPos, targetPos);
         reloada -= 1;
 
         sounds.emplace_back(buffer);
