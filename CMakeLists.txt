@@ -68,6 +68,8 @@ add_executable(${MAIN_EXECUTABLE_NAME}
         src/Enemy.h
         src/Map.cpp
         src/Map.h
+        src/GameManager.cpp
+        src/GameManager.h
 )
 
 # NOTE: Add all defined targets (e.g. executables, libraries, etc. )
