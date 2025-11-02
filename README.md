@@ -22,6 +22,15 @@ Gameplay-ul se bazează pe controlul unui personaj care poate merge, sări, trag
   - https://sounds.spriters-resource.com/wii_u/nintendoland/asset/426887/
   - https://sounds.spriters-resource.com/snes/smetroid/asset/439917/
   - https://sounds.spriters-resource.com/wii_u/supermariomaker/asset/400349/
+
+## To do:
+ 
+- More rooms that should be generated from local resources + Interconnections
+- Tiles system
+- Better shooting system
+- More enemies + Bosses
+- PowerUps + Ammo and Health Drops
+
 ### Tema 0
 
 - [x] Nume proiect (poate fi schimbat ulterior)
