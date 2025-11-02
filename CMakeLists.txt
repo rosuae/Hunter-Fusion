@@ -70,6 +70,8 @@ add_executable(${MAIN_EXECUTABLE_NAME}
         src/Map.h
         src/GameManager.cpp
         src/GameManager.h
+        src/ResourceManager.cpp
+        src/ResourceManager.h
 )
 
 # NOTE: Add all defined targets (e.g. executables, libraries, etc. )

@@ -14,7 +14,7 @@ class Player {
     float posX, posY, speed, gravity, velocity, maxJump;
     bool isJumping, isalive = true, isHit_ = false, facingRight = true;
 
-    sf::Texture texture;
+    sf::Texture& texture;
     sf::Sprite sprite;
     sf::RectangleShape damageOverlay;
 
@@ -27,7 +27,7 @@ class Player {
     [[nodiscard]]float calculateWeaponOffsetX() const;
 
 public:
-    Player(std::string n, const std::string& texturePath);
+    Player(std::string n, sf::Texture& tex);
 
     friend std::ostream& operator<< (std::ostream& out, const Player& p) {
         out << " Nume player: " << p.name << " Viata: " << p.health<< " Pos X: " << p.posX << " Pos Y: " << p.posY << "Player speed: " << p.speed;

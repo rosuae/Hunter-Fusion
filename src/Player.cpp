@@ -41,28 +41,25 @@ float Player::calculateWeaponOffsetX() const {
     return facingRight ? 30.f : -30.f;
 }
 
-Player::Player(std::string n, const std::string& texturePath):
-    name{std::move(n)},
-    health{100},
-    posX{900.0f},
-    posY{900.0f},
-    speed{900.0f},
-    gravity{2000.f},
-    velocity{0.0f},
-    maxJump{-1000.f},
-    isJumping{false},
-    texture {texturePath},
-    sprite {texture}
-    {   if (!texture.loadFromFile(texturePath))
-            std::cout << "Eroare la incarcarea texturii PLayer";
+Player::Player(std::string n, sf::Texture& tex):
+name{std::move(n)},
+health{100},
+posX{900.0f},
+posY{900.0f},
+speed{900.0f},
+gravity{2000.f},
+velocity{0.0f},
+maxJump{-1000.f},
+isJumping{false},
+texture {tex},
+sprite{texture}
+{   damageOverlay.setSize(sf::Vector2f(1920.f, 1080.f));
+    damageOverlay.setFillColor(sf::Color(255, 0, 0, 0));
 
-        damageOverlay.setSize(sf::Vector2f(1920.f, 1080.f));
-        damageOverlay.setFillColor(sf::Color(255, 0, 0, 0));
-
-        sprite.setPosition(sf::Vector2f(posX, posY));
-        sprite.setOrigin(sf::Vector2f(static_cast<float>(texture.getSize().x) / 2.f, static_cast<float>(texture.getSize().y)));
-        sprite.scale(sf::Vector2f(.5f, .5f));
-        std::cout<<"Constructor Player \n";
+    sprite.setPosition(sf::Vector2f(posX, posY));
+    sprite.setOrigin(sf::Vector2f(static_cast<float>(texture.getSize().x) / 2.f, static_cast<float>(texture.getSize().y)));
+    sprite.scale(sf::Vector2f(.5f, .5f));
+    std::cout<<"Constructor Player \n";
 }
 
 void Player::PlayerMovement(float deltaTime, std::list<sf::Sound>& sounds, const sf::SoundBuffer& buffer) {
