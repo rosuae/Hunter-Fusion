@@ -1,10 +1,11 @@
 #include "Player.h"
+#include "Map.h"
 
 void Player::updateSpriteDirection() {
     if (facingRight)
-        sprite.setScale(sf::Vector2f(.5f, .5f));
+        sprite.setScale(sf::Vector2f(1.f, 1.f));
     else
-        sprite.setScale(sf::Vector2f(-.5f, .5f));
+        sprite.setScale(sf::Vector2f(-1.f, 1.f));
 }
 
 void Player::applyGravity(float deltaTime) {
@@ -12,27 +13,11 @@ void Player::applyGravity(float deltaTime) {
     posY += velocity * deltaTime;
 }
 
-void Player::handleGroundCollision() {
-    if (posY >= 1000.0f) {
-        posY = 1000.f;
-        velocity = 0.f;
-        isJumping = false;
-    }
-}
-
-void Player::handleScreenBarriers() {
-    if (posX < 0.0f)
-        posX = 1920.0f;
-    if (posX > 1920.0f)
-        posX = 0.0f;
-    if (posY < 0.0f)
-        posY = 0.0f;
-}
-
-void Player::checkDeath() {
+void Player::checkDeath(sf::RenderWindow& window) {
     if (health <= 0) {
         health = 0;
         isalive = false;
+        window.close();
         std::cout << "GAME OVER \n";
     }
 }
@@ -44,8 +29,8 @@ float Player::calculateWeaponOffsetX() const {
 Player::Player(std::string n, sf::Texture& tex):
 name{std::move(n)},
 health{100},
-posX{900.0f},
-posY{900.0f},
+posX{1000.0f},
+posY{450.0f},
 speed{900.0f},
 gravity{2000.f},
 velocity{0.0f},
@@ -53,16 +38,16 @@ maxJump{-1000.f},
 isJumping{false},
 texture {tex},
 sprite{texture}
-{   damageOverlay.setSize(sf::Vector2f(1920.f, 1080.f));
+{   damageOverlay.setSize(sf::Vector2f(3000.f, 3000.f));
     damageOverlay.setFillColor(sf::Color(255, 0, 0, 0));
 
     sprite.setPosition(sf::Vector2f(posX, posY));
     sprite.setOrigin(sf::Vector2f(static_cast<float>(texture.getSize().x) / 2.f, static_cast<float>(texture.getSize().y)));
-    sprite.scale(sf::Vector2f(.5f, .5f));
+    sprite.scale(sf::Vector2f(1.f, 1.f));
     std::cout<<"Constructor Player \n";
 }
 
-void Player::PlayerMovement(float deltaTime, std::list<sf::Sound>& sounds, const sf::SoundBuffer& buffer) {
+void Player::PlayerMovement(float deltaTime, std::list<sf::Sound>& sounds, const sf::SoundBuffer& buffer, const Map& map) {
 
     if ((sf::Keyboard::isKeyPressed(sf::Keyboard::Key::W) ||
          sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Space)) && !isJumping) {
@@ -73,31 +58,60 @@ void Player::PlayerMovement(float deltaTime, std::list<sf::Sound>& sounds, const
         sounds.back().play();
     }
 
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::S)) {
-        posY += speed * deltaTime;
-    }
+    sf::FloatRect localBounds = sprite.getLocalBounds();
+    float spriteWidth = localBounds.size.x;
+    float spriteHeight = localBounds.size.y;
 
+    float lastPosX = posX;
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A)) {
         posX -= speed * deltaTime;
         facingRight = false;
     }
-
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D)) {
         posX += speed * deltaTime;
         facingRight = true;
     }
 
-    applyGravity(deltaTime);
-    handleGroundCollision();
-    handleScreenBarriers();
-    updateSpriteDirection();
+    float testTopLeftX = posX - spriteWidth / 2.0f;
+    float testTopLeftY = posY - spriteHeight;
 
+    sf::FloatRect testBoundsX(sf::Vector2f(testTopLeftX, testTopLeftY),
+                            sf::Vector2f(spriteWidth, spriteHeight));
+
+    if (map.isWall(testBoundsX)) {
+        posX = lastPosX;
+    }
+
+    float lastPosY = posY;
+
+    isJumping = true;
+
+    applyGravity(deltaTime);
+
+    testTopLeftX = posX - spriteWidth / 2.0f;
+    testTopLeftY = posY - spriteHeight;
+
+    sf::FloatRect testBoundsY(sf::Vector2f(testTopLeftX, testTopLeftY),
+                            sf::Vector2f(spriteWidth, spriteHeight));
+
+    if (map.isWall(testBoundsY)) {
+        posY = lastPosY;
+
+        if (velocity > 0) {
+            isJumping = false;
+            velocity = 0;
+        } else if (velocity < 0) {
+            velocity = 0;
+        }
+    }
+ 
+    updateSpriteDirection();
     sprite.setPosition(sf::Vector2f(posX, posY));
 }
 
-void Player::takeDamage (int damageAmount) {
+void Player::takeDamage (int damageAmount, sf::RenderWindow& window) {
     health -= damageAmount;
-    checkDeath();
+    checkDeath(window);
     if (isalive) {
         std::cout << "Player ul a primit " << damageAmount << " dmg, ramanand cu " << health << " viata \n";
     }

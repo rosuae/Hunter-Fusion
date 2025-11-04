@@ -2,8 +2,9 @@
 #define OOP_ENEMY_H
 
 #include <list>
-
 #include "Weapon.h"
+
+class Map;
 
 class Enemy {
     std::string nume;
@@ -23,7 +24,7 @@ public:
     Enemy(std::string n, Weapon* f, float posx_, float posy_, sf::Texture& tex);
 
     void loadEnemy(sf::RenderWindow& window) const;
-    void enemyMovement(sf::Vector2f playerpos, float deltaTime);
+    void enemyMovement(sf::Vector2f playerpos, float deltaTime, const Map& map);
     void takeDamage(int damageAmount, std::list<sf::Sound>& sounds, const sf::SoundBuffer& buffer, const sf::SoundBuffer& buffer1);
 
     friend std::ostream& operator<< (std::ostream& out, const Enemy& e) {

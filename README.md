@@ -26,11 +26,16 @@ Gameplay-ul se bazează pe controlul unui personaj care poate merge, sări, trag
 ## To do:
  
 - More rooms that should be generated from local resources + Interconnections
-- Tiles system
 - Better shooting system
 - More enemies + Bosses
 - PowerUps + Ammo and Health Drops
 
+
+## Known Bugs:
+
+- Enemies could spawn inside tiles causing them to stop moving completely
+- Projectiles not coliding yet with tiles
+- Player can run out of ammo. Drops system will be implemented
 ### Tema 0
 
 - [x] Nume proiect (poate fi schimbat ulterior)

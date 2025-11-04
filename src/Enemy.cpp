@@ -1,4 +1,5 @@
 #include "Enemy.h"
+#include "Map.h"
 
 void Enemy::moveTowardsPlayer(sf::Vector2f playerPos, float deltaTime) {
     if (posX >= playerPos.x) {
@@ -11,8 +12,6 @@ void Enemy::moveTowardsPlayer(sf::Vector2f playerPos, float deltaTime) {
 
 void Enemy::applyGravity(float deltaTime) {
     posY += gravity * deltaTime;
-    if (posY >= 1000.f)
-        posY = 1000.f;
 }
 
 void Enemy::updateSpritePosition() {
@@ -36,7 +35,7 @@ Enemy::Enemy(std::string n, Weapon* f, float posx_, float posy_, sf::Texture& te
     health{100},
     posX{posx_},
     posY(posy_),
-    gravity{3000.f},
+    gravity{1000.f},
     speed{300.f},
     alive{true},
     fists{f},
@@ -44,7 +43,7 @@ Enemy::Enemy(std::string n, Weapon* f, float posx_, float posy_, sf::Texture& te
     sprite{texture} {
     sprite.setPosition(sf::Vector2f(posX, posY));
     sprite.setOrigin(sf::Vector2f(static_cast<float>(texture.getSize().x) / 2.f, static_cast<float>(texture.getSize().y)));
-    sprite.setScale(sf::Vector2f(.7f, .7f));
+    sprite.setScale(sf::Vector2f(1.f, 1.f));
     std::cout<<"Constructor Enemy \n";
 }
 
@@ -52,9 +51,43 @@ void Enemy::loadEnemy(sf::RenderWindow& window) const{
     window.draw(sprite);
 }
 
-void Enemy::enemyMovement(sf::Vector2f playerpos, float deltaTime) {
+void Enemy::enemyMovement(sf::Vector2f playerpos, float deltaTime, const Map& map) {
+
+    sf::FloatRect localBounds = sprite.getLocalBounds();
+    float spriteWidth = localBounds.size.x;
+    float spriteHeigth = localBounds.size.y;
+
+    float lastX = posX;
+
     moveTowardsPlayer(playerpos, deltaTime);
+
+    float topLeftX = posX - spriteWidth / 2.f;
+    float topLeftY = posY - spriteHeigth;
+
+    sf::FloatRect enemyBoundsX(
+        sf::Vector2f(topLeftX, topLeftY),
+        sf::Vector2f(spriteWidth, spriteHeigth)
+        );
+
+    if (map.isWall(enemyBoundsX)) {
+        posX = lastX;
+    }
+
+    float lastY = posY;
     applyGravity(deltaTime);
+
+    topLeftX = posX - spriteWidth / 2.f;
+    topLeftY = posY - spriteHeigth;
+
+    sf::FloatRect enemyBoundsY(
+        sf::Vector2f(topLeftX, topLeftY),
+        sf::Vector2f(spriteWidth, spriteHeigth)
+        );
+
+    if (map.isWall(enemyBoundsY)) {
+        posY = lastY;
+    }
+
     updateSpritePosition();
 }
 

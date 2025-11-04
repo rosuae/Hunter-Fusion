@@ -8,6 +8,8 @@
 #include <SFML/Graphics.hpp>
 #include <SFML/Audio.hpp>
 
+class Map;
+
 class Player {
     std::string name;
     int health;
@@ -20,9 +22,7 @@ class Player {
 
     void updateSpriteDirection();
     void applyGravity(float deltaTime);
-    void handleGroundCollision();
-    void handleScreenBarriers();
-    void checkDeath();
+    void checkDeath(sf::RenderWindow& window);
 
     [[nodiscard]]float calculateWeaponOffsetX() const;
 
@@ -34,8 +34,8 @@ public:
         return out;
     }
 
-    void PlayerMovement(float deltaTime, std::list<sf::Sound>& sounds, const sf::SoundBuffer& buffer);
-    void takeDamage (int damageAmount);
+    void PlayerMovement(float deltaTime, std::list<sf::Sound>& sounds, const sf::SoundBuffer& buffer, const Map& map);
+    void takeDamage (int damageAmount, sf::RenderWindow& window);
     void setHit (bool ok);
     void alphaDamageEffect(int alpha);
     void resetDamageEffect();

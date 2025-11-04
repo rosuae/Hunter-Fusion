@@ -10,6 +10,8 @@
 #include <SFML/Audio.hpp>
 
 #include "src/Map.h"
+#include "src/Enemy.h"
+#include "src/Player.h"
 #include "src/ResourceManager.h"
 
 bool intersects(const sf::FloatRect& rect1, const sf::FloatRect& rect2) {
@@ -31,16 +33,12 @@ int main() {
             return 1;
         }
 
-        sf::Sprite bck(resManager.getTexture("background.bmp"));
-        bck.setPosition(sf::Vector2f(-100.f, -200.f));
-        bck.scale(sf::Vector2f(8.f, 8.f));
-
         std::string playerName, playerWeapon, projectileName, mapName, enemyWeapon, enemyProj;
         fin >> playerName >> playerWeapon >> projectileName >> mapName >> enemyWeapon >> enemyProj;
 
         Player player(playerName, resManager.getTexture("samustest.png"));
         Weapon PlasmaG(playerWeapon, projectileName, 25, resManager.getTexture("projectile.png"), 120);
-        Map map(mapName, 1000, 1000, player);
+        Map map(mapName, player, "assets/textures/map/harta.txt", resManager);
         Weapon fists(enemyWeapon, enemyProj, 10, resManager.getTexture("projectile.png"), 1000);
 
         std::vector<std::string> enemyNames;
@@ -107,12 +105,12 @@ int main() {
             }
 
             if (player.isAlive()) {
-                player.PlayerMovement(deltaTime, playingSounds, resManager.getSound("jump.wav"));
+                player.PlayerMovement(deltaTime, playingSounds, resManager.getSound("jump.wav"), map);
             }
 
             for (auto& en : map.getEnemies()) {
                 if (en.isAlive()) {
-                    en.enemyMovement(player.getPos(), deltaTime);
+                    en.enemyMovement(player.getPos(), deltaTime, map);
                 }
             }
 
@@ -138,7 +136,7 @@ int main() {
             }
 
             if (totalDamageThisFrame > 0 && playerDamageCooldown.getElapsedTime().asSeconds() > 1.f) {
-                player.takeDamage(totalDamageThisFrame);
+                player.takeDamage(totalDamageThisFrame, window);
                 player.setHit(true);
                 damageClock.restart();
                 playerDamageCooldown.restart();
@@ -177,12 +175,12 @@ int main() {
 
             sf::Vector2f targetPos = player.getPos();
             cameraPos.x += (targetPos.x - cameraPos.x) * cameraSpeed * deltaTime;
-            cameraPos.y += (targetPos.y - cameraPos.y - static_cast<float>(height) / 3.f) * cameraSpeed * deltaTime;
+            cameraPos.y += (targetPos.y - cameraPos.y - static_cast<float>(height) / 6) * cameraSpeed * deltaTime;
             camera.setCenter(cameraPos);
             window.setView(camera);
 
             window.clear(sf::Color::Black);
-            window.draw(bck);
+            map.drawMap(window);
 
             PlasmaG.drawProjectiles(window);
 
