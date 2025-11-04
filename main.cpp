@@ -114,7 +114,7 @@ int main() {
                 }
             }
 
-            PlasmaG.updateProjectiles(deltaTime);
+            PlasmaG.updateProjectiles(deltaTime, map);
 
             for (auto& proj : PlasmaG.getProjectiles()) {
                 if (!proj.isActive()) continue;

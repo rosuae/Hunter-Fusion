@@ -1,4 +1,5 @@
 #include "Weapon.h"
+#include "Map.h"
 
 [[nodiscard]]int Weapon::calculateReloadAmount() const {
     int needed = 30 - reloada;
@@ -40,10 +41,10 @@ void Weapon::fire(sf::Vector2f playerPos, sf::Vector2f targetPos, std::list<sf::
     }
 }
 
-void Weapon::updateProjectiles(float deltaTime) {
+void Weapon::updateProjectiles(float deltaTime, const Map& map) {
     for (auto& proj : projectiles) {
         if (proj.isActive()) {
-            proj.projectileTravel(deltaTime);
+            proj.projectileTravel(deltaTime, map);
         }
     }
 

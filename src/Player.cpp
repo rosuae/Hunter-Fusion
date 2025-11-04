@@ -104,7 +104,7 @@ void Player::PlayerMovement(float deltaTime, std::list<sf::Sound>& sounds, const
             velocity = 0;
         }
     }
- 
+
     updateSpriteDirection();
     sprite.setPosition(sf::Vector2f(posX, posY));
 }

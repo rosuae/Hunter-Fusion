@@ -6,7 +6,6 @@ Gameplay-ul se bazează pe controlul unui personaj care poate merge, sări, trag
 
 ## Controls:
 - `A,D` Move Left / Right.
-- `S` Fast fall.
 - `W / Space` Jump.
 - `Mouse` Aim.
 - `Left-Click` Shoot.
@@ -34,7 +33,6 @@ Gameplay-ul se bazează pe controlul unui personaj care poate merge, sări, trag
 ## Known Bugs:
 
 - Enemies could spawn inside tiles causing them to stop moving completely
-- Projectiles not coliding yet with tiles
 - Player can run out of ammo. Drops system will be implemented
 ### Tema 0
 

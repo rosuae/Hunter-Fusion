@@ -6,6 +6,8 @@
 
 #include <SFML/Graphics.hpp>
 
+class Map;
+
 class Projectile {
     std::string nume;
     int dmg;
@@ -17,7 +19,7 @@ class Projectile {
 
     void setupSprite(const sf::Texture& tex);
     void calculateDirection(sf::Vector2f playerPos, sf::Vector2f targetPos);
-    void updatePosition(float deltaTime);
+    void updatePosition(float deltaTime, const Map& map);
 
 public:
     Projectile(std::string n, int d, const sf::Texture& tex, sf::Vector2f playerPos, sf::Vector2f targetPos);
@@ -28,7 +30,7 @@ public:
     }
 
     void drawProjectile(sf::RenderWindow& window) const;
-    void projectileTravel (float deltaTime);
+    void projectileTravel (float deltaTime,  const Map& map);
     void deactivate();
 
     ~Projectile();
