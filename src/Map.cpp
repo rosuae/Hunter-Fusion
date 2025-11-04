@@ -3,9 +3,8 @@
 #include "Enemy.h"
 #include "ResourceManager.h"
 
-Map::Map(std::string n, Player& p, const std::string& filePath, ResourceManager& resManager):
+Map::Map(std::string n, const std::string& filePath, ResourceManager& resManager):
     MapNume{std::move(n)},
-    MyPlayer{p},
     tileSprite{resManager.getTexture("tile.png")} {
 
     std::ifstream file(filePath);

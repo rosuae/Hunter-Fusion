@@ -38,7 +38,7 @@ int main() {
 
         Player player(playerName, resManager.getTexture("samustest.png"));
         Weapon PlasmaG(playerWeapon, projectileName, 25, resManager.getTexture("projectile.png"), 120);
-        Map map(mapName, player, "assets/textures/map/harta.txt", resManager);
+        Map map(mapName, "assets/textures/map/harta.txt", resManager);
         Weapon fists(enemyWeapon, enemyProj, 10, resManager.getTexture("projectile.png"), 1000);
 
         std::vector<std::string> enemyNames;

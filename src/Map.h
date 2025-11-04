@@ -12,14 +12,13 @@ class ResourceManager;
 
 class Map {
     std::string MapNume;
-    Player& MyPlayer;
     std::vector<Enemy> enemies;
     std::vector<std::string> mapLayout;
     const float TILE_SIZE = 64.f;
     sf::Sprite tileSprite;
 public:
 
-    Map(std::string n, Player& p, const std::string& filePath, ResourceManager& resManager);
+    Map(std::string n, const std::string& filePath, ResourceManager& resManager);
 
     void drawMap(sf::RenderWindow& window);
 
