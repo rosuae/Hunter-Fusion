@@ -23,7 +23,7 @@ void Player::checkDeath(sf::RenderWindow& window) {
 }
 
 float Player::calculateWeaponOffsetX() const {
-    float offsetX = frameSize.x * 0.3f;
+    float offsetX = static_cast<float>(frameSize.x) * 0.3f;
     return facingRight ? offsetX : -offsetX;
 }
 
@@ -132,9 +132,9 @@ void Player::updateAnimation(float deltaTime) {
 
     if (isJumping) {
         int jumpCol = 5;
-        int jumpFrameCount = 2;
 
         if (animationStartIndex != jumpCol) {
+            int jumpFrameCount = 2;
             animationStartIndex = jumpCol;
             animationFrameCount = jumpFrameCount;
             currentFrame = 0;
@@ -228,7 +228,7 @@ void Player::resetDamageEffect() {
 void Player::draw(sf::RenderWindow& window) const{
     sf::RectangleShape healthbar(sf::Vector2f(100.f, 10.f));
 
-    float healthbarY = posY - frameSize.y - 15.f;
+    float healthbarY = posY - static_cast<float>(frameSize.y) - 15.f;
 
     healthbar.setPosition(sf::Vector2f(posX - 50.f, healthbarY));
     healthbar.setFillColor(sf::Color::Green);
@@ -254,7 +254,7 @@ sf::Vector2f Player::getPos() const{
 
 sf::Vector2f Player::getWeaponTipPos() const {
     float offsetX = calculateWeaponOffsetX();
-    float offsetY = -(frameSize.y * 0.7f);
+    float offsetY = -( static_cast<float>(frameSize.y) * 0.7f);
 
     return {posX + offsetX, posY + offsetY};
 }
@@ -263,7 +263,7 @@ sf::Vector2f Player::getWeaponTipPos() const {
 sf::FloatRect Player::getBounds () const {
     float left = posX - hitboxWidth / 2.0f;
     float top = posY - hitboxHeight;
-    return sf::FloatRect(sf::Vector2f(left, top), sf::Vector2f(hitboxWidth, hitboxHeight));
+    return {sf::Vector2f(left, top), sf::Vector2f(hitboxWidth, hitboxHeight)};
 }
 
 bool Player::isHit () const{
