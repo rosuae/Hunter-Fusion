@@ -1,5 +1,6 @@
 #include "Weapon.h"
 #include "Map.h"
+#include "Player.h"
 
 [[nodiscard]]int Weapon::calculateReloadAmount() const {
     int needed = 30 - reloada;
@@ -22,22 +23,15 @@ Weapon::Weapon(std::string n, std::string projName, int projDmg, sf::Texture& te
     ammoamount{a},
     projectileDmg{projDmg},
     firerate{0.1f},
-    projectileTex{&tex}
-     {
-    std::cout<<"Constructor weapon \n";
-}
+    projectileTex{&tex} {}
 
-void Weapon::fire(sf::Vector2f playerPos, sf::Vector2f targetPos, std::list<sf::Sound>& sounds, const sf::SoundBuffer& buffer) {
-    if (canFire()) {
+void Weapon::fire(const Player& player, sf::Vector2f playerPos, sf::Vector2f targetPos, std::list<sf::Sound>& sounds, const sf::SoundBuffer& buffer) {
+    if (canFire(player)) {
         projectiles.emplace_back(projectileName, projectileDmg, *projectileTex, playerPos, targetPos);
         reloada -= 1;
 
         sounds.emplace_back(buffer);
         sounds.back().play();
-
-        std::cout << "Fire! \n";
-    } else {
-        std::cout << "press r to reload\n";
     }
 }
 
@@ -60,12 +54,7 @@ void Weapon::reload(std::list<sf::Sound>& sounds, const sf::SoundBuffer& buffer)
 
         sounds.emplace_back(buffer);
         sounds.back().play();
-
-        std::cout << "\n Reloaded:  " << toReload << "\n";
-        std::cout << "Ammo Amount: " << ammoamount << "\n";
     }
-    else
-        std::cout << "Out of ammo \n";
 }
 
 void Weapon::drawProjectiles(sf::RenderWindow& window) const {
@@ -84,6 +73,6 @@ Weapon::~Weapon() { std::cout << "S a apelat destructor Weapon \n";}
     return projectileDmg;
 }
 
-[[nodiscard]]bool Weapon::canFire() const {
-    return reloada > 0;
+[[nodiscard]]bool Weapon::canFire(const Player& player) const {
+    return reloada > 0 && !player.Jumping();
 }

@@ -26,7 +26,6 @@ void Enemy::checkDeath(std::list<sf::Sound>& sounds, const sf::SoundBuffer& buff
         sounds.back().play();
 
         alive = false;
-        std::cout << "inamic invins \n";
     }
 }
 
@@ -44,7 +43,6 @@ Enemy::Enemy(std::string n, Weapon* f, float posx_, float posy_, sf::Texture& te
     sprite.setPosition(sf::Vector2f(posX, posY));
     sprite.setOrigin(sf::Vector2f(static_cast<float>(texture.getSize().x) / 2.f, static_cast<float>(texture.getSize().y)));
     sprite.setScale(sf::Vector2f(1.f, 1.f));
-    std::cout<<"Constructor Enemy \n";
 }
 
 void Enemy::loadEnemy(sf::RenderWindow& window) const{
@@ -74,6 +72,7 @@ void Enemy::enemyMovement(sf::Vector2f playerpos, float deltaTime, const Map& ma
     }
 
     float lastY = posY;
+
     applyGravity(deltaTime);
 
     topLeftX = posX - spriteWidth / 2.f;
@@ -98,9 +97,6 @@ void Enemy::takeDamage(int damageAmount, std::list<sf::Sound>& sounds, const sf:
     sounds.back().play();
 
     checkDeath(sounds, buffer1);
-    if (alive) {
-        std::cout << "a primit " << damageAmount << " dmg, mai are " << health << "\n";
-    }
 }
 
 Enemy::Enemy (const Enemy& other):

@@ -14,11 +14,27 @@ class Player {
     std::string name;
     int health;
     float posX, posY, speed, gravity, velocity, maxJump;
-    bool isJumping, isalive = true, isHit_ = false, facingRight = true;
+    bool isalive = true, isHit_ = false, facingRight = true;
 
     sf::Texture& texture;
     sf::Sprite sprite;
     sf::RectangleShape damageOverlay;
+
+    sf::Vector2i frameSize;
+    const float shootingDuration = 0.3f;
+    float hitboxWidth;
+    float hitboxHeight;
+    float animationTimer;
+    float frameDuration;
+    float shootingTimer;
+
+    bool isRunning;
+    bool isJumping;
+
+    int currentFrame;
+    int animationRow;
+    int animationStartIndex;
+    int animationFrameCount;
 
     void updateSpriteDirection();
     void applyGravity(float deltaTime);
@@ -35,6 +51,8 @@ public:
     }
 
     void PlayerMovement(float deltaTime, std::list<sf::Sound>& sounds, const sf::SoundBuffer& buffer, const Map& map);
+    void updateAnimation(float deltaTime);
+    void shootAnimation();
     void takeDamage (int damageAmount, sf::RenderWindow& window);
     void setHit (bool ok);
     void alphaDamageEffect(int alpha);
@@ -48,6 +66,7 @@ public:
     [[nodiscard]]sf::Vector2f getWeaponTipPos() const;
     [[nodiscard]]sf::FloatRect getBounds () const;
     [[nodiscard]]bool isHit () const;
+    [[nodiscard]]bool Jumping() const;
     [[nodiscard]]bool isAlive() const;
 
 };

@@ -33,7 +33,7 @@ public:
     void projectileTravel (float deltaTime,  const Map& map);
     void deactivate();
 
-    ~Projectile();
+    ~Projectile() = default;
 
     sf::FloatRect getBounds() const;
     [[nodiscard]]int getDamage() const;

@@ -36,7 +36,7 @@ int main() {
         std::string playerName, playerWeapon, projectileName, mapName, enemyWeapon, enemyProj;
         fin >> playerName >> playerWeapon >> projectileName >> mapName >> enemyWeapon >> enemyProj;
 
-        Player player(playerName, resManager.getTexture("samustest.png"));
+        Player player(playerName, resManager.getTexture("samussheet.png"));
         Weapon PlasmaG(playerWeapon, projectileName, 25, resManager.getTexture("projectile.png"), 120);
         Map map(mapName, "assets/textures/map/harta.txt", resManager);
         Weapon fists(enemyWeapon, enemyProj, 10, resManager.getTexture("projectile.png"), 1000);
@@ -95,17 +95,19 @@ int main() {
                 }
 
                 if (const auto* mousePress = event->getIf<sf::Event::MouseButtonPressed>()) {
-                    if (mousePress->button == sf::Mouse::Button::Left && PlasmaG.canFire() && player.isAlive()) {
+                    if (mousePress->button == sf::Mouse::Button::Left && PlasmaG.canFire(player) && player.isAlive()) {
                         sf::Vector2i mousePixel = sf::Mouse::getPosition(window);
                         sf::Vector2f mouseWorld = window.mapPixelToCoords(mousePixel);
 
-                        PlasmaG.fire(player.getWeaponTipPos(), mouseWorld, playingSounds, resManager.getSound("shoot.wav"));
+                        PlasmaG.fire(player, player.getWeaponTipPos(), mouseWorld, playingSounds, resManager.getSound("shoot.wav"));
+                        player.shootAnimation();
                     }
                 }
             }
 
             if (player.isAlive()) {
                 player.PlayerMovement(deltaTime, playingSounds, resManager.getSound("jump.wav"), map);
+                player.updateAnimation(deltaTime);
             }
 
             for (auto& en : map.getEnemies()) {

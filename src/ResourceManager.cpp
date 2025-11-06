@@ -2,7 +2,7 @@
 
 ResourceManager::ResourceManager() {
     loadTextures("assets/textures","enemy.png");
-    loadTextures("assets/textures","samustest.png");
+    loadTextures("assets/textures","samussheet.png");
     loadTextures("assets/textures","projectile.png");
     loadTextures("assets/textures/map","background.bmp");
     loadTextures("assets/textures","tile.png");
@@ -22,7 +22,6 @@ ResourceManager& ResourceManager::Instance() {
 void ResourceManager::cleanup() {
     m_textures.clear();
     m_sounds.clear();
-    std::cout << "ResourceManager curatat\n";
 }
 
 void ResourceManager::loadTextures(const std::string &path, const std::string &texture_name) {

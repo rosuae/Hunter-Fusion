@@ -23,7 +23,8 @@ void Player::checkDeath(sf::RenderWindow& window) {
 }
 
 float Player::calculateWeaponOffsetX() const {
-    return facingRight ? 30.f : -30.f;
+    float offsetX = frameSize.x * 0.3f;
+    return facingRight ? offsetX : -offsetX;
 }
 
 Player::Player(std::string n, sf::Texture& tex):
@@ -35,16 +36,31 @@ speed{900.0f},
 gravity{2000.f},
 velocity{0.0f},
 maxJump{-1000.f},
-isJumping{false},
 texture {tex},
-sprite{texture}
+sprite{texture},
+
+frameSize{sf::Vector2i(149, 148)},
+hitboxWidth{80},
+hitboxHeight{80},
+animationTimer{0.0f},
+frameDuration{0.12f},
+shootingTimer{0.0f},
+
+isRunning{false},
+isJumping{false},
+
+currentFrame{0},
+animationRow{0},
+animationStartIndex{0},
+animationFrameCount{1}
 {   damageOverlay.setSize(sf::Vector2f(3000.f, 3000.f));
     damageOverlay.setFillColor(sf::Color(255, 0, 0, 0));
 
     sprite.setPosition(sf::Vector2f(posX, posY));
-    sprite.setOrigin(sf::Vector2f(static_cast<float>(texture.getSize().x) / 2.f, static_cast<float>(texture.getSize().y)));
+    sprite.setOrigin(sf::Vector2f(static_cast<float>(frameSize.x) / 2.f, static_cast<float>(frameSize.y)));
     sprite.scale(sf::Vector2f(1.f, 1.f));
-    std::cout<<"Constructor Player \n";
+
+    sprite.setTextureRect(sf::IntRect(sf::Vector2i(0, 0), frameSize));
 }
 
 void Player::PlayerMovement(float deltaTime, std::list<sf::Sound>& sounds, const sf::SoundBuffer& buffer, const Map& map) {
@@ -58,25 +74,27 @@ void Player::PlayerMovement(float deltaTime, std::list<sf::Sound>& sounds, const
         sounds.back().play();
     }
 
-    sf::FloatRect localBounds = sprite.getLocalBounds();
-    float spriteWidth = localBounds.size.x;
-    float spriteHeight = localBounds.size.y;
-
     float lastPosX = posX;
+    bool moved = false;
+
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A)) {
         posX -= speed * deltaTime;
         facingRight = false;
+        moved = true;
     }
+
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D)) {
         posX += speed * deltaTime;
         facingRight = true;
+        moved = true;
     }
 
-    float testTopLeftX = posX - spriteWidth / 2.0f;
-    float testTopLeftY = posY - spriteHeight;
+    this->isRunning = moved;
 
+    float testTopLeftX = posX - hitboxWidth / 2.0f;
+    float testTopLeftY = posY - hitboxHeight;
     sf::FloatRect testBoundsX(sf::Vector2f(testTopLeftX, testTopLeftY),
-                            sf::Vector2f(spriteWidth, spriteHeight));
+                            sf::Vector2f(hitboxWidth, hitboxHeight));
 
     if (map.isWall(testBoundsX)) {
         posX = lastPosX;
@@ -84,15 +102,12 @@ void Player::PlayerMovement(float deltaTime, std::list<sf::Sound>& sounds, const
 
     float lastPosY = posY;
 
-    isJumping = true;
-
     applyGravity(deltaTime);
 
-    testTopLeftX = posX - spriteWidth / 2.0f;
-    testTopLeftY = posY - spriteHeight;
-
+    testTopLeftX = posX - hitboxWidth / 2.0f;
+    testTopLeftY = posY - hitboxHeight;
     sf::FloatRect testBoundsY(sf::Vector2f(testTopLeftX, testTopLeftY),
-                            sf::Vector2f(spriteWidth, spriteHeight));
+                            sf::Vector2f(hitboxWidth, hitboxHeight));
 
     if (map.isWall(testBoundsY)) {
         posY = lastPosY;
@@ -109,12 +124,93 @@ void Player::PlayerMovement(float deltaTime, std::list<sf::Sound>& sounds, const
     sprite.setPosition(sf::Vector2f(posX, posY));
 }
 
+void Player::updateAnimation(float deltaTime) {
+
+    if (shootingTimer > 0.0f) {
+        shootingTimer -= deltaTime;
+    }
+
+    if (isJumping) {
+        int jumpCol = 5;
+        int jumpFrameCount = 2;
+
+        if (animationStartIndex != jumpCol) {
+            animationStartIndex = jumpCol;
+            animationFrameCount = jumpFrameCount;
+            currentFrame = 0;
+            animationTimer = 0.0f;
+        }
+
+        animationTimer += deltaTime;
+        if (animationTimer >= frameDuration) {
+            animationTimer -= frameDuration;
+            currentFrame = (currentFrame + 1) % animationFrameCount;
+        }
+
+        int rectLeft = jumpCol * frameSize.x;
+        int rectTop = currentFrame * frameSize.y;
+        sprite.setTextureRect(sf::IntRect(sf::Vector2i(rectLeft, rectTop), frameSize));
+
+        return;
+    }
+
+    if (shootingTimer > 0.0f) {
+        animationRow = 1;
+    } else {
+        animationRow = 0;
+    }
+
+    int newStartIndex;
+    int newFrameCount;
+    bool loopAnimation;
+
+    if (isRunning) {
+        newStartIndex = 2;
+        newFrameCount = 3;
+        loopAnimation = true;
+    }
+    else if (shootingTimer > 0.0f) {
+        newStartIndex = 1;
+        newFrameCount = 1;
+        loopAnimation = false;
+    }
+    else {
+        newStartIndex = 0;
+        newFrameCount = 1;
+        loopAnimation = true;
+    }
+
+    if (newStartIndex != animationStartIndex) {
+        animationStartIndex = newStartIndex;
+        animationFrameCount = newFrameCount;
+        currentFrame = 0;
+        animationTimer = 0.0f;
+    }
+
+    animationTimer += deltaTime;
+    if (animationTimer >= frameDuration) {
+        animationTimer -= frameDuration;
+        if (loopAnimation) {
+            currentFrame = (currentFrame + 1) % animationFrameCount;
+        } else {
+            if (currentFrame < animationFrameCount - 1) {
+                currentFrame++;
+            }
+        }
+    }
+
+    int rectLeft = (animationStartIndex + currentFrame) * frameSize.x;
+    int rectTop = animationRow * frameSize.y;
+    sprite.setTextureRect(sf::IntRect(sf::Vector2i(rectLeft, rectTop), frameSize));
+}
+
+void Player::shootAnimation() {
+    shootingTimer = shootingDuration;
+}
+
 void Player::takeDamage (int damageAmount, sf::RenderWindow& window) {
     health -= damageAmount;
     checkDeath(window);
-    if (isalive) {
-        std::cout << "Player ul a primit " << damageAmount << " dmg, ramanand cu " << health << " viata \n";
-    }
 }
 
 void Player::setHit (const bool ok) {
@@ -132,7 +228,9 @@ void Player::resetDamageEffect() {
 void Player::draw(sf::RenderWindow& window) const{
     sf::RectangleShape healthbar(sf::Vector2f(100.f, 10.f));
 
-    healthbar.setPosition(sf::Vector2f(posX - 50.f, posY - 250.f));
+    float healthbarY = posY - frameSize.y - 15.f;
+
+    healthbar.setPosition(sf::Vector2f(posX - 50.f, healthbarY));
     healthbar.setFillColor(sf::Color::Green);
     healthbar.setSize(sf::Vector2f(static_cast<float>(health), 10.f));
 
@@ -156,18 +254,24 @@ sf::Vector2f Player::getPos() const{
 
 sf::Vector2f Player::getWeaponTipPos() const {
     float offsetX = calculateWeaponOffsetX();
-    float offsetY = -180.f;
+    float offsetY = -(frameSize.y * 0.7f);
 
     return {posX + offsetX, posY + offsetY};
 }
 
 
 sf::FloatRect Player::getBounds () const {
-    return sprite.getGlobalBounds();
+    float left = posX - hitboxWidth / 2.0f;
+    float top = posY - hitboxHeight;
+    return sf::FloatRect(sf::Vector2f(left, top), sf::Vector2f(hitboxWidth, hitboxHeight));
 }
 
 bool Player::isHit () const{
     return isHit_;
+}
+
+bool Player::Jumping() const {
+    return isJumping;
 }
 
 bool Player::isAlive() const {

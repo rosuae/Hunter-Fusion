@@ -22,8 +22,6 @@ Map::Map(std::string n, const std::string& filePath, ResourceManager& resManager
     for (const auto& mapLay : mapLayout) {
         std::cout << mapLay << "\n";
     }
-
-    std::cout<<"Constructor Map\n";
 }
 
 void Map::drawMap(sf::RenderWindow& window) {

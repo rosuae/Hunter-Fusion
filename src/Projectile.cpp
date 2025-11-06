@@ -1,10 +1,11 @@
 #include "Projectile.h"
 #include "Map.h"
+#include "Player.h"
 
 void Projectile::setupSprite(const sf::Texture& tex) {
     sprite.setOrigin(sf::Vector2f(static_cast<float>(tex.getSize().x),
                                   static_cast<float>(tex.getSize().y) / 2.f));
-    sprite.scale(sf::Vector2f(1.5f, 1.5f));
+    sprite.scale(sf::Vector2f(1.f, 1.f));
 }
 
 void Projectile::calculateDirection(sf::Vector2f playerPos, sf::Vector2f targetPos) {
@@ -53,7 +54,6 @@ Projectile::Projectile(std::string n, int d, const sf::Texture& tex, sf::Vector2
 {
     calculateDirection(playerPos, targetPos);
     setupSprite(tex);
-    std::cout<<"Constructor proiectil \n";
 }
 
 void Projectile::drawProjectile(sf::RenderWindow& window) const{
@@ -67,8 +67,6 @@ void Projectile::projectileTravel (float deltaTime, const Map& map) {
 void Projectile::deactivate() {
     active = false;
 }
-
-Projectile::~Projectile() { std::cout << "S a apelat destructor projectile \n";}
 
 sf::FloatRect Projectile::getBounds() const {
     return sprite.getGlobalBounds();

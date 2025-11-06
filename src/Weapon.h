@@ -11,6 +11,7 @@
 #include <list>
 
 class Map;
+class Player;
 
 class Weapon {
     std::string nume;
@@ -35,7 +36,7 @@ public:
         return out;
     }
 
-    void fire(sf::Vector2f playerPos, sf::Vector2f targetPos, std::list<sf::Sound>& sounds, const sf::SoundBuffer& buffer);
+    void fire(const Player& player, sf::Vector2f playerPos, sf::Vector2f targetPos, std::list<sf::Sound>& sounds, const sf::SoundBuffer& buffer);
     void updateProjectiles(float deltaTime, const Map& map);
     void reload(std::list<sf::Sound>& sounds, const sf::SoundBuffer& buffer);
     void drawProjectiles(sf::RenderWindow& window) const;
@@ -44,7 +45,7 @@ public:
 
     [[nodiscard]]std::vector<Projectile>& getProjectiles();
     [[nodiscard]]int getDmg() const;
-    [[nodiscard]]bool canFire() const;
+    [[nodiscard]]bool canFire(const Player& player) const;
 };
 
 #endif
