@@ -8,7 +8,7 @@ Gameplay-ul se bazează pe controlul unui personaj care poate merge, sări, trag
 - `A,D` Move Left / Right.
 - `W / Space` Jump.
 - `Mouse` Aim.
-- `Left-Click` Shoot.
+- `Left-Click` Shoot (Can't shoot while jumping).
 - `R` Reload.
 - `Escape` Exit Game.
 
@@ -24,11 +24,10 @@ Gameplay-ul se bazează pe controlul unui personaj care poate merge, sări, trag
 
 ## To do:
  
-- More rooms that should be generated from local resources + Interconnections
-- Better shooting system
+- More rooms that should be generated from files + Interconnections
 - More enemies + Bosses
 - PowerUps + Ammo and Health Drops
-
+- Player and Enemy SpawnPoints to be placed as tiles
 
 ## Known Bugs:
 
