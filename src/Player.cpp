@@ -79,13 +79,17 @@ void Player::PlayerMovement(float deltaTime, std::list<sf::Sound>& sounds, const
 
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A)) {
         posX -= speed * deltaTime;
-        facingRight = false;
+        if (shootingTimer <= 0.0f) {
+            facingRight = false;
+        }
         moved = true;
     }
 
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D)) {
         posX += speed * deltaTime;
-        facingRight = true;
+        if (shootingTimer <= 0.0f) {
+            facingRight = true;
+        }
         moved = true;
     }
 
@@ -208,6 +212,11 @@ void Player::shootAnimation() {
     shootingTimer = shootingDuration;
 }
 
+void Player::setFacing (bool isFacingRight) {
+    facingRight = isFacingRight;
+    updateSpriteDirection();
+}
+
 void Player::takeDamage (int damageAmount, sf::RenderWindow& window) {
     health -= damageAmount;
     checkDeath(window);
@@ -226,13 +235,13 @@ void Player::resetDamageEffect() {
 }
 
 void Player::draw(sf::RenderWindow& window) const{
-    sf::RectangleShape healthbar(sf::Vector2f(100.f, 10.f));
+    sf::RectangleShape healthbar(sf::Vector2f(100.f, 5.f));
 
     float healthbarY = posY - static_cast<float>(frameSize.y) - 15.f;
 
     healthbar.setPosition(sf::Vector2f(posX - 50.f, healthbarY));
     healthbar.setFillColor(sf::Color::Green);
-    healthbar.setSize(sf::Vector2f(static_cast<float>(health), 10.f));
+    healthbar.setSize(sf::Vector2f(static_cast<float>(health), 5.f));
 
     window.draw(healthbar);
     window.draw(sprite);
@@ -254,7 +263,7 @@ sf::Vector2f Player::getPos() const{
 
 sf::Vector2f Player::getWeaponTipPos() const {
     float offsetX = calculateWeaponOffsetX();
-    float offsetY = -( static_cast<float>(frameSize.y) * 0.7f);
+    float offsetY = -( static_cast<float>(frameSize.y) * 0.6f);
 
     return {posX + offsetX, posY + offsetY};
 }

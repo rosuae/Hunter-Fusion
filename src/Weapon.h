@@ -36,7 +36,7 @@ public:
         return out;
     }
 
-    void fire(const Player& player, sf::Vector2f playerPos, sf::Vector2f targetPos, std::list<sf::Sound>& sounds, const sf::SoundBuffer& buffer);
+    void fire(Player& player, sf::Vector2f playerPos, sf::Vector2f targetPos, std::list<sf::Sound>& sounds, const sf::SoundBuffer& buffer);
     void updateProjectiles(float deltaTime, const Map& map);
     void reload(std::list<sf::Sound>& sounds, const sf::SoundBuffer& buffer);
     void drawProjectiles(sf::RenderWindow& window) const;

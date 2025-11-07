@@ -25,8 +25,12 @@ Weapon::Weapon(std::string n, std::string projName, int projDmg, sf::Texture& te
     firerate{0.1f},
     projectileTex{&tex} {}
 
-void Weapon::fire(const Player& player, sf::Vector2f playerPos, sf::Vector2f targetPos, std::list<sf::Sound>& sounds, const sf::SoundBuffer& buffer) {
+void Weapon::fire(Player& player, sf::Vector2f playerPos, sf::Vector2f targetPos, std::list<sf::Sound>& sounds, const sf::SoundBuffer& buffer) {
+    bool shouldFaceRight = targetPos.x > playerPos.x;
+    player.setFacing(shouldFaceRight);
+
     if (canFire(player)) {
+        player.shootAnimation();
         projectiles.emplace_back(projectileName, projectileDmg, *projectileTex, playerPos, targetPos);
         reloada -= 1;
 

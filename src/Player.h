@@ -53,10 +53,13 @@ public:
     void PlayerMovement(float deltaTime, std::list<sf::Sound>& sounds, const sf::SoundBuffer& buffer, const Map& map);
     void updateAnimation(float deltaTime);
     void shootAnimation();
+    void setFacing (bool isFacingRight);
     void takeDamage (int damageAmount, sf::RenderWindow& window);
     void setHit (bool ok);
+
     void alphaDamageEffect(int alpha);
     void resetDamageEffect();
+
     void draw(sf::RenderWindow& window) const;
     void drawDamageEffect(sf::RenderWindow& window) const;
 

@@ -176,7 +176,7 @@ int main() {
             }
 
             sf::Vector2f targetPos = player.getPos();
-            cameraPos.x += (targetPos.x - cameraPos.x) * cameraSpeed * deltaTime;
+            // cameraPos.x += (targetPos.x - cameraPos.x) * cameraSpeed * deltaTime;
             cameraPos.y += (targetPos.y - cameraPos.y - static_cast<float>(height) / 6) * cameraSpeed * deltaTime;
             camera.setCenter(cameraPos);
             window.setView(camera);
