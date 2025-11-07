@@ -68,8 +68,8 @@ add_executable(${MAIN_EXECUTABLE_NAME}
         src/Enemy.h
         src/Map.cpp
         src/Map.h
-        src/GameManager.cpp
-        src/GameManager.h
+        src/Game.cpp
+        src/Game.h
         src/ResourceManager.cpp
         src/ResourceManager.h
 )

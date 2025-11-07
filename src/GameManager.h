@@ -1,4 +1,0 @@
-#ifndef OOP_GAMEMANAGER_H
-#define OOP_GAMEMANAGER_H
-
-#endif

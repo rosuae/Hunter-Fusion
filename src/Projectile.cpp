@@ -47,7 +47,7 @@ void Projectile::updatePosition(float deltaTime, const Map& map) {
 Projectile::Projectile(std::string n, int d, const sf::Texture& tex, sf::Vector2f playerPos, sf::Vector2f targetPos):
     nume{std::move(n)},
     dmg{d},
-    speed{1000.f},
+    speed{1500.f},
     active{true},
     position{playerPos},
     sprite{tex}
