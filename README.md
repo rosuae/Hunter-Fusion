@@ -16,7 +16,7 @@ Gameplay-ul se bazează pe controlul unui personaj care poate merge, sări, trag
 ### Sprites:
 - *Player:* https://www.spriters-resource.com/browser_games/supermariobroscrossover/asset/177036/
 - *Enemies:* https://www.spriters-resource.com/snes/smetroid/asset/1725/
-- *Background:* https://www.spriters-resource.com/snes/smetroid/asset/65181/
+- *Tiles:* https://www.spriters-resource.com/snes/smetroid/asset/144515/
 - *Sounds:*
   - https://sounds.spriters-resource.com/wii_u/nintendoland/asset/426887/
   - https://sounds.spriters-resource.com/snes/smetroid/asset/439917/

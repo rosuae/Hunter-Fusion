@@ -72,6 +72,8 @@ add_executable(${MAIN_EXECUTABLE_NAME}
         src/Game.h
         src/ResourceManager.cpp
         src/ResourceManager.h
+        src/Entity.cpp
+        src/Entity.h
 )
 
 # NOTE: Add all defined targets (e.g. executables, libraries, etc. )
