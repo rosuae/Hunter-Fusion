@@ -48,10 +48,6 @@ sf::Vector2f Entity::getPos() const {
     return {posX, posY};
 }
 
-int Entity::getHealth() const {
-    return health;
-}
-
 bool Entity::isAlive() const {
     return alive;
 }

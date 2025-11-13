@@ -34,7 +34,6 @@ public:
     virtual bool isAlive() const;
 
     sf::Vector2f getPos() const;
-    int getHealth() const;
 
     void setPosition(float x, float y);
 };
