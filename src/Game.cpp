@@ -152,7 +152,7 @@ void Game::handleCollisions() {
     }
 
     if (totalDamageThisFrame > 0 && m_playerDamageCooldown.getElapsedTime().asSeconds() > 1.f) {
-        m_player->takeDamage(totalDamageThisFrame, m_window);
+        m_player->takeDamage(totalDamageThisFrame);
         m_player->setHit(true);
         m_damageClock.restart();
         m_playerDamageCooldown.restart();
@@ -207,7 +207,7 @@ void Game::render() {
     }
 
     for (const auto& en : m_map->getEnemies()) {
-        en.loadEnemy(m_window);
+        en.draw(m_window);
     }
 
     m_player->drawDamageEffect(m_window);

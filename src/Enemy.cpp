@@ -1,5 +1,6 @@
 #include "Enemy.h"
 #include "Map.h"
+#include <iostream>
 
 void Enemy::moveTowardsPlayer(sf::Vector2f playerPos, float deltaTime) {
     if (posX >= playerPos.x) {
@@ -10,42 +11,22 @@ void Enemy::moveTowardsPlayer(sf::Vector2f playerPos, float deltaTime) {
     }
 }
 
-void Enemy::applyGravity(float deltaTime) {
-    posY += gravity * deltaTime;
+void Enemy::takeDamage(int damageAmount) {
+    health -= damageAmount;
+    checkDeath();
 }
 
-void Enemy::updateSpritePosition() {
+Enemy::Enemy(std::string n, Weapon* f, float posx_, float posy_, sf::Texture& tex)
+    : Entity(n, posx_, posy_, 300.f, 1000.f, tex),
+    fists{f} {
     sprite.setPosition(sf::Vector2f(posX, posY));
-}
-
-void Enemy::checkDeath(std::list<sf::Sound>& sounds, const sf::SoundBuffer& buffer) {
-    if (health <= 0) {
-        health = 0;
-
-        sounds.emplace_back(buffer);
-        sounds.back().play();
-
-        alive = false;
-    }
-}
-
-Enemy::Enemy(std::string n, Weapon* f, float posx_, float posy_, sf::Texture& tex):
-    nume{std::move(n)},
-    health{100},
-    posX{posx_},
-    posY(posy_),
-    gravity{1000.f},
-    speed{300.f},
-    alive{true},
-    fists{f},
-    texture{tex},
-    sprite{texture} {
-    sprite.setPosition(sf::Vector2f(posX, posY));
-    sprite.setOrigin(sf::Vector2f(static_cast<float>(texture.getSize().x) / 2.f, static_cast<float>(texture.getSize().y)));
+    sprite.setOrigin(sf::Vector2f(static_cast<float>(texture.getSize().x) / 2.f,
+                                    static_cast<float>(texture.getSize().y))
+                                    );
     sprite.setScale(sf::Vector2f(1.f, 1.f));
 }
 
-void Enemy::loadEnemy(sf::RenderWindow& window) const{
+void Enemy::draw(sf::RenderWindow& window) const{
     window.draw(sprite);
 }
 
@@ -90,26 +71,25 @@ void Enemy::enemyMovement(sf::Vector2f playerpos, float deltaTime, const Map& ma
     updateSpritePosition();
 }
 
-void Enemy::takeDamage(int damageAmount, std::list<sf::Sound>& sounds, const sf::SoundBuffer& buffer, const sf::SoundBuffer& buffer1) {
-    health -= damageAmount;
+void Enemy::takeDamage(int damageAmount, std::list<sf::Sound>& sounds, const sf::SoundBuffer& hitBuff, const sf::SoundBuffer& deathBuff) {
 
-    sounds.emplace_back(buffer);
-    sounds.back().play();
+    bool wasAlive = this->alive;
 
-    checkDeath(sounds, buffer1);
+    this->takeDamage(damageAmount);
+
+    if (isAlive()) {
+        sounds.emplace_back(hitBuff);
+        sounds.back().play();
+    }
+    else if (wasAlive) {
+        sounds.emplace_back(deathBuff);
+        sounds.back().play();
+    }
 }
 
-Enemy::Enemy (const Enemy& other):
-nume{other.nume},
-health{other.health},
-posX{other.posX},
-posY{other.posY},
-gravity{other.gravity},
-speed{other.speed},
-alive{other.alive},
-fists{other.fists},
-texture{other.texture},
-sprite{other.sprite}
+Enemy::Enemy (const Enemy& other)
+: Entity(other),
+fists{other.fists}
 {
     std::cout<<"Constructor de copiere\n";
 }
@@ -122,8 +102,4 @@ sf::FloatRect Enemy::getBounds() const{
 
 int Enemy::getContactDamage() const {
     return fists->getDmg();
-}
-
-bool Enemy::isAlive() const{
-    return alive;
 }

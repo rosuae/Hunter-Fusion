@@ -3,32 +3,24 @@
 
 #include <list>
 #include "Weapon.h"
+#include "Entity.h"
 
 class Map;
 
-class Enemy {
-    std::string nume;
-    int health;
-    float posX, posY, gravity, speed;
-    bool alive;
+class Enemy : public Entity{
     Weapon* fists;
-    sf::Texture& texture;
-    sf::Sprite sprite;
 
     void moveTowardsPlayer(sf::Vector2f playerPos, float deltaTime);
-    void applyGravity(float deltaTime);
-    void updateSpritePosition();
-    void checkDeath(std::list<sf::Sound>& sounds, const sf::SoundBuffer& buffer);
-
 public:
     Enemy(std::string n, Weapon* f, float posx_, float posy_, sf::Texture& tex);
 
-    void loadEnemy(sf::RenderWindow& window) const;
+    void draw(sf::RenderWindow& window) const override;
     void enemyMovement(sf::Vector2f playerpos, float deltaTime, const Map& map);
+    void takeDamage(int damageAmount) override;
     void takeDamage(int damageAmount, std::list<sf::Sound>& sounds, const sf::SoundBuffer& buffer, const sf::SoundBuffer& buffer1);
 
     friend std::ostream& operator<< (std::ostream& out, const Enemy& e) {
-        out << " Nume inamic: " << e.nume << " Pos X: " << e.posX << " Pos Y: " << e.posY << " Viata inamic: " << e.health << " Viteza imanic: " << e.speed << " " << *e.fists;
+        out << " Nume inamic: " << e.name << " Pos X: " << e.posX << " Pos Y: " << e.posY << " Viata inamic: " << e.health << " Viteza imanic: " << e.speed << " " << *e.fists;
         return out;
     }
 
@@ -37,7 +29,7 @@ public:
             return *this;
         }
 
-        nume = other.nume;
+        name = other.name;
         health = other.health;
         posX = other.posX;
         posY = other.posY;
@@ -52,12 +44,11 @@ public:
     }
 
     Enemy (const Enemy& other);
-    ~Enemy();
+    ~Enemy() override;
 
 
-    sf::FloatRect getBounds() const;
+    sf::FloatRect getBounds() const override;
     [[nodiscard]]int getContactDamage() const;
-    [[nodiscard]]bool isAlive() const;
 };
 
 #endif
