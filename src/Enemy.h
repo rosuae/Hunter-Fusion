@@ -12,7 +12,7 @@ class Enemy : public Entity{
 
     void moveTowardsPlayer(sf::Vector2f playerPos, float deltaTime);
 public:
-    Enemy(std::string n, Weapon* f, float posx_, float posy_, sf::Texture& tex);
+    Enemy(const std::string& n, Weapon* f, float posx_, float posy_, sf::Texture& tex);
 
     void draw(sf::RenderWindow& window) const override;
     void enemyMovement(sf::Vector2f playerpos, float deltaTime, const Map& map);

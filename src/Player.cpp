@@ -27,7 +27,7 @@ float Player::calculateWeaponOffsetX() const {
     return facingRight ? offsetX : -offsetX;
 }
 
-Player::Player(std::string n, sf::Texture& tex)
+Player::Player(const std::string& n, sf::Texture& tex)
     : Entity(n, 1000.0f, 450.0f, 900.0f, 2000.f, tex),
       velocity{0.0f},
       maxJump{-1000.f},

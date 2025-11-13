@@ -16,7 +16,7 @@ void Enemy::takeDamage(int damageAmount) {
     checkDeath();
 }
 
-Enemy::Enemy(std::string n, Weapon* f, float posx_, float posy_, sf::Texture& tex)
+Enemy::Enemy(const std::string& n, Weapon* f, float posx_, float posy_, sf::Texture& tex)
     : Entity(n, posx_, posy_, 300.f, 1000.f, tex),
     fists{f} {
     sprite.setPosition(sf::Vector2f(posX, posY));

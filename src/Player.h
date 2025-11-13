@@ -38,7 +38,7 @@ class Player : public Entity {
     float calculateWeaponOffsetX() const;
 
 public:
-    Player(std::string n, sf::Texture& tex);
+    Player(const std::string& n, sf::Texture& tex);
     ~Player() override;
 
     void PlayerMovement(float deltaTime, std::list<sf::Sound>& sounds,
