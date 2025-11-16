@@ -31,7 +31,7 @@ class Game {
     std::unique_ptr<Player> m_player;
     std::unique_ptr<Weapon> m_playerWeapon;
     std::unique_ptr<Map> m_map;
-    std::unique_ptr<Weapon> m_enemyWeapon;
+    std::shared_ptr<Weapon> m_enemyWeapon;
 
     sf::Clock m_clock;
     sf::Clock m_playerDamageCooldown;

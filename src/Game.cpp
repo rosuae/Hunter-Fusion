@@ -28,7 +28,7 @@ Game::Game() :
     m_player = std::make_unique<Player>(playerName, m_resManager.getTexture("samussheet.png"));
     m_playerWeapon = std::make_unique<Weapon>(playerWeapon, projectileName, 25, m_resManager.getTexture("projectile.png"), 120);
     m_map = std::make_unique<Map>(mapName, "assets/textures/map/harta.txt", m_resManager);
-    m_enemyWeapon = std::make_unique<Weapon>(enemyWeapon, enemyProj, 10, m_resManager.getTexture("projectile.png"), 1000);
+    m_enemyWeapon = std::make_shared<Weapon>(enemyWeapon, enemyProj, 10, m_resManager.getTexture("projectile.png"), 1000);
 
     std::vector<std::string> enemyNames;
     std::string enemyName;
@@ -38,7 +38,7 @@ Game::Game() :
     fin.close();
 
     for (const auto& name : enemyNames) {
-        m_map->addEnemy({name, m_enemyWeapon.get(),
+        m_map->addEnemy({name, m_enemyWeapon,
                       static_cast<float>(randomInt(100, 1920)),
                       static_cast<float>(randomInt(99, 400)),
                       m_resManager.getTexture("enemy.png")});
@@ -114,7 +114,7 @@ void Game::updateEntities(float deltaTime) {
 
     for (auto& en : m_map->getEnemies()) {
         if (en.isAlive()) {
-            en.enemyMovement(m_player->getPos(), deltaTime, *m_map);
+            en.update(deltaTime, *m_map);
         }
     }
 
@@ -170,7 +170,7 @@ void Game::handleCollisions() {
     });
 
     for (int i = 0; i < enemiesToSpawn; ++i) {
-        m_map->addEnemy({"Metroid", m_enemyWeapon.get(),
+        m_map->addEnemy({"Metroid", m_enemyWeapon,
             static_cast<float> (randomInt(100, 1920)),
             static_cast<float> (randomInt(100, 400)),
             m_resManager.getTexture("enemy.png")});

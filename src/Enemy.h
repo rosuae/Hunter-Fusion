@@ -8,15 +8,19 @@
 class Map;
 
 class Enemy : public Entity{
-    Weapon* fists;
-
+    Entity* target;
+    std::shared_ptr<Weapon> fists;
+    sf::FloatRect doGetBounds() const override;
+    void doDraw(sf::RenderWindow& window) const override;
+    void doTakeDamage(int damageAmount) override;
+    void doUpdate(float deltatime, const Map &) override;
+    void applyGravity(float deltaTime) override;
     void moveTowardsPlayer(sf::Vector2f playerPos, float deltaTime);
-public:
-    Enemy(const std::string& n, Weapon* f, float posx_, float posy_, sf::Texture& tex);
 
-    void draw(sf::RenderWindow& window) const override;
-    void enemyMovement(sf::Vector2f playerpos, float deltaTime, const Map& map);
-    void takeDamage(int damageAmount) override;
+public:
+    Enemy(const std::string& n, std::shared_ptr<Weapon> f, float posx_, float posy_, sf::Texture& tex);
+
+    void setTarget (Entity* playerTarget);
     void takeDamage(int damageAmount, std::list<sf::Sound>& sounds, const sf::SoundBuffer& buffer, const sf::SoundBuffer& buffer1);
 
     friend std::ostream& operator<< (std::ostream& out, const Enemy& e) {
@@ -29,16 +33,9 @@ public:
             return *this;
         }
 
-        name = other.name;
-        health = other.health;
-        posX = other.posX;
-        posY = other.posY;
-        speed = other.speed;
-        gravity = other.gravity;
-        alive = other.alive;
+        Entity::operator=(other);
+        target = other.target;
         fists = other.fists;
-        texture = other.texture;
-        sprite = other.sprite;
         std::cout<<"S-a folosit supraincarcarea op= pentru clasa Enemy \n";
         return *this;
     }
@@ -46,8 +43,6 @@ public:
     Enemy (const Enemy& other);
     ~Enemy() override;
 
-
-    sf::FloatRect getBounds() const override;
     [[nodiscard]]int getContactDamage() const;
 };
 

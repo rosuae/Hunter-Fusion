@@ -14,14 +14,6 @@ void Player::applyGravity(float deltaTime) {
     posY += velocity * deltaTime;
 }
 
-void Player::checkDeath() {
-    if (health <= 0) {
-        health = 0;
-        alive = false;
-        std::cout << "GAME OVER \n";
-    }
-}
-
 float Player::calculateWeaponOffsetX() const {
     float offsetX = static_cast<float>(frameSize.x) * 0.3f;
     return facingRight ? offsetX : -offsetX;
@@ -212,9 +204,8 @@ void Player::setFacing(bool isFacingRight) {
     updateSpriteDirection();
 }
 
-void Player::takeDamage(int damageAmount) {
+void Player::doTakeDamage(int damageAmount) {
     health -= damageAmount;
-    checkDeath();
 }
 
 void Player::setHit(const bool ok) {
@@ -261,7 +252,7 @@ sf::Vector2f Player::getWeaponTipPos() const {
     return {posX + offsetX, posY + offsetY};
 }
 
-sf::FloatRect Player::getBounds() const {
+sf::FloatRect Player::doGetBounds() const {
     float left = posX - static_cast<float>(hitboxWidth) / 2.0f;
     float top = posY - static_cast<float>(hitboxHeight);
     return {sf::Vector2f(left, top), sf::Vector2f(static_cast<float>(hitboxWidth), static_cast<float>(hitboxHeight))};

@@ -7,6 +7,14 @@
 class Map;
 
 class Entity {
+
+    bool alive;
+
+    virtual sf::FloatRect doGetBounds() const = 0;
+    virtual void doDraw(sf::RenderWindow& window) const = 0;
+    virtual void doTakeDamage(int damageAmount) = 0;
+    virtual void doUpdate(float deltatime, const Map&) = 0;
+    virtual void applyGravity(float deltaTime) = 0;
 protected:
     std::string name;
     int health;
@@ -14,28 +22,42 @@ protected:
     float posY;
     float speed;
     float gravity;
-    bool alive;
 
     sf::Texture& texture;
     sf::Sprite sprite;
+    void updateSpritePosition();
+    void checkDeath();
 
 public:
     Entity(std::string n, float x, float y, float spd, float grav, sf::Texture& tex);
     Entity (const Entity& other);
+    Entity& operator= (const Entity& other) {
+        if (this == &other) {
+            return *this;
+        }
+
+        alive = other.alive;
+        name = other.name;
+        health = other.health;
+        posX = other.posX;
+        posY = other.posY;
+        speed = other.speed;
+        gravity = other.gravity;
+        texture = other.texture;
+        sprite = other.sprite;
+        return *this;
+    }
     virtual ~Entity();
 
-    virtual void draw(sf::RenderWindow& window) const = 0;
-    virtual sf::FloatRect getBounds() const = 0;
-    virtual void takeDamage(int damageAmount) = 0;
-
-    virtual void applyGravity(float deltaTime);
-    virtual void updateSpritePosition();
-    virtual void checkDeath();
-    virtual bool isAlive() const;
-
-    sf::Vector2f getPos() const;
-
+    void draw(sf::RenderWindow& window) const;
+    void update(float deltaTime, const Map& map);
+    void takeDamage(int damageAmount);
     void setPosition(float x, float y);
+
+    bool isAlive() const;
+
+    sf::FloatRect getBounds() const;
+    sf::Vector2f getPos() const;
 };
 
 #endif // ENTITY_H

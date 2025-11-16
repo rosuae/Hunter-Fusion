@@ -32,9 +32,10 @@ class Player : public Entity {
 
     sf::RectangleShape damageOverlay;
 
-    void updateSpriteDirection();
+    sf::FloatRect doGetBounds() const override;
     void applyGravity(float deltaTime) override;
-    void checkDeath() override;
+    void doTakeDamage(int damageAmount) override;
+    void updateSpriteDirection();
     float calculateWeaponOffsetX() const;
 
 public:
@@ -46,16 +47,14 @@ public:
     void updateAnimation(float deltaTime);
     void shootAnimation();
     void setFacing(bool isFacingRight);
-    void takeDamage(int damageAmount) override;
     void setHit(bool ok);
     void alphaDamageEffect(int alpha);
     void resetDamageEffect();
 
-    void draw(sf::RenderWindow& window) const override;
+    void draw(sf::RenderWindow& window) const;
     void drawDamageEffect(sf::RenderWindow& window) const;
 
     sf::Vector2f getWeaponTipPos() const;
-    sf::FloatRect getBounds() const override;
     bool isHit() const;
     bool Jumping() const;
 };

@@ -2,13 +2,13 @@
 #include <iostream>
 
 Entity::Entity(std::string n, float x, float y, float spd, float grav, sf::Texture& tex)
-    : name{std::move(n)},
+    : alive{true},
+      name{std::move(n)},
       health{100},
       posX{x},
       posY{y},
       speed{spd},
       gravity{grav},
-      alive{true},
       texture{tex},
       sprite{texture} {
 }
@@ -18,19 +18,16 @@ Entity::~Entity() {
 }
 
 Entity::Entity (const Entity& other):
+alive{other.alive},
 name{other.name},
 health{other.health},
 posX{other.posX},
 posY{other.posY},
 speed{other.speed},
 gravity{other.gravity},
-alive{other.alive},
 texture{other.texture},
 sprite{other.sprite}{
-}
-
-void Entity::applyGravity(float deltaTime) {
-    posY += gravity * deltaTime;
+    std::cout << "S a apelat constructor copiere entity";
 }
 
 void Entity::updateSpritePosition() {
@@ -44,14 +41,38 @@ void Entity::checkDeath() {
     }
 }
 
-sf::Vector2f Entity::getPos() const {
-    return {posX, posY};
+void Entity::draw(sf::RenderWindow& window) const {
+    if (!alive) return;
+    doDraw(window);
 }
 
-bool Entity::isAlive() const {
+void Entity::update(float deltaTime, const Map &map) {
+    if (!alive) return;
+
+    doUpdate(deltaTime, map);
+    updateSpritePosition();
+    checkDeath();
+}
+
+void Entity::takeDamage(int damageAmount) {
+    if (!alive) return;
+
+    doTakeDamage(damageAmount);
+    checkDeath();
+}
+
+bool Entity::isAlive() const{
     return alive;
 }
 
+sf::FloatRect Entity::getBounds() const {
+    if (!alive) return sf::FloatRect{};
+    return doGetBounds();
+}
+
+sf::Vector2f Entity::getPos() const {
+    return {posX, posY};
+}
 void Entity::setPosition(float x, float y) {
     posX = x;
     posY = y;
