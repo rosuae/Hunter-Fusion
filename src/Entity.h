@@ -13,7 +13,7 @@ class Entity {
     virtual sf::FloatRect doGetBounds() const = 0;
     virtual void doDraw(sf::RenderWindow& window) const = 0;
     virtual void doTakeDamage(int damageAmount) = 0;
-    virtual void doUpdate(float deltatime, const Map&) = 0;
+    virtual void doUpdate(float deltaTime, const Map&) = 0;
     virtual void applyGravity(float deltaTime) = 0;
 protected:
     std::string name;

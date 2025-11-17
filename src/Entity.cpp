@@ -1,7 +1,7 @@
 #include "Entity.h"
 #include <iostream>
 
-Entity::Entity(std::string n, float x, float y, float spd, float grav, sf::Texture& tex)
+Entity::Entity(std::string n, const float x, const float y, const float spd, const float grav, sf::Texture& tex)
     : alive{true},
       name{std::move(n)},
       health{100},

@@ -25,10 +25,30 @@ Game::Game() :
     std::string playerName, playerWeapon, projectileName, mapName, enemyWeapon, enemyProj;
     fin >> playerName >> playerWeapon >> projectileName >> mapName >> enemyWeapon >> enemyProj;
 
-    m_player = std::make_unique<Player>(playerName, m_resManager.getTexture("samussheet.png"));
-    m_playerWeapon = std::make_unique<Weapon>(playerWeapon, projectileName, 25, m_resManager.getTexture("projectile.png"), 120);
-    m_map = std::make_unique<Map>(mapName, "assets/textures/map/harta.txt", m_resManager);
-    m_enemyWeapon = std::make_shared<Weapon>(enemyWeapon, enemyProj, 10, m_resManager.getTexture("projectile.png"), 1000);
+    m_player = std::make_unique<Player>(
+    playerName,
+    m_resManager.getTexture("samussheet.png"),
+    m_playingSounds,
+    m_resManager.getSound("jump.wav")
+    );
+    m_playerWeapon = std::make_unique<Weapon>(
+    playerWeapon,
+    projectileName,
+    25,
+    m_resManager.getTexture("projectile.png"),
+    120
+    );
+    m_map = std::make_unique<Map>(
+    mapName,
+    "assets/textures/map/harta.txt",
+    m_resManager
+    );
+    m_enemyWeapon = std::make_shared<Weapon>(
+    enemyWeapon,
+    enemyProj,
+    10,
+    m_resManager.getTexture("projectile.png"),
+    1000);
 
     std::vector<std::string> enemyNames;
     std::string enemyName;
@@ -38,10 +58,20 @@ Game::Game() :
     fin.close();
 
     for (const auto& name : enemyNames) {
-        m_map->addEnemy({name, m_enemyWeapon,
-                      static_cast<float>(randomInt(100, 1920)),
-                      static_cast<float>(randomInt(99, 400)),
-                      m_resManager.getTexture("enemy.png")});
+        m_map->addEnemy({
+            name,
+            m_enemyWeapon,
+            static_cast<float>(randomInt(100, 1920)),
+            static_cast<float>(randomInt(99, 400)),
+            m_resManager.getTexture("enemy.png"),
+            m_playingSounds,
+            m_resManager.getSound("enemydamage.wav"),
+            m_resManager.getSound("enemydeath.wav")
+        });
+    }
+
+    for (auto& en : m_map->getEnemies()) {
+        en.setTarget(m_player.get());
     }
 
     const sf::VideoMode desktop = sf::VideoMode::getDesktopMode();
@@ -107,15 +137,11 @@ void Game::update(float deltaTime) {
 }
 
 void Game::updateEntities(float deltaTime) {
-    if (m_player->isAlive()) {
-        m_player->PlayerMovement(deltaTime, m_playingSounds, m_resManager.getSound("jump.wav"), *m_map);
-        m_player->updateAnimation(deltaTime);
-    }
+
+    m_player->update(deltaTime, *m_map);
 
     for (auto& en : m_map->getEnemies()) {
-        if (en.isAlive()) {
             en.update(deltaTime, *m_map);
-        }
     }
 
     m_playerWeapon->updateProjectiles(deltaTime, *m_map);
@@ -137,7 +163,7 @@ void Game::handleCollisions() {
         if (!proj.isActive()) continue;
         for (auto& en : m_map->getEnemies()) {
             if (en.isAlive() && intersects(proj.getBounds(), en.getBounds())) {
-                en.takeDamage(proj.getDamage(), m_playingSounds, m_resManager.getSound("enemydamage.wav"), m_resManager.getSound("enemydeath.wav"));
+                en.takeDamage(proj.getDamage());
                 proj.deactivate();
                 break;
             }
@@ -170,10 +196,20 @@ void Game::handleCollisions() {
     });
 
     for (int i = 0; i < enemiesToSpawn; ++i) {
-        m_map->addEnemy({"Metroid", m_enemyWeapon,
-            static_cast<float> (randomInt(100, 1920)),
-            static_cast<float> (randomInt(100, 400)),
-            m_resManager.getTexture("enemy.png")});
+        m_map->addEnemy({
+            "Metroid",
+            m_enemyWeapon,
+            static_cast<float>(randomInt(100, 1920)),
+            static_cast<float>(randomInt(99, 400)),
+            m_resManager.getTexture("enemy.png"),
+            m_playingSounds,
+            m_resManager.getSound("enemydamage.wav"),
+            m_resManager.getSound("enemydeath.wav")
+        });
+    }
+
+    for (auto& en : m_map->getEnemies()) {
+        en.setTarget(m_player.get());
     }
 }
 
@@ -202,9 +238,7 @@ void Game::render() {
     m_map->drawMap(m_window);
     m_playerWeapon->drawProjectiles(m_window);
 
-    if (m_player->isAlive()) {
-        m_player->draw(m_window);
-    }
+    m_player->draw(m_window);
 
     for (const auto& en : m_map->getEnemies()) {
         en.draw(m_window);

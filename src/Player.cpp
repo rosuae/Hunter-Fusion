@@ -19,7 +19,7 @@ float Player::calculateWeaponOffsetX() const {
     return facingRight ? offsetX : -offsetX;
 }
 
-Player::Player(const std::string& n, sf::Texture& tex)
+Player::Player(const std::string& n, sf::Texture& tex, std::list<sf::Sound>& activeSounds_, const sf::SoundBuffer& jumpSound_)
     : Entity(n, 1000.0f, 450.0f, 900.0f, 2000.f, tex),
       velocity{0.0f},
       maxJump{-1000.f},
@@ -36,7 +36,10 @@ Player::Player(const std::string& n, sf::Texture& tex)
       currentFrame{0},
       animationRow{0},
       animationStartIndex{0},
-      animationFrameCount{1} {
+      animationFrameCount{1},
+      activeSounds{activeSounds_},
+      jumpSound{jumpSound_}
+{
 
     damageOverlay.setSize(sf::Vector2f(3000.f, 3000.f));
     damageOverlay.setFillColor(sf::Color(255, 0, 0, 0));
@@ -49,16 +52,15 @@ Player::Player(const std::string& n, sf::Texture& tex)
     sprite.setTextureRect(sf::IntRect(sf::Vector2i(0, 0), frameSize));
 }
 
-void Player::PlayerMovement(float deltaTime, std::list<sf::Sound>& sounds,
-                           const sf::SoundBuffer& buffer, const Map& map) {
+void Player::doUpdate(float deltaTime, const Map& map) {
 
     if ((sf::Keyboard::isKeyPressed(sf::Keyboard::Key::W) ||
          sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Space)) && !isJumping) {
         velocity = maxJump;
         isJumping = true;
 
-        sounds.emplace_back(buffer);
-        sounds.back().play();
+        activeSounds.emplace_back(jumpSound);
+        activeSounds.back().play();
     }
 
     float lastPosX = posX;
@@ -85,7 +87,9 @@ void Player::PlayerMovement(float deltaTime, std::list<sf::Sound>& sounds,
     float testTopLeftX = posX - static_cast<float>(hitboxWidth) / 2.0f;
     float testTopLeftY = posY - static_cast<float>(hitboxHeight);
     sf::FloatRect testBoundsX(sf::Vector2f(testTopLeftX, testTopLeftY),
-                            sf::Vector2f(static_cast<float>(hitboxWidth), static_cast<float>(hitboxHeight)));
+                            sf::Vector2f(static_cast<float>(hitboxWidth),
+                                static_cast<float>(hitboxHeight))
+                                );
 
     if (map.isWall(testBoundsX)) {
         posX = lastPosX;
@@ -98,7 +102,9 @@ void Player::PlayerMovement(float deltaTime, std::list<sf::Sound>& sounds,
     testTopLeftX = posX - static_cast<float>(hitboxWidth) / 2.0f;
     testTopLeftY = posY - static_cast<float>(hitboxHeight);
     sf::FloatRect testBoundsY(sf::Vector2f(testTopLeftX, testTopLeftY),
-                            sf::Vector2f(static_cast<float>(hitboxWidth), static_cast<float>(hitboxHeight)));
+                            sf::Vector2f(static_cast<float>(hitboxWidth),
+                                static_cast<float>(hitboxHeight))
+                                );
 
     if (map.isWall(testBoundsY)) {
         posY = lastPosY;
@@ -112,7 +118,7 @@ void Player::PlayerMovement(float deltaTime, std::list<sf::Sound>& sounds,
     }
 
     updateSpriteDirection();
-    sprite.setPosition(sf::Vector2f(posX, posY));
+    updateAnimation(deltaTime);
 }
 
 void Player::updateAnimation(float deltaTime) {
@@ -220,7 +226,7 @@ void Player::resetDamageEffect() {
     damageOverlay.setFillColor(sf::Color(255, 0, 0, 0));
 }
 
-void Player::draw(sf::RenderWindow& window) const {
+void Player::doDraw(sf::RenderWindow& window) const {
     sf::RectangleShape healthbar(sf::Vector2f(100.f, 5.f));
 
     float healthbarY = posY - static_cast<float>(frameSize.y) - 15.f;
@@ -255,7 +261,11 @@ sf::Vector2f Player::getWeaponTipPos() const {
 sf::FloatRect Player::doGetBounds() const {
     float left = posX - static_cast<float>(hitboxWidth) / 2.0f;
     float top = posY - static_cast<float>(hitboxHeight);
-    return {sf::Vector2f(left, top), sf::Vector2f(static_cast<float>(hitboxWidth), static_cast<float>(hitboxHeight))};
+    return {sf::Vector2f(left, top),
+                            sf::Vector2f(
+                            static_cast<float>(hitboxWidth),
+                                static_cast<float>(hitboxHeight))
+                };
 }
 
 bool Player::isHit() const {

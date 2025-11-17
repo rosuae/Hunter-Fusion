@@ -1,11 +1,21 @@
 #include "Enemy.h"
 #include "Map.h"
+#include <SFML/Audio.hpp>
 #include <iostream>
 
-Enemy::Enemy(const std::string& n, std::shared_ptr<Weapon> f, float posx_, float posy_, sf::Texture& tex)
+Enemy::Enemy(const std::string& n,
+    std::shared_ptr<Weapon> f,
+    float posx_, float posy_,
+    sf::Texture& tex,
+    std::list<sf::Sound>& activeSounds_,
+    const sf::SoundBuffer& hitSound_,
+    const sf::SoundBuffer& deathSound_)
     : Entity(n, posx_, posy_, 300.f, 1000.f, tex),
     target{nullptr},
-    fists{std::move(f)}
+    fists{std::move(f)},
+    activeSounds{activeSounds_},
+    hitSound{hitSound_},
+    deathSound{deathSound_}
 {
     sprite.setPosition(sf::Vector2f(posX, posY));
     sprite.setOrigin(sf::Vector2f(static_cast<float>(texture.getSize().x) / 2.f,
@@ -17,7 +27,10 @@ Enemy::Enemy(const std::string& n, std::shared_ptr<Weapon> f, float posx_, float
 Enemy::Enemy (const Enemy& other)
 : Entity(other),
 target{other.target},
-fists{other.fists}
+fists{other.fists},
+activeSounds{other.activeSounds},
+hitSound{other.hitSound},
+deathSound{other.deathSound}
 {
     std::cout<<"Constructor de copiere\n";
 }
@@ -41,8 +54,21 @@ void Enemy::doDraw(sf::RenderWindow& window) const{
     window.draw(sprite);
 }
 
-void Enemy::doTakeDamage(int damageamount) {
-    health -= damageamount;
+void Enemy::doTakeDamage(int damageAmount) {
+
+    bool wasAlive = this->isAlive();
+
+    health -= damageAmount;
+    checkDeath();
+
+    if (isAlive()) {
+        activeSounds.emplace_back(hitSound);
+        activeSounds.back().play();
+    }
+    else if (wasAlive) {
+        activeSounds.emplace_back(deathSound);
+        activeSounds.back().play();
+    }
 }
 
 void Enemy::doUpdate(float deltaTime, const Map& map) {
@@ -106,22 +132,6 @@ void Enemy::applyGravity(float deltaTime) {
 
 void Enemy::setTarget(Entity *playerTarget) {
     this->target = playerTarget;
-}
-
-void Enemy::takeDamage(int damageAmount, std::list<sf::Sound>& sounds, const sf::SoundBuffer& hitBuff, const sf::SoundBuffer& deathBuff) {
-
-    bool wasAlive = this->isAlive();
-
-    Entity::takeDamage(damageAmount);
-
-    if (isAlive()) {
-        sounds.emplace_back(hitBuff);
-        sounds.back().play();
-    }
-    else if (wasAlive) {
-        sounds.emplace_back(deathBuff);
-        sounds.back().play();
-    }
 }
 
 int Enemy::getContactDamage() const {

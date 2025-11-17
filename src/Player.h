@@ -31,19 +31,21 @@ class Player : public Entity {
     int animationFrameCount;
 
     sf::RectangleShape damageOverlay;
+    std::list<sf::Sound>& activeSounds;
+    const sf::SoundBuffer& jumpSound;
 
     sf::FloatRect doGetBounds() const override;
-    void applyGravity(float deltaTime) override;
+    void doDraw(sf::RenderWindow &window) const override;
     void doTakeDamage(int damageAmount) override;
+    void doUpdate(float deltaTime, const Map&) override;
+    void applyGravity(float deltaTime) override;
     void updateSpriteDirection();
     float calculateWeaponOffsetX() const;
 
 public:
-    Player(const std::string& n, sf::Texture& tex);
+    Player(const std::string& n, sf::Texture& tex, std::list<sf::Sound>& activeSounds_, const sf::SoundBuffer& jumpSound_);
     ~Player() override;
 
-    void PlayerMovement(float deltaTime, std::list<sf::Sound>& sounds,
-                       const sf::SoundBuffer& buffer, const Map& map);
     void updateAnimation(float deltaTime);
     void shootAnimation();
     void setFacing(bool isFacingRight);
@@ -51,7 +53,6 @@ public:
     void alphaDamageEffect(int alpha);
     void resetDamageEffect();
 
-    void draw(sf::RenderWindow& window) const;
     void drawDamageEffect(sf::RenderWindow& window) const;
 
     sf::Vector2f getWeaponTipPos() const;
