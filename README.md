@@ -27,11 +27,9 @@ Gameplay-ul se bazează pe controlul unui personaj care poate merge, sări, trag
 - More rooms that should be generated from files + Interconnections
 - More enemies + Bosses
 - PowerUps + Ammo and Health Drops
-- Player and Enemy SpawnPoints to be placed as tiles
 
 ## Known Bugs:
 
-- Enemies could spawn inside tiles causing them to stop moving completely
 - Player can run out of ammo. Drops system will be implemented
 - While falling, the player can perform one jump if he didn't jump before (more like a feature)
 ### Tema 0

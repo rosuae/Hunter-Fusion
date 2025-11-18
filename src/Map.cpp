@@ -3,6 +3,14 @@
 #include "Enemy.h"
 #include "Entity.h"
 #include "ResourceManager.h"
+#include <random>
+
+namespace {
+    int randomInt(const int min, const int max) {
+        static std::mt19937 gen(std::random_device{}());
+        return std::uniform_int_distribution(min, max)(gen);
+    }
+}
 
 Map::Map(std::string n, const std::string& filePath, ResourceManager& resManager):
     MapNume{std::move(n)},
@@ -23,6 +31,16 @@ Map::Map(std::string n, const std::string& filePath, ResourceManager& resManager
     for (const auto& mapLay : mapLayout) {
         std::cout << mapLay << "\n";
     }
+
+    for (size_t y = 0; y < mapLayout.size(); ++y)
+        for (size_t x = 0; x <  mapLayout[y].size(); ++x) {
+            char tileType = mapLayout[y][x];
+            if (tileType == 'E') {
+                enemySpawns.emplace_back(std::pair(x, y));
+            } else if (tileType == 'P') {
+                playerSpawn = std::pair(x, y);
+            }
+        }
 }
 
 void Map::drawMap(sf::RenderWindow& window) {
@@ -52,6 +70,28 @@ void Map::drawEntities(sf::RenderWindow& window) const{
     for (const auto& ent : entities) {
         ent->draw(window);
     }
+}
+
+std::pair<float, float> Map::generateEnemySpawn() const {
+    if (enemySpawns.empty()) {
+        return {0.0f, 0.0f};
+    }
+    int randomIndex = randomInt(0, static_cast<int>(enemySpawns.size()) - 1);
+
+    auto spawnGrid = enemySpawns[randomIndex];
+
+    float spawnX = spawnGrid.first * TILE_SIZE;
+    float spawnY = spawnGrid.second * TILE_SIZE;
+
+    return {spawnX, spawnY};
+}
+
+std::pair<float, float> Map::getPlayerSpawn() const {
+    auto spawnGrid = playerSpawn;
+    float spawnX = spawnGrid.first * TILE_SIZE;
+    float spawnY = spawnGrid.second * TILE_SIZE;
+
+    return {spawnX, spawnY};
 }
 
 int Map::removeDeadEntities() {

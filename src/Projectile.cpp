@@ -80,10 +80,11 @@ bool Projectile::isActive() const {
     return active;
 }
 
-bool Projectile::isOutOfBounds(float maxX, float maxY) const {
-    return position.x < -100 || position.x > maxX + 100 || position.y < -100 || position.y > maxY + 3000;
-}
+// bool Projectile::isOutOfBounds(float maxX, float maxY) const {
+//     return position.x < -100 || position.x > maxX + 100 || position.y < -100 || position.y > maxY + 3000;
+// }
+//
 
-bool Projectile::shouldBeRemoved(float maxX, float maxY) const {
-    return !active || isOutOfBounds(maxX, maxY);
+bool Projectile::shouldBeRemoved() const {
+    return !active;
 }

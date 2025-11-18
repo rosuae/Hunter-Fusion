@@ -19,13 +19,13 @@ float Player::calculateWeaponOffsetX() const {
     return facingRight ? offsetX : -offsetX;
 }
 
-Player::Player(const std::string& n, sf::Texture& tex, std::list<sf::Sound>& activeSounds_, const sf::SoundBuffer& jumpSound_)
-    : Entity(n, 1000.0f, 450.0f, 900.0f, 2000.f, tex),
+Player::Player(const std::string& n, sf::Texture& tex, float posx_, float posy_, std::list<sf::Sound>& activeSounds_, const sf::SoundBuffer& jumpSound_)
+    : Entity(n, posx_, posy_, 1100.0f, 2500.f, tex),
       velocity{0.0f},
-      maxJump{-1000.f},
-      frameSize{sf::Vector2i(149, 148)},
-      hitboxWidth{80},
-      hitboxHeight{80},
+      maxJump{-1400.f},
+      frameSize{sf::Vector2i(224, 222)},
+      hitboxWidth{120},
+      hitboxHeight{120},
       animationTimer{0.0f},
       frameDuration{0.12f},
       shootingTimer{0.0f},
@@ -46,7 +46,7 @@ Player::Player(const std::string& n, sf::Texture& tex, std::list<sf::Sound>& act
 
     sprite.setPosition(sf::Vector2f(posX, posY));
     sprite.setOrigin(sf::Vector2f(static_cast<float>(frameSize.x) / 2.f,
-                                   static_cast<float>(frameSize.y))
+                                   (static_cast<float>(frameSize.y)) - 12.f)
                                    );
     sprite.scale(sf::Vector2f(1.f, 1.f));
     sprite.setTextureRect(sf::IntRect(sf::Vector2i(0, 0), frameSize));
@@ -71,32 +71,40 @@ void Player::doBehavior(float deltaTime, const Map& map) {
     }
 
     float lastPosX = posX;
-    bool moved = false;
+    bool movedLeft = false;
+    bool movedRight = false;
 
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A)) {
+        movedLeft = true;
+    }
+
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D)) {
+        movedRight = true;
+    }
+
+    if (movedLeft && movedRight) {
+        this->isRunning = false;
+    } else if (movedLeft) {
         posX -= speed * deltaTime;
         if (shootingTimer <= 0.0f) {
             facingRight = false;
         }
-        moved = true;
-    }
-
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D)) {
+        this->isRunning = true;
+    } else if (movedRight) {
         posX += speed * deltaTime;
         if (shootingTimer <= 0.0f) {
             facingRight = true;
         }
-        moved = true;
+        this->isRunning = true;
+    } else {
+        this->isRunning = false;
     }
-
-    this->isRunning = moved;
 
     float testTopLeftX = posX - static_cast<float>(hitboxWidth) / 2.0f;
     float testTopLeftY = posY - static_cast<float>(hitboxHeight);
     sf::FloatRect testBoundsX(sf::Vector2f(testTopLeftX, testTopLeftY),
                             sf::Vector2f(static_cast<float>(hitboxWidth),
-                                static_cast<float>(hitboxHeight))
-                                );
+                                static_cast<float>(hitboxHeight)));
 
     if (map.isWall(testBoundsX)) {
         posX = lastPosX;
@@ -268,8 +276,7 @@ sf::FloatRect Player::doGetBounds() const {
     return {sf::Vector2f(left, top),
                             sf::Vector2f(
                             static_cast<float>(hitboxWidth),
-                                static_cast<float>(hitboxHeight))
-                };
+                                static_cast<float>(hitboxHeight))};
 }
 
 bool Player::isHit() const {

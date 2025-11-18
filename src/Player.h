@@ -43,7 +43,7 @@ class Player : public Entity {
     float calculateWeaponOffsetX() const;
 
 public:
-    Player(const std::string& n, sf::Texture& tex, std::list<sf::Sound>& activeSounds_, const sf::SoundBuffer& jumpSound_);
+    Player(const std::string& n, sf::Texture& tex, float posx_, float posy_, std::list<sf::Sound>& activeSounds_, const sf::SoundBuffer& jumpSound_);
     std::unique_ptr<Entity> clone() const override;
     ~Player() override;
 

@@ -47,7 +47,7 @@ void Weapon::updateProjectiles(float deltaTime, const Map& map) {
     }
 
     std::erase_if(projectiles, [](const Projectile& p) {
-        return p.shouldBeRemoved(1920.f, 1080.f);
+        return p.shouldBeRemoved();
     });
 }
 

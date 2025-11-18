@@ -38,8 +38,8 @@ public:
     sf::FloatRect getBounds() const;
     [[nodiscard]]int getDamage() const;
     [[nodiscard]]bool isActive() const;
-    [[nodiscard]]bool isOutOfBounds(float maxX, float maxY) const;
-    [[nodiscard]]bool shouldBeRemoved(float maxX, float maxY) const;
+    // [[nodiscard]]bool isOutOfBounds(float maxX, float maxY) const;
+    [[nodiscard]]bool shouldBeRemoved() const;
 };
 
 

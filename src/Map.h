@@ -2,6 +2,7 @@
 #define OOP_MAP_H
 
 #include <iostream>
+#include <utility>
 #include <fstream>
 #include <vector>
 #include <SFML/Graphics.hpp>
@@ -15,7 +16,9 @@ class Map {
     std::string MapNume;
     std::vector<std::unique_ptr<Entity>> entities;
     std::vector<std::string> mapLayout;
-    const float TILE_SIZE = 64.f;
+    std::vector<std::pair<float, float>> enemySpawns;
+    std::pair<float, float> playerSpawn;
+    const float TILE_SIZE = 96.f;
     sf::Sprite tileSprite;
 public:
 
@@ -28,6 +31,7 @@ public:
     void updateEntities(float deltaTime);
     void drawEntities(sf::RenderWindow& window) const;
 
+
     [[nodiscard]]int removeDeadEntities();
 
     ~Map();
@@ -37,8 +41,9 @@ public:
         return out;
     }
 
+    [[nodiscard]]std::pair<float, float> generateEnemySpawn () const;
+    [[nodiscard]]std::pair<float, float> getPlayerSpawn() const;
     [[nodiscard]]bool isWall (const sf::FloatRect& bounds) const;
-
     [[nodiscard]]std::vector<std::unique_ptr<Entity>>& getEntities();
 };
 

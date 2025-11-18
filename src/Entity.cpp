@@ -1,4 +1,5 @@
 #include "Entity.h"
+#include <cmath>
 #include <iostream>
 
 Entity::Entity(std::string n, const float x, const float y, const float spd, const float grav, sf::Texture& tex)
@@ -31,7 +32,7 @@ sprite{other.sprite}{
 }
 
 void Entity::updateSpritePosition() {
-    sprite.setPosition(sf::Vector2f(posX, posY));
+    sprite.setPosition(sf::Vector2f(std::floor(posX), std::floor(posY)));
 }
 
 void Entity::checkDeath() {

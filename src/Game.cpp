@@ -8,11 +8,6 @@ namespace {
     bool intersects(const sf::FloatRect& rect1, const sf::FloatRect& rect2) {
         return rect1.findIntersection(rect2).has_value();
     }
-
-    int randomInt(const int min, const int max) {
-        static std::mt19937 gen(std::random_device{}());
-        return std::uniform_int_distribution(min, max)(gen);
-    }
 }
 
 Game::Game() :
@@ -25,12 +20,22 @@ Game::Game() :
     std::string playerName, playerWeapon, projectileName, mapName, enemyWeapon, enemyProj;
     fin >> playerName >> playerWeapon >> projectileName >> mapName >> enemyWeapon >> enemyProj;
 
+    m_map = std::make_unique<Map>(
+    mapName,
+    "assets/textures/map/harta.txt",
+    m_resManager
+    );
+
+    auto [xPlayer, yPlayer] = m_map->getPlayerSpawn();
     m_player = std::make_unique<Player>(
     playerName,
     m_resManager.getTexture("samussheet.png"),
+    xPlayer,
+    yPlayer,
     m_playingSounds,
     m_resManager.getSound("jump.wav")
     );
+
     m_playerWeapon = std::make_unique<Weapon>(
     playerWeapon,
     projectileName,
@@ -38,11 +43,7 @@ Game::Game() :
     m_resManager.getTexture("projectile.png"),
     120
     );
-    m_map = std::make_unique<Map>(
-    mapName,
-    "assets/textures/map/harta.txt",
-    m_resManager
-    );
+
     m_enemyWeapon = std::make_shared<Weapon>(
     enemyWeapon,
     enemyProj,
@@ -58,11 +59,12 @@ Game::Game() :
     fin.close();
 
     for (const auto& name: enemyNames) {
+        auto [x, y] = m_map->generateEnemySpawn();
         auto newEnemy = std::make_unique<Enemy>(
             name,
             m_enemyWeapon,
-            static_cast<float>(randomInt(100, 1920)),
-            static_cast<float>(randomInt(99, 400)),
+            x,
+            y,
             m_resManager.getTexture("enemy.png"),
             m_playingSounds,
             m_resManager.getSound("enemydamage.wav"),
@@ -80,6 +82,7 @@ Game::Game() :
 
     m_window.create(sf::VideoMode({m_width, m_height}, desktop.bitsPerPixel), "Hunter Fusion", sf::Style::Default, sf::State::Fullscreen);
     std::cout << "Fereastra a fost creată\n";
+    // m_window.setFramerateLimit(60);
     m_window.setVerticalSyncEnabled(true);
 
     m_camera = sf::View(sf::FloatRect(sf::Vector2f(0.f, 0.f), sf::Vector2f(static_cast<float>(m_width), static_cast<float>(m_height))));
@@ -159,7 +162,7 @@ void Game::updateEntities(float deltaTime) {
 void Game::handleCollisions() {
     for (auto& proj : m_playerWeapon->getProjectiles()) {
         if (!proj.isActive()) continue;
-        for (auto& en : m_map->getEntities()) {
+        for (const auto& en : m_map->getEntities()) {
             if (en->isAlive() && intersects(proj.getBounds(), en->getBounds())) {
                 en->takeDamage(proj.getDamage());
                 proj.deactivate();
@@ -200,11 +203,8 @@ void Game::handleCollisions() {
 
         for (int i = 0; i < enemiesToSpawn; ++i) {
             auto newEnemy = std::make_unique<Enemy>(prototype);
-
-            newEnemy->setPosition(
-                static_cast<float>(randomInt(100, 1920)),
-                static_cast<float>(randomInt(99, 400))
-            );
+            auto [x, y] = m_map->generateEnemySpawn();
+            newEnemy->setPosition(x, y);
 
             m_map->addEntity(std::move(newEnemy));
         }
@@ -213,7 +213,22 @@ void Game::handleCollisions() {
 
 void Game::updateCamera(float deltaTime) {
     sf::Vector2f targetPos = m_player->getPos();
-    m_cameraPos.y += (targetPos.y - m_cameraPos.y - static_cast<float>(m_height) / 6) * m_cameraSpeed * deltaTime;
+
+    constexpr float deadZone = 8.f;
+    float diffX = targetPos.x - m_cameraPos.x;
+    float diffY = targetPos.y - m_cameraPos.y - static_cast<float>(m_height) / 6;
+
+    if (std::abs(diffX) > deadZone) {
+        m_cameraPos.x += diffX * m_cameraSpeed * deltaTime;
+    } else {
+        m_cameraPos.x = targetPos.x;
+    }
+
+    if (std::abs(diffY) > deadZone) {
+        m_cameraPos.y += diffY * m_cameraSpeed * deltaTime;
+    } else {
+        m_cameraPos.y = targetPos.y - static_cast<float>(m_height) / 6;
+    }
 
     m_camera.setCenter(m_cameraPos);
     m_window.setView(m_camera);
