@@ -44,6 +44,7 @@ class Player : public Entity {
 
 public:
     Player(const std::string& n, sf::Texture& tex, std::list<sf::Sound>& activeSounds_, const sf::SoundBuffer& jumpSound_);
+    std::unique_ptr<Entity> clone() const override;
     ~Player() override;
 
     void updateAnimation(float deltaTime);

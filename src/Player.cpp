@@ -52,6 +52,13 @@ Player::Player(const std::string& n, sf::Texture& tex, std::list<sf::Sound>& act
     sprite.setTextureRect(sf::IntRect(sf::Vector2i(0, 0), frameSize));
 }
 
+std::unique_ptr<Entity> Player::clone() const {
+    return std::unique_ptr<Entity>(new Player{*this});
+}
+
+Player::~Player() {
+    std::cout << "S a apelat destructor Player \n";
+}
 void Player::doUpdate(float deltaTime, const Map& map) {
 
     if ((sf::Keyboard::isKeyPressed(sf::Keyboard::Key::W) ||
@@ -247,9 +254,6 @@ void Player::drawDamageEffect(sf::RenderWindow& window) const {
     window.setView(currentView);
 }
 
-Player::~Player() {
-    std::cout << "S a apelat destructor Player \n";
-}
 
 sf::Vector2f Player::getWeaponTipPos() const {
     float offsetX = calculateWeaponOffsetX();

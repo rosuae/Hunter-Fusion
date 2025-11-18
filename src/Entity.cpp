@@ -9,8 +9,8 @@ Entity::Entity(std::string n, const float x, const float y, const float spd, con
       posY{y},
       speed{spd},
       gravity{grav},
-      texture{tex},
-      sprite{texture} {
+      texture{&tex},
+      sprite{*texture} {
 }
 
 Entity::~Entity() {

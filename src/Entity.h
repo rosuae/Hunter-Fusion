@@ -23,7 +23,7 @@ protected:
     float speed;
     float gravity;
 
-    sf::Texture& texture;
+    sf::Texture* texture;
     sf::Sprite sprite;
     void updateSpritePosition();
     void checkDeath();
@@ -31,22 +31,46 @@ protected:
 public:
     Entity(std::string n, float x, float y, float spd, float grav, sf::Texture& tex);
     Entity (const Entity& other);
-    Entity& operator= (const Entity& other) {
-        if (this == &other) {
-            return *this;
-        }
+    // Entity& operator= (const Entity& other) {
+    //     if (this == &other) {
+    //         return *this;
+    //     }
+    //
+    //     alive = other.alive;
+    //     name = other.name;
+    //     health = other.health;
+    //     posX = other.posX;
+    //     posY = other.posY;
+    //     speed = other.speed;
+    //     gravity = other.gravity;
+    //     texture = other.texture;
+    //     sprite = other.sprite;
+    //     return *this;
+    // }
 
-        alive = other.alive;
-        name = other.name;
-        health = other.health;
-        posX = other.posX;
-        posY = other.posY;
-        speed = other.speed;
-        gravity = other.gravity;
-        texture = other.texture;
-        sprite = other.sprite;
+    friend void swap(Entity &lhs, Entity &rhs) noexcept {
+        using std::swap;
+        swap(lhs.alive, rhs.alive);
+        swap(lhs.name, rhs.name);
+        swap(lhs.health, rhs.health);
+        swap(lhs.posX, rhs.posX);
+        swap(lhs.posY, rhs.posY);
+        swap(lhs.speed, rhs.speed);
+        swap(lhs.gravity, rhs.gravity);
+        swap(lhs.texture, rhs.texture);
+        swap(lhs.sprite, rhs.sprite);
+    }
+
+    Entity& operator= (const Entity& other) {
+        if (this != &other) {
+            auto copie = other.clone();
+            using std::swap;
+            swap(*this, *copie);
+        }
         return *this;
     }
+
+    virtual std::unique_ptr<Entity> clone() const = 0;
     virtual ~Entity();
 
     void draw(sf::RenderWindow& window) const;

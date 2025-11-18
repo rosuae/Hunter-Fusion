@@ -51,6 +51,7 @@ public:
     }
 
     Enemy (const Enemy& other);
+    std::unique_ptr<Entity> clone() const override;
     ~Enemy() override;
 
     [[nodiscard]]int getContactDamage() const;

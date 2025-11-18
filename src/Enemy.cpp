@@ -18,8 +18,8 @@ Enemy::Enemy(const std::string& n,
     deathSound{deathSound_}
 {
     sprite.setPosition(sf::Vector2f(posX, posY));
-    sprite.setOrigin(sf::Vector2f(static_cast<float>(texture.getSize().x) / 2.f,
-                                    static_cast<float>(texture.getSize().y))
+    sprite.setOrigin(sf::Vector2f(static_cast<float>(texture->getSize().x) / 2.f,
+                                    static_cast<float>(texture->getSize().y))
                                     );
     sprite.setScale(sf::Vector2f(1.f, 1.f));
 }
@@ -33,6 +33,10 @@ hitSound{other.hitSound},
 deathSound{other.deathSound}
 {
     std::cout<<"Constructor de copiere\n";
+}
+
+std::unique_ptr<Entity> Enemy::clone() const{
+    return std::unique_ptr<Entity> (new Enemy{*this});
 }
 
 Enemy::~Enemy() {std::cout << "S a apelat destructor Enemy \n";}
