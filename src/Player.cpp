@@ -82,15 +82,13 @@ void Player::doBehavior(float deltaTime, const Map& map) {
         movedRight = true;
     }
 
-    if (movedLeft && movedRight) {
-        this->isRunning = false;
-    } else if (movedLeft) {
+    if (movedLeft && !movedRight) {
         posX -= speed * deltaTime;
         if (shootingTimer <= 0.0f) {
             facingRight = false;
         }
         this->isRunning = true;
-    } else if (movedRight) {
+    } else if (movedRight && !movedLeft) {
         posX += speed * deltaTime;
         if (shootingTimer <= 0.0f) {
             facingRight = true;
