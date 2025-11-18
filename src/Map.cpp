@@ -49,7 +49,7 @@ void Map::updateEntities(float deltaTime) {
 }
 
 void Map::drawEntities(sf::RenderWindow& window) const{
-    for (auto& ent : entities) {
+    for (const auto& ent : entities) {
         ent->draw(window);
     }
 }
