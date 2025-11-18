@@ -48,7 +48,7 @@ public:
         swap(lhs.deathSound, rhs.deathSound);
     }
 
-    Enemy& operator=(Enemy other) {
+    Enemy& operator=(const Enemy& other) {
         if (this != &other){
             auto copie = other.clone();
             using std::swap;
