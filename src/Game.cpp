@@ -170,10 +170,10 @@ void Game::handleCollisions() {
 
     int totalDamageThisFrame = 0;
     for (const auto& en : m_map->getEntities()) {
-        const auto enPtr = dynamic_cast<Enemy*> (en.get());
-        if (enPtr && enPtr->isAlive() && m_player->isAlive() && intersects(m_player->getBounds(), enPtr->getBounds())) {
-            totalDamageThisFrame += enPtr->getContactDamage();
-        }
+        if (const auto enPtr = dynamic_cast<const Enemy*>(en.get()))
+            if (enPtr->isAlive() && m_player->isAlive() && intersects(m_player->getBounds(), enPtr->getBounds())) {
+                totalDamageThisFrame += enPtr->getContactDamage();
+            }
     }
 
     if (totalDamageThisFrame > 0 && m_playerDamageCooldown.getElapsedTime().asSeconds() > 1.f) {
