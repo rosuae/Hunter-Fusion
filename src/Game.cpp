@@ -82,8 +82,8 @@ Game::Game() :
 
     m_window.create(sf::VideoMode({m_width, m_height}, desktop.bitsPerPixel), "Hunter Fusion", sf::Style::Default, sf::State::Fullscreen);
     std::cout << "Fereastra a fost creată\n";
-    // m_window.setFramerateLimit(60);
-    m_window.setVerticalSyncEnabled(true);
+    m_window.setFramerateLimit(90);
+    // m_window.setVerticalSyncEnabled(true);
 
     m_camera = sf::View(sf::FloatRect(sf::Vector2f(0.f, 0.f), sf::Vector2f(static_cast<float>(m_width), static_cast<float>(m_height))));
     m_window.setView(m_camera);

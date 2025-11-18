@@ -20,9 +20,9 @@ float Player::calculateWeaponOffsetX() const {
 }
 
 Player::Player(const std::string& n, sf::Texture& tex, float posx_, float posy_, std::list<sf::Sound>& activeSounds_, const sf::SoundBuffer& jumpSound_)
-    : Entity(n, posx_, posy_, 1100.0f, 2500.f, tex),
+    : Entity(n, posx_, posy_, 900.0f, 2500.f, tex),
       velocity{0.0f},
-      maxJump{-1400.f},
+      maxJump{-1450.f},
       frameSize{sf::Vector2i(224, 222)},
       hitboxWidth{120},
       hitboxHeight{120},
@@ -46,7 +46,7 @@ Player::Player(const std::string& n, sf::Texture& tex, float posx_, float posy_,
 
     sprite.setPosition(sf::Vector2f(posX, posY));
     sprite.setOrigin(sf::Vector2f(static_cast<float>(frameSize.x) / 2.f,
-                                   (static_cast<float>(frameSize.y)) - 12.f)
+                                   (static_cast<float>(frameSize.y)) - 7.f)
                                    );
     sprite.scale(sf::Vector2f(1.f, 1.f));
     sprite.setTextureRect(sf::IntRect(sf::Vector2i(0, 0), frameSize));
@@ -143,12 +143,9 @@ void Player::updateAnimation(float deltaTime) {
     }
 
     if (isJumping) {
-        int jumpCol = 5;
-
-        if (animationStartIndex != jumpCol) {
-            int jumpFrameCount = 2;
-            animationStartIndex = jumpCol;
-            animationFrameCount = jumpFrameCount;
+        if (animationStartIndex != 4) {
+            animationStartIndex = 4;
+            animationFrameCount = 3;
             currentFrame = 0;
             animationTimer = 0.0f;
         }
@@ -156,17 +153,26 @@ void Player::updateAnimation(float deltaTime) {
         animationTimer += deltaTime;
         if (animationTimer >= frameDuration) {
             animationTimer -= frameDuration;
-            currentFrame = (currentFrame + 1) % animationFrameCount;
+            currentFrame = (currentFrame + 1) % 3;
         }
 
-        int rectLeft = jumpCol * frameSize.x;
-        int rectTop = currentFrame * frameSize.y;
+        int col, row;
+        switch (currentFrame) {
+            case 0: col = 5; row = 0; break;
+            case 1: col = 4; row = 1; break;
+            case 2: col = 5; row = 1; break;
+            default: col = 5; row = 0; break;
+        }
+
+        int rectLeft = col * frameSize.x;
+        int rectTop = row * frameSize.y;
+
         sprite.setTextureRect(sf::IntRect(sf::Vector2i(rectLeft, rectTop), frameSize));
 
         return;
     }
 
-    if (shootingTimer > 0.0f) {
+    if (shootingTimer > 0.0f && isRunning) {
         animationRow = 1;
     } else {
         animationRow = 0;
@@ -174,22 +180,14 @@ void Player::updateAnimation(float deltaTime) {
 
     int newStartIndex;
     int newFrameCount;
-    bool loopAnimation;
 
     if (isRunning) {
-        newStartIndex = 2;
-        newFrameCount = 3;
-        loopAnimation = true;
-    }
-    else if (shootingTimer > 0.0f) {
         newStartIndex = 1;
-        newFrameCount = 1;
-        loopAnimation = false;
+        newFrameCount = 3;
     }
     else {
         newStartIndex = 0;
         newFrameCount = 1;
-        loopAnimation = true;
     }
 
     if (newStartIndex != animationStartIndex) {
@@ -202,13 +200,7 @@ void Player::updateAnimation(float deltaTime) {
     animationTimer += deltaTime;
     if (animationTimer >= frameDuration) {
         animationTimer -= frameDuration;
-        if (loopAnimation) {
-            currentFrame = (currentFrame + 1) % animationFrameCount;
-        } else {
-            if (currentFrame < animationFrameCount - 1) {
-                currentFrame++;
-            }
-        }
+        currentFrame = (currentFrame + 1) % animationFrameCount;
     }
 
     int rectLeft = (animationStartIndex + currentFrame) * frameSize.x;
@@ -265,7 +257,7 @@ void Player::drawDamageEffect(sf::RenderWindow& window) const {
 
 sf::Vector2f Player::getWeaponTipPos() const {
     float offsetX = calculateWeaponOffsetX();
-    float offsetY = -(static_cast<float>(frameSize.y) * 0.6f);
+    float offsetY = -(static_cast<float>(frameSize.y) * 0.55f);
 
     return {posX + offsetX, posY + offsetY};
 }
