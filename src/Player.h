@@ -37,7 +37,7 @@ class Player : public Entity {
     sf::FloatRect doGetBounds() const override;
     void doDraw(sf::RenderWindow &window) const override;
     void doTakeDamage(int damageAmount) override;
-    void doUpdate(float deltaTime, const Map&) override;
+    void doBehavior(float deltaTime, const Map&) override;
     void applyGravity(float deltaTime) override;
     void updateSpriteDirection();
     float calculateWeaponOffsetX() const;

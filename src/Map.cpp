@@ -1,6 +1,7 @@
 #include "Map.h"
 #include "Player.h"
 #include "Enemy.h"
+#include "Entity.h"
 #include "ResourceManager.h"
 
 Map::Map(std::string n, const std::string& filePath, ResourceManager& resManager):
@@ -37,8 +38,35 @@ void Map::drawMap(sf::RenderWindow& window) {
         }
 }
 
-void Map::addEnemy(const Enemy& enemy) {
-    enemies.push_back(enemy);
+void Map::addEntity(std::unique_ptr<Entity> entity) {
+    entities.push_back(std::move(entity));
+}
+
+void Map::updateEntities(float deltaTime) {
+    for (auto& ent : entities) {
+        ent->behavior(deltaTime, *this);
+    }
+}
+
+void Map::drawEntities(sf::RenderWindow& window) const{
+    for (auto& ent : entities) {
+        ent->draw(window);
+    }
+}
+
+int Map::removeDeadEntities() {
+    int deadcount = 0;
+    for (const auto& ent : entities)
+        if (!ent->isAlive()) {
+            deadcount++;
+        }
+
+    std::erase_if(entities,
+        [](const std::unique_ptr<Entity>& en) {
+            return !en->isAlive();
+        });
+
+    return deadcount;
 }
 
 Map::~Map() { std::cout << "S a apelat destructor Map \n";}
@@ -68,6 +96,6 @@ bool Map::isWall(const sf::FloatRect& bounds) const {
     return false;
 }
 
-std::vector<Enemy>& Map::getEnemies() {
-    return enemies;
+std::vector<std::unique_ptr<Entity>>& Map::getEntities() {
+    return entities;
 }

@@ -13,9 +13,9 @@ Enemy::Enemy(const std::string& n,
     : Entity(n, posx_, posy_, 300.f, 1000.f, tex),
     target{nullptr},
     fists{std::move(f)},
-    activeSounds{activeSounds_},
-    hitSound{hitSound_},
-    deathSound{deathSound_}
+    activeSounds{&activeSounds_},
+    hitSound{&hitSound_},
+    deathSound{&deathSound_}
 {
     sprite.setPosition(sf::Vector2f(posX, posY));
     sprite.setOrigin(sf::Vector2f(static_cast<float>(texture->getSize().x) / 2.f,
@@ -36,7 +36,7 @@ deathSound{other.deathSound}
 }
 
 std::unique_ptr<Entity> Enemy::clone() const{
-    return std::unique_ptr<Entity> (new Enemy{*this});
+    return std::make_unique<Enemy>(*this);
 }
 
 Enemy::~Enemy() {std::cout << "S a apelat destructor Enemy \n";}
@@ -66,16 +66,16 @@ void Enemy::doTakeDamage(int damageAmount) {
     checkDeath();
 
     if (isAlive()) {
-        activeSounds.emplace_back(hitSound);
-        activeSounds.back().play();
+        activeSounds->emplace_back(*hitSound);
+        activeSounds->back().play();
     }
     else if (wasAlive) {
-        activeSounds.emplace_back(deathSound);
-        activeSounds.back().play();
+        activeSounds->emplace_back(*deathSound);
+        activeSounds->back().play();
     }
 }
 
-void Enemy::doUpdate(float deltaTime, const Map& map) {
+void Enemy::doBehavior(float deltaTime, const Map& map) {
 
     sf::FloatRect localBounds = sprite.getLocalBounds();
     float spriteWidth = localBounds.size.x;

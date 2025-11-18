@@ -46,10 +46,10 @@ void Entity::draw(sf::RenderWindow& window) const {
     doDraw(window);
 }
 
-void Entity::update(float deltaTime, const Map &map) {
+void Entity::behavior(float deltaTime, const Map &map) {
     if (!alive) return;
 
-    doUpdate(deltaTime, map);
+    doBehavior(deltaTime, map);
     updateSpritePosition();
     checkDeath();
 }

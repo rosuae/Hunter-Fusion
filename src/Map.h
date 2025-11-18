@@ -7,12 +7,13 @@
 #include <SFML/Graphics.hpp>
 
 class Player;
+class Entity;
 class Enemy;
 class ResourceManager;
 
 class Map {
     std::string MapNume;
-    std::vector<Enemy> enemies;
+    std::vector<std::unique_ptr<Entity>> entities;
     std::vector<std::string> mapLayout;
     const float TILE_SIZE = 64.f;
     sf::Sprite tileSprite;
@@ -22,7 +23,12 @@ public:
 
     void drawMap(sf::RenderWindow& window);
 
-    void addEnemy(const Enemy& enemy);
+    void addEntity(std::unique_ptr<Entity> entity);
+
+    void updateEntities(float deltaTime);
+    void drawEntities(sf::RenderWindow& window) const;
+
+    [[nodiscard]]int removeDeadEntities();
 
     ~Map();
 
@@ -31,9 +37,9 @@ public:
         return out;
     }
 
-    bool isWall (const sf::FloatRect& bounds) const;
+    [[nodiscard]]bool isWall (const sf::FloatRect& bounds) const;
 
-    [[nodiscard]]std::vector<Enemy>& getEnemies();
+    [[nodiscard]]std::vector<std::unique_ptr<Entity>>& getEntities();
 };
 
 #endif

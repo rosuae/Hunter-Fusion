@@ -57,8 +57,8 @@ Game::Game() :
     }
     fin.close();
 
-    for (const auto& name : enemyNames) {
-        m_map->addEnemy({
+    for (const auto& name: enemyNames) {
+        auto newEnemy = std::make_unique<Enemy>(
             name,
             m_enemyWeapon,
             static_cast<float>(randomInt(100, 1920)),
@@ -67,11 +67,11 @@ Game::Game() :
             m_playingSounds,
             m_resManager.getSound("enemydamage.wav"),
             m_resManager.getSound("enemydeath.wav")
-        });
-    }
+        );
 
-    for (auto& en : m_map->getEnemies()) {
-        en.setTarget(m_player.get());
+        newEnemy->setTarget(m_player.get());
+
+        m_map->addEntity(std::move(newEnemy));
     }
 
     const sf::VideoMode desktop = sf::VideoMode::getDesktopMode();
@@ -138,11 +138,9 @@ void Game::update(float deltaTime) {
 
 void Game::updateEntities(float deltaTime) {
 
-    m_player->update(deltaTime, *m_map);
+    m_player->behavior(deltaTime, *m_map);
 
-    for (auto& en : m_map->getEnemies()) {
-            en.update(deltaTime, *m_map);
-    }
+    m_map->updateEntities(deltaTime);
 
     m_playerWeapon->updateProjectiles(deltaTime, *m_map);
 
@@ -161,9 +159,9 @@ void Game::updateEntities(float deltaTime) {
 void Game::handleCollisions() {
     for (auto& proj : m_playerWeapon->getProjectiles()) {
         if (!proj.isActive()) continue;
-        for (auto& en : m_map->getEnemies()) {
-            if (en.isAlive() && intersects(proj.getBounds(), en.getBounds())) {
-                en.takeDamage(proj.getDamage());
+        for (auto& en : m_map->getEntities()) {
+            if (en->isAlive() && intersects(proj.getBounds(), en->getBounds())) {
+                en->takeDamage(proj.getDamage());
                 proj.deactivate();
                 break;
             }
@@ -171,9 +169,10 @@ void Game::handleCollisions() {
     }
 
     int totalDamageThisFrame = 0;
-    for (const auto& en : m_map->getEnemies()) {
-        if (en.isAlive() && m_player->isAlive() && intersects(m_player->getBounds(), en.getBounds())) {
-            totalDamageThisFrame += en.getContactDamage();
+    for (const auto& en : m_map->getEntities()) {
+        auto enPtr = dynamic_cast<Enemy*> (en.get());
+        if (enPtr && enPtr->isAlive() && m_player->isAlive() && intersects(m_player->getBounds(), enPtr->getBounds())) {
+            totalDamageThisFrame += enPtr->getContactDamage();
         }
     }
 
@@ -184,32 +183,31 @@ void Game::handleCollisions() {
         m_playerDamageCooldown.restart();
     }
 
-    int enemiesToSpawn = 0;
-    for (const auto& en : m_map->getEnemies()) {
-        if (!en.isAlive()) {
-            enemiesToSpawn += 2;
-        }
-    }
+    int enemiesDied = m_map->removeDeadEntities();
+    int enemiesToSpawn = enemiesDied * 2;
 
-    std::erase_if(m_map->getEnemies(), [](const Enemy& en) {
-        return !en.isAlive();
-    });
-
-    for (int i = 0; i < enemiesToSpawn; ++i) {
-        m_map->addEnemy({
+    if (enemiesToSpawn > 0) {
+        Enemy prototype(
             "Metroid",
             m_enemyWeapon,
-            static_cast<float>(randomInt(100, 1920)),
-            static_cast<float>(randomInt(99, 400)),
+            0, 0,
             m_resManager.getTexture("enemy.png"),
             m_playingSounds,
             m_resManager.getSound("enemydamage.wav"),
             m_resManager.getSound("enemydeath.wav")
-        });
-    }
+        );
+        prototype.setTarget(m_player.get());
 
-    for (auto& en : m_map->getEnemies()) {
-        en.setTarget(m_player.get());
+        for (int i = 0; i < enemiesToSpawn; ++i) {
+            auto newEnemy = std::make_unique<Enemy>(prototype);
+
+            newEnemy->setPosition(
+                static_cast<float>(randomInt(100, 1920)),
+                static_cast<float>(randomInt(99, 400))
+            );
+
+            m_map->addEntity(std::move(newEnemy));
+        }
     }
 }
 
@@ -240,9 +238,7 @@ void Game::render() {
 
     m_player->draw(m_window);
 
-    for (const auto& en : m_map->getEnemies()) {
-        en.draw(m_window);
-    }
+    m_map->drawEntities(m_window);
 
     m_player->drawDamageEffect(m_window);
 

@@ -53,13 +53,13 @@ Player::Player(const std::string& n, sf::Texture& tex, std::list<sf::Sound>& act
 }
 
 std::unique_ptr<Entity> Player::clone() const {
-    return std::unique_ptr<Entity>(new Player{*this});
+    return std::make_unique<Player>(*this);
 }
 
 Player::~Player() {
     std::cout << "S a apelat destructor Player \n";
 }
-void Player::doUpdate(float deltaTime, const Map& map) {
+void Player::doBehavior(float deltaTime, const Map& map) {
 
     if ((sf::Keyboard::isKeyPressed(sf::Keyboard::Key::W) ||
          sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Space)) && !isJumping) {
