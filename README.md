@@ -23,8 +23,6 @@ Gameplay-ul se bazează pe controlul unui personaj care poate merge, sări, trag
   - https://sounds.spriters-resource.com/wii_u/nintendoland/asset/426887/
   - https://sounds.spriters-resource.com/snes/smetroid/asset/439917/
   - https://sounds.spriters-resource.com/wii_u/supermariomaker/asset/400349/
-  - 
-![ezgif com-video-to-gif-converter](https://github.com/user-attachments/assets/d948dd0b-27ba-4c03-a817-86cc17c810cf)
 
 ## To do:
  
