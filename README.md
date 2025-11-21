@@ -24,6 +24,12 @@ Gameplay-ul se bazează pe controlul unui personaj care poate merge, sări, trag
   - https://sounds.spriters-resource.com/snes/smetroid/asset/439917/
   - https://sounds.spriters-resource.com/wii_u/supermariomaker/asset/400349/
 
+
+
+![ezgif com-video-to-gif-converter](https://github.com/user-attachments/assets/06858a86-0bf7-4be1-8de6-75c1374df7d2)
+
+
+
 ## To do:
  
 - More rooms that should be generated from files + Interconnections
