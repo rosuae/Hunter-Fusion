@@ -3,6 +3,7 @@
 #include "Enemy.h"
 #include "Entity.h"
 #include "ResourceManager.h"
+#include "GameExceptions.h"
 #include <random>
 
 namespace {
@@ -18,7 +19,7 @@ Map::Map(std::string n, const std::string& filePath, ResourceManager& resManager
 
     std::ifstream file(filePath);
     if (!file.is_open()) {
-        throw std::runtime_error("Eroare la deschiderea fisierului cu harta: " + filePath);
+        throw ResourceException("Couldn't read map from file: " + filePath);
     }
 
     std::string line;
@@ -28,10 +29,7 @@ Map::Map(std::string n, const std::string& filePath, ResourceManager& resManager
 
     file.close();
 
-    for (const auto& mapLay : mapLayout) {
-        std::cout << mapLay << "\n";
-    }
-
+    bool playerFound = false;
     for (size_t y = 0; y < mapLayout.size(); ++y)
         for (size_t x = 0; x <  mapLayout[y].size(); ++x) {
             char tileType = mapLayout[y][x];
@@ -39,8 +37,12 @@ Map::Map(std::string n, const std::string& filePath, ResourceManager& resManager
                 enemySpawns.emplace_back(std::pair(x, y));
             } else if (tileType == 'P') {
                 playerSpawn = std::pair(x, y);
+                playerFound = true;
             }
         }
+    if (!playerFound) {
+        throw ResourceException("No playerSpawn found: " + filePath);
+    }
 }
 
 void Map::drawMap(sf::RenderWindow& window) {
@@ -57,6 +59,15 @@ void Map::drawMap(sf::RenderWindow& window) {
 }
 
 void Map::addEntity(std::unique_ptr<Entity> entity) {
+    if (!entity)
+        return;
+
+    if (isWall(entity->getBounds())) {
+        const sf::Vector2f pos = entity->getPos();
+
+        throw MapEntityException("Unreachable position ", pos);
+    }
+
     entities.push_back(std::move(entity));
 }
 
@@ -74,8 +85,9 @@ void Map::drawEntities(sf::RenderWindow& window) const{
 
 std::pair<float, float> Map::generateEnemySpawn() const {
     if (enemySpawns.empty()) {
-        return {0.0f, 0.0f};
+        throw MapEntityException("Symbol 'E' missing form map generation. No existing enemy spawns.", {-999.f, -999.f});
     }
+
     int randomIndex = randomInt(0, static_cast<int>(enemySpawns.size()) - 1);
 
     auto spawnGrid = enemySpawns[randomIndex];

@@ -24,7 +24,6 @@ class Weapon {
     sf::Texture* projectileTex;
 
     [[nodiscard]]int calculateReloadAmount() const;
-    [[nodiscard]]bool hasAmmoToReload() const;
 
     void transferAmmo(int amount);
 

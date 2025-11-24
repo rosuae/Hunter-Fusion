@@ -1,11 +1,13 @@
 #include "ResourceManager.h"
+#include "GameExceptions.h"
 
 ResourceManager::ResourceManager() {
     loadTextures("assets/textures","enemy.png");
     loadTextures("assets/textures","samussheet.png");
     loadTextures("assets/textures","projectile.png");
-    loadTextures("assets/textures/map","background.bmp");
     loadTextures("assets/textures","tile.png");
+    loadTextures("assets/textures/map","background.bmp");
+
 
     loadSounds("assets/sound","jump.wav");
     loadSounds("assets/sound","reload.wav");
@@ -28,7 +30,7 @@ void ResourceManager::loadTextures(const std::string &path, const std::string &t
     sf::Texture tex;
 
     if (!tex.loadFromFile(path + '/' + texture_name)) {
-        throw std::runtime_error("Textura " + texture_name + " nu a putut fi incarcata.");
+        throw ResourceException("Texture: " + path + " couldn't be loaded");
     }
 
     m_textures[texture_name] = tex;
@@ -38,7 +40,7 @@ void ResourceManager::loadSounds(const std::string &path, const std::string &sou
     sf::SoundBuffer sound;
 
     if (!sound.loadFromFile(path + '/' + sound_name)) {
-        throw std::runtime_error("Sunetul " + sound_name + " nu a putut fi incarcat ");
+        throw ResourceException("Sound: " + path + " couldn't be loaded");
     }
 
     m_sounds[sound_name] = sound;
@@ -46,7 +48,7 @@ void ResourceManager::loadSounds(const std::string &path, const std::string &sou
 
 sf::Texture& ResourceManager::getTexture (const std::string& texture_name) {
     if (m_textures.find(texture_name) == m_textures.end()) {
-        throw std::runtime_error("Textura " + texture_name + " nu a fost gasita ");
+        throw ResourceException("Texture: " + texture_name + " wasn't found");
     }
 
     return m_textures[texture_name];
@@ -54,7 +56,7 @@ sf::Texture& ResourceManager::getTexture (const std::string& texture_name) {
 
 sf::SoundBuffer& ResourceManager::getSound(const std::string& sound_name) {
     if (m_sounds.find(sound_name) == m_sounds.end()) {
-        throw std::runtime_error("Sound ul " + sound_name + "nu a fost gasit");
+        throw ResourceException("Sound: " + sound_name + " wasn't found");
     }
 
     return m_sounds[sound_name];

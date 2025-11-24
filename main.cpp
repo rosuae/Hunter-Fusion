@@ -1,5 +1,6 @@
 #include "src/Game.h"
 #include "src/ResourceManager.h"
+#include "src/GameExceptions.h"
 #include <iostream>
 
 int main() {
@@ -8,16 +9,16 @@ int main() {
 
     try {
         Game game;
-
         game.run();
     }
-    catch (const std::exception& e) {
-        std::cerr << "A apărut o eroare fatală: " << e.what() << std::endl;
+    catch (const ResourceException& e) {
+        std::cout << e.what() << std::endl;
         resManager.cleanup();
         return 1;
     }
-    catch (...) {
-        std::cerr << "A apărut o eroare necunoscută!" << std::endl;
+
+    catch (const MapEntityException& e) {
+        std::cout << e.what() << std::endl;
         resManager.cleanup();
         return 2;
     }

@@ -1,5 +1,6 @@
 #include "Game.h"
 #include "ResourceManager.h"
+#include "GameExceptions.h"
 #include <iostream>
 #include <fstream>
 #include <random>
@@ -14,11 +15,13 @@ Game::Game() :
     m_resManager(ResourceManager::Instance()) {
     std::ifstream fin("date.txt");
     if (!fin.is_open()) {
-        std::cout << "Eroare la deschiderea fisierului date.txt \n";
+        throw ResourceException("Couldn't load file: date.txt");
     }
 
     std::string playerName, playerWeapon, projectileName, mapName, enemyWeapon, enemyProj;
-    fin >> playerName >> playerWeapon >> projectileName >> mapName >> enemyWeapon >> enemyProj;
+    if (!(fin >> playerName >> playerWeapon >> projectileName >> mapName >> enemyWeapon >> enemyProj)) {
+        throw ResourceException("File: date.txt ; incomplete or currupted");
+    }
 
     m_map = std::make_unique<Map>(
     mapName,
@@ -59,6 +62,7 @@ Game::Game() :
     fin.close();
 
     for (const auto& name: enemyNames) {
+
         auto [x, y] = m_map->generateEnemySpawn();
         auto newEnemy = std::make_unique<Enemy>(
             name,
@@ -72,8 +76,12 @@ Game::Game() :
         );
 
         newEnemy->setTarget(m_player.get());
-
+        try{
         m_map->addEntity(std::move(newEnemy));
+        }
+        catch (const MapEntityException& e) {
+            std::cout << e.what() << std::endl;
+        }
     }
 
     const sf::VideoMode desktop = sf::VideoMode::getDesktopMode();
@@ -116,7 +124,12 @@ void Game::handleEvents() {
                 m_window.close();
             }
             if (keyPress->scancode == sf::Keyboard::Scancode::R) {
-                m_playerWeapon->reload(m_playingSounds, m_resManager.getSound("reload.wav"));
+                try {
+                    m_playerWeapon->reload(m_playingSounds, m_resManager.getSound("reload.wav"));
+                }
+                catch (const InvalidActionException& e) {
+                    std::cout << e.what() << std::endl;
+                }
             }
         }
 
@@ -205,8 +218,12 @@ void Game::handleCollisions() {
             auto newEnemy = std::make_unique<Enemy>(prototype);
             auto [x, y] = m_map->generateEnemySpawn();
             newEnemy->setPosition(x, y);
-
-            m_map->addEntity(std::move(newEnemy));
+            try {
+                m_map->addEntity(std::move(newEnemy));
+            }
+            catch (const MapEntityException& e) {
+                std::cout << e.what() << std::endl;
+            }
         }
     }
 }

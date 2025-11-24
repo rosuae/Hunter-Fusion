@@ -1,14 +1,11 @@
 #include "Weapon.h"
 #include "Map.h"
 #include "Player.h"
+#include "GameExceptions.h"
 
 [[nodiscard]]int Weapon::calculateReloadAmount() const {
     int needed = 30 - reloada;
     return std::min(needed, ammoamount);
-}
-
-[[nodiscard]]bool Weapon::hasAmmoToReload() const {
-    return ammoamount > 0 && reloada < 30;
 }
 
 void Weapon::transferAmmo(int amount) {
@@ -16,7 +13,7 @@ void Weapon::transferAmmo(int amount) {
     ammoamount -= amount;
 }
 
-Weapon::Weapon(std::string n, std::string projName, int projDmg, sf::Texture& tex, int a):
+Weapon::Weapon(std::string n, std::string projName, int projDmg, sf::Texture& tex, const int a):
     nume{std::move (n)},
     projectileName{std::move(projName)},
     reloada{30},
@@ -52,13 +49,19 @@ void Weapon::updateProjectiles(float deltaTime, const Map& map) {
 }
 
 void Weapon::reload(std::list<sf::Sound>& sounds, const sf::SoundBuffer& buffer) {
-    if (hasAmmoToReload()) {
-        int toReload = calculateReloadAmount();
-        transferAmmo(toReload);
-
-        sounds.emplace_back(buffer);
-        sounds.back().play();
+    if (reloada >= 30) {
+        throw InvalidActionException("Reload" , "Magazine Full");
     }
+
+    if (ammoamount <= 0) {
+        throw InvalidActionException("Reload", "Out of ammo");
+    }
+
+    int toReload = calculateReloadAmount();
+    transferAmmo(toReload);
+
+    sounds.emplace_back(buffer);
+    sounds.back().play();
 }
 
 void Weapon::drawProjectiles(sf::RenderWindow& window) const {
