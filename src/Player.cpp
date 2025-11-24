@@ -1,5 +1,6 @@
 #include "Player.h"
 #include "Map.h"
+#include "GameExceptions.h"
 #include <iostream>
 
 void Player::updateSpriteDirection() {
@@ -63,12 +64,29 @@ void Player::doBehavior(float deltaTime, const Map& map) {
 
     if ((sf::Keyboard::isKeyPressed(sf::Keyboard::Key::W) ||
          sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Space)) && !isJumping) {
-        velocity = maxJump;
-        isJumping = true;
+            try {
+                float testFeetX = posX - static_cast<float>(hitboxWidth) / 2.0f;
+                float testFeetY = posY - static_cast<float>(hitboxHeight) + 5.0f;
 
-        activeSounds.emplace_back(jumpSound);
-        activeSounds.back().play();
-    }
+                sf::FloatRect groundCheck(
+                    sf::Vector2f(testFeetX, testFeetY),
+                    sf::Vector2f(static_cast<float>(hitboxWidth), static_cast<float>(hitboxHeight))
+                );
+
+                if (!map.isWall(groundCheck)) {
+                    throw InvalidActionException("Jump", "Player is in mid air (falling)");
+                }
+                velocity = maxJump;
+                isJumping = true;
+
+                activeSounds.emplace_back(jumpSound);
+                activeSounds.back().play();
+
+            }
+            catch (const InvalidActionException& e) {
+                std::cout << e.what() << std::endl;
+            }
+         }
 
     float lastPosX = posX;
     bool movedLeft = false;

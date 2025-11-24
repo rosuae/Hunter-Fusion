@@ -39,7 +39,7 @@ Gameplay-ul se bazează pe controlul unui personaj care poate merge, sări, trag
 ## Known Bugs:
 
 - Player can run out of ammo. Drops system will be implemented
-- While falling, the player can perform one jump if he didn't jump before (more like a feature)
+
 ### Tema 0
 
 - [x] Nume proiect (poate fi schimbat ulterior)
