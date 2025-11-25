@@ -35,10 +35,21 @@ Gameplay-ul se bazează pe controlul unui personaj care poate merge, sări, trag
 - More rooms that should be generated from files + Interconnections
 - More enemies + Bosses
 - PowerUps + Ammo and Health Drops
+- More types of ammo
+- Enemies damage should influence with player movement behavior
+- Resolution change window
+- Intro screen + Main menu screen + pause screen + hud
+- Option to change the game volume
+- Ability to restart on the last room the player died in
+- Screen shake effect
+- Mini map
+- Change camera movement behavior
+- Ability to change player look
 
 ## Known Bugs:
 
 - Player can run out of ammo. Drops system will be implemented
+- Sometimes player jumps can cause a drop in frames
 
 ### Tema 0
 

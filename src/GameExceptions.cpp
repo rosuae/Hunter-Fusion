@@ -11,7 +11,7 @@ ResourceException::ResourceException(const std::string &path) : GameException("F
 
 StateException::StateException(const std::string &msg) : GameException("Invalid state change: " + msg){}
 
-MapEntityException::MapEntityException(const std::string& msg, const sf::Vector2f position_) : GameException("Entity stuck: " + msg), position(position_) {
+MapEntityException::MapEntityException(const std::string& msg, const sf::Vector2f position_) : GameException("Entity behavior failed: " + msg), position(position_) {
     std::cout << "[SPAWN FAILED] ->  " << position.x << " : " << position.y << std::endl;
 }
 
