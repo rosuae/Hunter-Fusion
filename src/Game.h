@@ -39,9 +39,7 @@ class Game {
 
     std::list <sf::Sound> m_playingSounds;
 public:
-
     Game();
     ~Game();
     void run();
-
 };

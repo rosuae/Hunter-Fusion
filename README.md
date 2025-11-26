@@ -36,7 +36,7 @@ Gameplay-ul se bazează pe controlul unui personaj care poate merge, sări, trag
 - More enemies + Bosses
 - PowerUps + Ammo and Health Drops
 - More types of ammo
-- Enemies damage should influence with player movement behavior
+- Enemies damage should influence the player movement behavior
 - Resolution change window
 - Intro screen + Main menu screen + pause screen + hud
 - Option to change the game volume
@@ -49,8 +49,6 @@ Gameplay-ul se bazează pe controlul unui personaj care poate merge, sări, trag
 ## Known Bugs:
 
 - Player can run out of ammo. Drops system will be implemented
-- Sometimes player jumps can cause a drop in frames
-
 ### Tema 0
 
 - [x] Nume proiect (poate fi schimbat ulterior)

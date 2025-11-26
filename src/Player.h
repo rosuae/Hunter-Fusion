@@ -32,7 +32,7 @@ class Player : public Entity {
 
     sf::RectangleShape damageOverlay;
     std::list<sf::Sound>& activeSounds;
-    const sf::SoundBuffer& jumpSound;
+    sf::Sound jumpSound;
 
     sf::FloatRect doGetBounds() const override;
     void doDraw(sf::RenderWindow &window) const override;

@@ -41,16 +41,17 @@ Player::Player(const std::string& n, sf::Texture& tex, float posx_, float posy_,
       activeSounds{activeSounds_},
       jumpSound{jumpSound_}
 {
-
     damageOverlay.setSize(sf::Vector2f(3000.f, 3000.f));
     damageOverlay.setFillColor(sf::Color(255, 0, 0, 0));
 
     sprite.setPosition(sf::Vector2f(posX, posY));
     sprite.setOrigin(sf::Vector2f(static_cast<float>(frameSize.x) / 2.f,
-                                   (static_cast<float>(frameSize.y)) - 7.f)
+                                  (static_cast<float>(frameSize.y)) - 7.f)
                                    );
     sprite.scale(sf::Vector2f(1.f, 1.f));
     sprite.setTextureRect(sf::IntRect(sf::Vector2i(0, 0), frameSize));
+
+    jumpSound.setVolume(50); //until volume settings feature
 }
 
 std::unique_ptr<Entity> Player::clone() const {

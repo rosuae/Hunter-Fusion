@@ -13,16 +13,23 @@ void Weapon::transferAmmo(int amount) {
     ammoamount -= amount;
 }
 
-Weapon::Weapon(std::string n, std::string projName, int projDmg, sf::Texture& tex, const int a):
+Weapon::Weapon(std::string n, std::string projName, int projDmg, sf::Texture& tex, const int a, std::list<sf::Sound>& activeSounds_, const sf::SoundBuffer& shootSound_, const sf::SoundBuffer& reloadSound_):
     nume{std::move (n)},
     projectileName{std::move(projName)},
     reloada{30},
     ammoamount{a},
     projectileDmg{projDmg},
     firerate{0.1f},
-    projectileTex{&tex} {}
+    projectileTex{&tex},
+    activeSounds{activeSounds_},
+    shootSound{shootSound_},
+    reloadSound{reloadSound_} {
 
-void Weapon::fire(Player& player, sf::Vector2f playerPos, sf::Vector2f targetPos, std::list<sf::Sound>& sounds, const sf::SoundBuffer& buffer) {
+    shootSound.setVolume(30); //until volume settings feature
+    reloadSound.setVolume(30);
+}
+
+void Weapon::fire(Player& player, sf::Vector2f playerPos, sf::Vector2f targetPos) {
     bool shouldFaceRight = targetPos.x > playerPos.x;
     player.setFacing(shouldFaceRight);
 
@@ -31,8 +38,8 @@ void Weapon::fire(Player& player, sf::Vector2f playerPos, sf::Vector2f targetPos
         projectiles.emplace_back(projectileName, projectileDmg, *projectileTex, playerPos, targetPos);
         reloada -= 1;
 
-        sounds.emplace_back(buffer);
-        sounds.back().play();
+        activeSounds.emplace_back(shootSound);
+        activeSounds.back().play();
     }
 }
 
@@ -48,7 +55,7 @@ void Weapon::updateProjectiles(float deltaTime, const Map& map) {
     });
 }
 
-void Weapon::reload(std::list<sf::Sound>& sounds, const sf::SoundBuffer& buffer) {
+void Weapon::reload() {
     if (reloada >= 30) {
         throw InvalidActionException("Reload" , "Magazine Full");
     }
@@ -60,8 +67,8 @@ void Weapon::reload(std::list<sf::Sound>& sounds, const sf::SoundBuffer& buffer)
     int toReload = calculateReloadAmount();
     transferAmmo(toReload);
 
-    sounds.emplace_back(buffer);
-    sounds.back().play();
+    activeSounds.emplace_back(reloadSound);
+    activeSounds.back().play();
 }
 
 void Weapon::drawProjectiles(sf::RenderWindow& window) const {

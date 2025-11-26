@@ -44,7 +44,10 @@ Game::Game() :
     projectileName,
     25,
     m_resManager.getTexture("projectile.png"),
-    120
+    120,
+    m_playingSounds,
+    m_resManager.getSound("shoot.wav"),
+    m_resManager.getSound("reload.wav")
     );
 
     m_enemyWeapon = std::make_shared<Weapon>(
@@ -52,7 +55,11 @@ Game::Game() :
     enemyProj,
     10,
     m_resManager.getTexture("projectile.png"),
-    1000);
+    1000,
+    m_playingSounds,
+    m_resManager.getSound("shoot.wav"),
+    m_resManager.getSound("reload.wav")
+    );
 
     std::vector<std::string> enemyNames;
     std::string enemyName;
@@ -89,21 +96,21 @@ Game::Game() :
     m_height = desktop.size.y;
 
     m_window.create(sf::VideoMode({m_width, m_height}, desktop.bitsPerPixel), "Hunter Fusion", sf::Style::Default, sf::State::Fullscreen);
-    std::cout << "Fereastra a fost creată\n";
     m_window.setFramerateLimit(90);
     // m_window.setVerticalSyncEnabled(true);
 
     m_camera = sf::View(sf::FloatRect(sf::Vector2f(0.f, 0.f), sf::Vector2f(static_cast<float>(m_width), static_cast<float>(m_height))));
     m_window.setView(m_camera);
     m_cameraPos = m_player->getPos();
-
 }
+
 Game::~Game() {
     for (auto& sound : m_playingSounds) {
         sound.stop();
     }
     m_playingSounds.clear();
 }
+
 void Game::run() {
     while (m_window.isOpen()) {
         float deltaTime = m_clock.restart().asSeconds();
@@ -125,7 +132,7 @@ void Game::handleEvents() {
             }
             if (keyPress->scancode == sf::Keyboard::Scancode::R) {
                 try {
-                    m_playerWeapon->reload(m_playingSounds, m_resManager.getSound("reload.wav"));
+                    m_playerWeapon->reload();
                 }
                 catch (const InvalidActionException& e) {
                     std::cout << e.what() << std::endl;
@@ -138,7 +145,7 @@ void Game::handleEvents() {
                 sf::Vector2i mousePixel = sf::Mouse::getPosition(m_window);
                 sf::Vector2f mouseWorld = m_window.mapPixelToCoords(mousePixel);
 
-                m_playerWeapon->fire(*m_player, m_player->getWeaponTipPos(), mouseWorld, m_playingSounds, m_resManager.getSound("shoot.wav"));
+                m_playerWeapon->fire(*m_player, m_player->getWeaponTipPos(), mouseWorld);
                 m_player->shootAnimation();
             }
         }
