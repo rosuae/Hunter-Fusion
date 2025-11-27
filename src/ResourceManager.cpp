@@ -6,8 +6,9 @@ ResourceManager::ResourceManager() {
     loadTextures("assets/textures","samussheet.png");
     loadTextures("assets/textures","projectile.png");
     loadTextures("assets/textures","tile.png");
+    loadTextures("assets/textures","backgroudtile.png");
     loadTextures("assets/textures/map","background.bmp");
-
+    loadTextures("assets/textures","settingsmenu.png");
 
     loadSounds("assets/sound","jump.wav");
     loadSounds("assets/sound","reload.wav");

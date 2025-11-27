@@ -20,6 +20,7 @@ class Map {
     std::pair<float, float> playerSpawn;
     const float TILE_SIZE = 96.f;
     sf::Sprite tileSprite;
+    sf::Sprite tileBackgroundSprite;
 public:
 
     Map(std::string n, const std::string& filePath, ResourceManager& resManager);

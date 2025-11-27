@@ -11,8 +11,7 @@ namespace {
     }
 }
 
-Game::Game() :
-    m_resManager(ResourceManager::Instance()) {
+void Game::instanceObjects() {
     std::ifstream fin("date.txt");
     if (!fin.is_open()) {
         throw ResourceException("Couldn't load file: date.txt");
@@ -91,11 +90,7 @@ Game::Game() :
         }
     }
 
-    const sf::VideoMode desktop = sf::VideoMode::getDesktopMode();
-    m_width = desktop.size.x;
-    m_height = desktop.size.y;
-
-    m_window.create(sf::VideoMode({m_width, m_height}, desktop.bitsPerPixel), "Hunter Fusion", sf::Style::Default, sf::State::Fullscreen);
+    m_window.create(sf::VideoMode({m_width, m_height}), "Hunter Fusion", settings.GetWindowStyle());
     m_window.setFramerateLimit(90);
     // m_window.setVerticalSyncEnabled(true);
 
@@ -104,7 +99,17 @@ Game::Game() :
     m_cameraPos = m_player->getPos();
 }
 
+Game::Game() :
+    m_width{},
+    m_height{},
+    m_resManager{ResourceManager::Instance()} {
+    settings.SetSettingsLauncher();
+    m_width = settings.GetResolution().x;
+    m_height = settings.GetResolution().y;
+}
+
 Game::~Game() {
+    m_resManager.cleanup();
     for (auto& sound : m_playingSounds) {
         sound.stop();
     }
@@ -112,8 +117,11 @@ Game::~Game() {
 }
 
 void Game::run() {
+    instanceObjects();
+    m_clock.restart();
     while (m_window.isOpen()) {
         float deltaTime = m_clock.restart().asSeconds();
+        if (deltaTime > 0.1f) deltaTime = 0.1f;
         handleEvents();
         update(deltaTime);
         render();
@@ -140,13 +148,26 @@ void Game::handleEvents() {
             }
         }
 
-        if (const auto* mousePress = event->getIf<sf::Event::MouseButtonPressed>()) {
-            if (mousePress->button == sf::Mouse::Button::Left && m_playerWeapon->canFire(*m_player) && m_player->isAlive()) {
-                sf::Vector2i mousePixel = sf::Mouse::getPosition(m_window);
-                sf::Vector2f mouseWorld = m_window.mapPixelToCoords(mousePixel);
+        if (const auto* keyPress = event->getIf<sf::Event::KeyPressed>()) {
+            sf::Vector2f shootDirection;
+            bool isShooting = false;
 
-                m_playerWeapon->fire(*m_player, m_player->getWeaponTipPos(), mouseWorld);
-                m_player->shootAnimation();
+            if (keyPress->scancode == sf::Keyboard::Scancode::Left) {
+                shootDirection = sf::Vector2f(-1.f, 0.f);
+                isShooting = true;
+            }
+            else if (keyPress->scancode == sf::Keyboard::Scancode::Right) {
+                shootDirection = sf::Vector2f(1.f, 0.f);
+                isShooting = true;
+            }
+            else if (keyPress->scancode == sf::Keyboard::Scancode::Up) {
+                shootDirection = sf::Vector2f(0.f, -1.f);
+                isShooting = true;
+            }
+
+            if (isShooting && m_playerWeapon->canFire(*m_player) && m_player->isAlive()) {
+
+                m_playerWeapon->fire(*m_player, shootDirection);
             }
         }
     }
@@ -165,6 +186,7 @@ void Game::updateEntities(float deltaTime) {
 
     m_map->updateEntities(deltaTime);
 
+    m_playerWeapon->update(deltaTime);
     m_playerWeapon->updateProjectiles(deltaTime, *m_map);
 
     if (m_player->isHit()) {
@@ -265,7 +287,7 @@ void Game::updateSounds() {
 }
 
 void Game::render() {
-    m_window.clear(sf::Color::Black);
+    m_window.clear(sf::Color::Transparent);
 
     if (!m_map || !m_playerWeapon || !m_player) {
         m_window.display();

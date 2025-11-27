@@ -7,9 +7,11 @@
 #include "Map.h"
 #include "Enemy.h"
 #include "Player.h"
+#include "settingsMenuState.h"
 
 class Game {
 
+    void instanceObjects();
     void handleEvents();
     void update(float deltaTime);
     void render();
@@ -27,6 +29,7 @@ class Game {
     const float m_cameraSpeed = 5.f;
 
     ResourceManager& m_resManager;
+    settingsMenuState settings;
 
     std::unique_ptr<Player> m_player;
     std::unique_ptr<Weapon> m_playerWeapon;

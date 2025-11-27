@@ -20,6 +20,7 @@ class Weapon {
     int ammoamount;
     int projectileDmg;
     float firerate;
+    float fireTimer;
     std::vector<Projectile> projectiles;
     sf::Texture* projectileTex;
 
@@ -38,9 +39,10 @@ public:
         return out;
     }
 
-    void fire(Player& player, sf::Vector2f playerPos, sf::Vector2f targetPos);
+    void fire(Player& player, sf::Vector2f direction);
     void updateProjectiles(float deltaTime, const Map& map);
     void reload();
+    void update(float deltaTime);
     void drawProjectiles(sf::RenderWindow& window) const;
 
     ~Weapon();

@@ -16,8 +16,16 @@ void Player::applyGravity(float deltaTime) {
 }
 
 float Player::calculateWeaponOffsetX() const {
-    float offsetX = static_cast<float>(frameSize.x) * 0.3f;
+    float off = 0.3f;
+    if (facingUp) off = 0.1f;
+    float offsetX = static_cast<float>(frameSize.x) * off;
     return facingRight ? offsetX : -offsetX;
+}
+
+float Player::calculateWeaponOffsetY() const {
+    float off = 0.5f;
+    if (facingUp) off = 1.1;
+    return -static_cast<float>(frameSize.y) * off;
 }
 
 Player::Player(const std::string& n, sf::Texture& tex, float posx_, float posy_, std::list<sf::Sound>& activeSounds_, const sf::SoundBuffer& jumpSound_)
@@ -33,6 +41,7 @@ Player::Player(const std::string& n, sf::Texture& tex, float posx_, float posy_,
       isRunning{false},
       isJumping{false},
       facingRight{true},
+      facingUp{false},
       isHit_{false},
       currentFrame{0},
       animationRow{0},
@@ -66,12 +75,12 @@ void Player::doBehavior(float deltaTime, const Map& map) {
     if ((sf::Keyboard::isKeyPressed(sf::Keyboard::Key::W) ||
          sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Space)) && !isJumping) {
             try {
-                float testFeetX = posX - static_cast<float>(hitboxWidth) / 2.0f;
-                float testFeetY = posY - static_cast<float>(hitboxHeight) + 5.0f;
+                float testFeetX = posX - static_cast<float>(hitboxWidth) / 2.0f + 10.f;
+                float testFeetY = posY;
 
                 sf::FloatRect groundCheck(
                     sf::Vector2f(testFeetX, testFeetY),
-                    sf::Vector2f(static_cast<float>(hitboxWidth), static_cast<float>(hitboxHeight))
+                    sf::Vector2f(static_cast<float>(hitboxWidth) - 20.f, 10.f)
                 );
 
                 if (!map.isWall(groundCheck)) {
@@ -139,12 +148,14 @@ void Player::doBehavior(float deltaTime, const Map& map) {
                                 );
 
     if (map.isWall(testBoundsY)) {
-        posY = lastPosY;
-
         if (velocity > 0) {
-            isJumping = false;
+
+            posY = lastPosY;
             velocity = 0;
-        } else if (velocity < 0) {
+            isJumping = false;
+        }
+        else if (velocity < 0) {
+            posY = lastPosY;
             velocity = 0;
         }
     }
@@ -158,70 +169,57 @@ void Player::updateAnimation(float deltaTime) {
     if (shootingTimer > 0.0f) {
         shootingTimer -= deltaTime;
     }
-
     if (isJumping) {
-        if (animationStartIndex != 4) {
-            animationStartIndex = 4;
-            animationFrameCount = 3;
-            currentFrame = 0;
-            animationTimer = 0.0f;
-        }
+        if (shootingTimer > 0.0f) {
+            int col = 2;
+            int row = facingUp ? 2 : 1;
 
+            int rectLeft = col * frameSize.x;
+            int rectTop = row * frameSize.y;
+            sprite.setTextureRect(sf::IntRect(sf::Vector2i(rectLeft, rectTop), frameSize));
+            return;
+        }
         animationTimer += deltaTime;
         if (animationTimer >= frameDuration) {
             animationTimer -= frameDuration;
             currentFrame = (currentFrame + 1) % 3;
         }
-
-        int col, row;
-        switch (currentFrame) {
-            case 0: col = 5; row = 0; break;
-            case 1: col = 4; row = 1; break;
-            case 2: col = 5; row = 1; break;
-            default: col = 5; row = 0; break;
+        if (currentFrame >= 3) {
+            currentFrame = 0;
         }
+
+        int col = 5;
+        int row = currentFrame;
 
         int rectLeft = col * frameSize.x;
         int rectTop = row * frameSize.y;
-
         sprite.setTextureRect(sf::IntRect(sf::Vector2i(rectLeft, rectTop), frameSize));
 
         return;
     }
 
-    if (shootingTimer > 0.0f && isRunning) {
-        animationRow = 1;
-    } else {
-        animationRow = 0;
+    int row = 0;
+    if (shootingTimer > 0.0f) {
+        row = facingUp ? 2 : 1;
     }
 
-    int newStartIndex;
-    int newFrameCount;
+    int col = 0;
+    int maxFrames = 4;
 
     if (isRunning) {
-        newStartIndex = 1;
-        newFrameCount = 3;
-    }
-    else {
-        newStartIndex = 0;
-        newFrameCount = 1;
-    }
-
-    if (newStartIndex != animationStartIndex) {
-        animationStartIndex = newStartIndex;
-        animationFrameCount = newFrameCount;
+        animationTimer += deltaTime;
+        if (animationTimer >= frameDuration) {
+            animationTimer -= frameDuration;
+            currentFrame = (currentFrame + 1) % maxFrames;
+        }
+        col = currentFrame;
+    } else {
         currentFrame = 0;
-        animationTimer = 0.0f;
+        col = 0;
     }
 
-    animationTimer += deltaTime;
-    if (animationTimer >= frameDuration) {
-        animationTimer -= frameDuration;
-        currentFrame = (currentFrame + 1) % animationFrameCount;
-    }
-
-    int rectLeft = (animationStartIndex + currentFrame) * frameSize.x;
-    int rectTop = animationRow * frameSize.y;
+    int rectLeft = col * frameSize.x;
+    int rectTop = row * frameSize.y;
     sprite.setTextureRect(sf::IntRect(sf::Vector2i(rectLeft, rectTop), frameSize));
 }
 
@@ -232,6 +230,10 @@ void Player::shootAnimation() {
 void Player::setFacing(bool isFacingRight) {
     facingRight = isFacingRight;
     updateSpriteDirection();
+}
+
+void Player::setFacingUp(bool isFacingUp) {
+    facingUp = isFacingUp;
 }
 
 void Player::doTakeDamage(int damageAmount) {
@@ -273,8 +275,23 @@ void Player::drawDamageEffect(sf::RenderWindow& window) const {
 
 
 sf::Vector2f Player::getWeaponTipPos() const {
-    float offsetX = calculateWeaponOffsetX();
-    float offsetY = -(static_cast<float>(frameSize.y) * 0.55f);
+    float offsetX = 0.f;
+    float offsetY = 0.f;
+
+    if (facingRight) {
+        if (facingUp) offsetX = 10.f;
+        else offsetX = static_cast<float>(frameSize.x) * 0.3f;
+    }
+    else {
+        if (facingUp) offsetX = -10.f;
+        else offsetX = -static_cast<float>(frameSize.x) * 0.3f;
+    }
+
+    if (facingUp) {
+        offsetY = -(static_cast<float>(frameSize.y) * 0.9f);
+    } else {
+        offsetY = -(static_cast<float>(frameSize.y) * 0.5f);
+    }
 
     return {posX + offsetX, posY + offsetY};
 }
@@ -292,6 +309,14 @@ bool Player::isHit() const {
     return isHit_;
 }
 
+bool Player::isFacingUp() const {
+    return facingUp;
+}
+
 bool Player::Jumping() const {
     return isJumping;
+}
+
+float Player::getVelocityY() const {
+    return velocity;
 }

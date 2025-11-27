@@ -9,7 +9,6 @@
 class ResourceManager {
 public:
     ResourceManager(const ResourceManager&) = delete;
-    ResourceManager& operator= (const ResourceManager&) = delete;
 
     static ResourceManager& Instance();
 
@@ -21,6 +20,7 @@ public:
 private:
     ResourceManager();
     ~ResourceManager() = default;
+
 
     void loadTextures(const std::string& path, const std::string& texture_name);
     void loadSounds(const std::string& path, const std::string& sound_path);

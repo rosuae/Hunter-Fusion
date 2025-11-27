@@ -19,7 +19,8 @@ Weapon::Weapon(std::string n, std::string projName, int projDmg, sf::Texture& te
     reloada{30},
     ammoamount{a},
     projectileDmg{projDmg},
-    firerate{0.1f},
+    firerate{0.125f},
+    fireTimer{0.f},
     projectileTex{&tex},
     activeSounds{activeSounds_},
     shootSound{shootSound_},
@@ -29,14 +30,28 @@ Weapon::Weapon(std::string n, std::string projName, int projDmg, sf::Texture& te
     reloadSound.setVolume(30);
 }
 
-void Weapon::fire(Player& player, sf::Vector2f playerPos, sf::Vector2f targetPos) {
-    bool shouldFaceRight = targetPos.x > playerPos.x;
-    player.setFacing(shouldFaceRight);
+void Weapon::fire(Player& player, sf::Vector2f direction) {
+    if (direction.y < -0.1f) {
+        player.setFacingUp(true);
+    } else {
+        player.setFacingUp(false);
+    }
+
+    if (std::abs(direction.x) > 0.1f) {
+        bool shouldFaceRight = direction.x > 0;
+        player.setFacing(shouldFaceRight);
+    }
 
     if (canFire(player)) {
         player.shootAnimation();
-        projectiles.emplace_back(projectileName, projectileDmg, *projectileTex, playerPos, targetPos);
+        sf::Vector2f spawnPoint = player.getWeaponTipPos();
+
+        sf::Vector2f calculatedTarget = spawnPoint + direction * 1000.f;
+
+        projectiles.emplace_back(projectileName, projectileDmg, *projectileTex, spawnPoint, calculatedTarget);
+
         reloada -= 1;
+        fireTimer = firerate;
 
         activeSounds.emplace_back(shootSound);
         activeSounds.back().play();
@@ -71,6 +86,12 @@ void Weapon::reload() {
     activeSounds.back().play();
 }
 
+void Weapon::update(float deltaTime) {
+    if (fireTimer > 0.0f) {
+        fireTimer -= deltaTime;
+    }
+}
+
 void Weapon::drawProjectiles(sf::RenderWindow& window) const {
     for (const auto& proj : projectiles) {
         proj.drawProjectile(window);
@@ -88,5 +109,6 @@ Weapon::~Weapon() { std::cout << "S a apelat destructor Weapon \n";}
 }
 
 [[nodiscard]]bool Weapon::canFire(const Player& player) const {
-    return reloada > 0 && !player.Jumping();
+    bool movementStateAllowsFiring = !player.Jumping() || (player.Jumping() && player.getVelocityY() > 0.f);
+    return reloada > 0 && movementStateAllowsFiring && fireTimer <= 0.0f;
 }

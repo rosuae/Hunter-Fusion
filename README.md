@@ -7,10 +7,9 @@ Gameplay-ul se bazează pe controlul unui personaj care poate merge, sări, trag
 
 
 ## Controls:
-- `A,D` Move Left / Right.
+- `A, D` Move Left / Right.
 - `W / Space` Jump.
-- `Mouse` Aim.
-- `Left-Click` Shoot (Can't shoot while jumping).
+- `Left / Right / Up Arrow` Shoot.
 - `R` Reload.
 - `Escape` Exit Game.
 
@@ -26,10 +25,6 @@ Gameplay-ul se bazează pe controlul unui personaj care poate merge, sări, trag
 
 
 
-![ezgif com-video-to-gif-converter](https://github.com/user-attachments/assets/06858a86-0bf7-4be1-8de6-75c1374df7d2)
-
-
-
 ## To do:
  
 - More rooms that should be generated from files + Interconnections
@@ -37,7 +32,6 @@ Gameplay-ul se bazează pe controlul unui personaj care poate merge, sări, trag
 - PowerUps + Ammo and Health Drops
 - More types of ammo
 - Enemies damage should influence the player movement behavior
-- Resolution change window
 - Intro screen + Main menu screen + pause screen + hud
 - Option to change the game volume
 - Ability to restart on the last room the player died in
@@ -49,6 +43,7 @@ Gameplay-ul se bazează pe controlul unui personaj care poate merge, sări, trag
 ## Known Bugs:
 
 - Player can run out of ammo. Drops system will be implemented
+
 ### Tema 0
 
 - [x] Nume proiect (poate fi schimbat ulterior)

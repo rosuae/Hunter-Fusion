@@ -15,7 +15,8 @@ namespace {
 
 Map::Map(std::string n, const std::string& filePath, ResourceManager& resManager):
     MapNume{std::move(n)},
-    tileSprite{resManager.getTexture("tile.png")} {
+    tileSprite{resManager.getTexture("tile.png")},
+    tileBackgroundSprite{resManager.getTexture("backgroudtile.png")} {
 
     std::ifstream file(filePath);
     if (!file.is_open()) {
@@ -54,6 +55,10 @@ void Map::drawMap(sf::RenderWindow& window) {
             if (tileType == '#') {
                 tileSprite.setPosition(sf::Vector2f (static_cast<float>(x) * TILE_SIZE, static_cast<float> (y) * TILE_SIZE));
                 window.draw(tileSprite);
+            }else
+                {
+                tileBackgroundSprite.setPosition(sf::Vector2f (static_cast<float>(x) * TILE_SIZE, static_cast<float> (y) * TILE_SIZE));
+                window.draw(tileBackgroundSprite);
             }
         }
 }

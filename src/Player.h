@@ -23,6 +23,7 @@ class Player : public Entity {
     bool isRunning;
     bool isJumping;
     bool facingRight;
+    bool facingUp;
     bool isHit_;
 
     int currentFrame;
@@ -41,7 +42,7 @@ class Player : public Entity {
     void applyGravity(float deltaTime) override;
     void updateSpriteDirection();
     float calculateWeaponOffsetX() const;
-
+    float calculateWeaponOffsetY() const;
 public:
     Player(const std::string& n, sf::Texture& tex, float posx_, float posy_, std::list<sf::Sound>& activeSounds_, const sf::SoundBuffer& jumpSound_);
     std::unique_ptr<Entity> clone() const override;
@@ -50,6 +51,7 @@ public:
     void updateAnimation(float deltaTime);
     void shootAnimation();
     void setFacing(bool isFacingRight);
+    void setFacingUp(bool isFacingUp);
     void setHit(bool ok);
     void alphaDamageEffect(int alpha);
     void resetDamageEffect();
@@ -58,7 +60,9 @@ public:
 
     sf::Vector2f getWeaponTipPos() const;
     bool isHit() const;
+    bool isFacingUp() const;
     bool Jumping() const;
+    float getVelocityY() const;
 };
 
 #endif

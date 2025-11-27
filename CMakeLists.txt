@@ -76,6 +76,10 @@ add_executable(${MAIN_EXECUTABLE_NAME}
         src/Entity.h
         src/GameExceptions.cpp
         src/GameExceptions.h
+        src/gameState.cpp
+        src/gameState.h
+        src/settingsMenuState.cpp
+        src/settingsMenuState.h
 )
 
 # NOTE: Add all defined targets (e.g. executables, libraries, etc. )
