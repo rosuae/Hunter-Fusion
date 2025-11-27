@@ -15,19 +15,6 @@ void Player::applyGravity(float deltaTime) {
     posY += velocity * deltaTime;
 }
 
-float Player::calculateWeaponOffsetX() const {
-    float off = 0.3f;
-    if (facingUp) off = 0.1f;
-    float offsetX = static_cast<float>(frameSize.x) * off;
-    return facingRight ? offsetX : -offsetX;
-}
-
-float Player::calculateWeaponOffsetY() const {
-    float off = 0.5f;
-    if (facingUp) off = 1.1;
-    return -static_cast<float>(frameSize.y) * off;
-}
-
 Player::Player(const std::string& n, sf::Texture& tex, float posx_, float posy_, std::list<sf::Sound>& activeSounds_, const sf::SoundBuffer& jumpSound_)
     : Entity(n, posx_, posy_, 900.0f, 2500.f, tex),
       velocity{0.0f},
@@ -165,26 +152,27 @@ void Player::doBehavior(float deltaTime, const Map& map) {
 }
 
 void Player::updateAnimation(float deltaTime) {
-
     if (shootingTimer > 0.0f) {
         shootingTimer -= deltaTime;
     }
     if (isJumping) {
+        animationFrameCount = 3;
         if (shootingTimer > 0.0f) {
             int col = 2;
             int row = facingUp ? 2 : 1;
-
             int rectLeft = col * frameSize.x;
             int rectTop = row * frameSize.y;
             sprite.setTextureRect(sf::IntRect(sf::Vector2i(rectLeft, rectTop), frameSize));
             return;
         }
+
         animationTimer += deltaTime;
+
         if (animationTimer >= frameDuration) {
             animationTimer -= frameDuration;
-            currentFrame = (currentFrame + 1) % 3;
+            currentFrame = (currentFrame + 1) % animationFrameCount;
         }
-        if (currentFrame >= 3) {
+        if (currentFrame >= animationFrameCount) {
             currentFrame = 0;
         }
 
@@ -194,32 +182,37 @@ void Player::updateAnimation(float deltaTime) {
         int rectLeft = col * frameSize.x;
         int rectTop = row * frameSize.y;
         sprite.setTextureRect(sf::IntRect(sf::Vector2i(rectLeft, rectTop), frameSize));
-
         return;
     }
 
-    int row = 0;
     if (shootingTimer > 0.0f) {
-        row = facingUp ? 2 : 1;
+        animationRow = facingUp ? 2 : 1;
+    } else {
+        animationRow = 0;
     }
-
-    int col = 0;
-    int maxFrames = 4;
+    animationStartIndex = 0;
+    animationFrameCount = 4;
 
     if (isRunning) {
+        if (currentFrame == 0 && animationTimer == 0.0f) {
+            currentFrame = 1;
+        }
         animationTimer += deltaTime;
         if (animationTimer >= frameDuration) {
             animationTimer -= frameDuration;
-            currentFrame = (currentFrame + 1) % maxFrames;
+            currentFrame = (currentFrame + 1) % animationFrameCount;
         }
-        col = currentFrame;
     } else {
         currentFrame = 0;
-        col = 0;
+        animationTimer = frameDuration;
     }
+
+    int col = animationStartIndex + currentFrame;
+    int row = animationRow;
 
     int rectLeft = col * frameSize.x;
     int rectTop = row * frameSize.y;
+
     sprite.setTextureRect(sf::IntRect(sf::Vector2i(rectLeft, rectTop), frameSize));
 }
 
@@ -307,10 +300,6 @@ sf::FloatRect Player::doGetBounds() const {
 
 bool Player::isHit() const {
     return isHit_;
-}
-
-bool Player::isFacingUp() const {
-    return facingUp;
 }
 
 bool Player::Jumping() const {

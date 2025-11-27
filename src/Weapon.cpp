@@ -109,6 +109,6 @@ Weapon::~Weapon() { std::cout << "S a apelat destructor Weapon \n";}
 }
 
 [[nodiscard]]bool Weapon::canFire(const Player& player) const {
-    bool movementStateAllowsFiring = !player.Jumping() || (player.Jumping() && player.getVelocityY() > 0.f);
+    bool movementStateAllowsFiring = !player.Jumping() || player.getVelocityY() > 0.f;
     return reloada > 0 && movementStateAllowsFiring && fireTimer <= 0.0f;
 }
