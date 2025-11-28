@@ -50,6 +50,8 @@ public:
     [[nodiscard]]std::vector<Projectile>& getProjectiles();
     [[nodiscard]]int getDmg() const;
     [[nodiscard]]bool canFire(const Player& player) const;
+    [[nodiscard]]int getAmmoInClip() const { return reloada; }
+    [[nodiscard]]int getTotalAmmo() const { return ammoamount; }
 };
 
 #endif

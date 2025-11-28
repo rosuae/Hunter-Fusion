@@ -18,11 +18,11 @@ void settingsMenuState::SetSettingsLauncher() {
     if (!font.openFromFile("assets/textures/Metroid-Fusion.ttf")) {
     }
 
-    sf::Text textFull(font,"Fullscreen", 40);
-    textFull.setPosition({260.f, 160.f});
+    sf::Text textFull(font,"- Fullscreen", 30);
+    textFull.setPosition({10.f, 160.f});
 
-    sf::Text textWin(font, "Windowed", 40);
-    textWin.setPosition({270.f, 300.f});
+    sf::Text textWin(font, "- Windowed", 30);
+    textWin.setPosition({10.f, 260.f});
 
     while (launcher.isOpen()) {
         while (const std::optional<sf::Event> event = launcher.pollEvent()) {

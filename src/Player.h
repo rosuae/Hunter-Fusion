@@ -61,6 +61,7 @@ public:
     bool isHit() const;
     bool Jumping() const;
     float getVelocityY() const;
+    [[nodiscard]]int getHealth() const { return health; }
 };
 
 #endif

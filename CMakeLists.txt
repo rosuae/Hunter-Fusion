@@ -80,6 +80,10 @@ add_executable(${MAIN_EXECUTABLE_NAME}
         src/gameState.h
         src/settingsMenuState.cpp
         src/settingsMenuState.h
+        src/Hud.cpp
+        src/Hud.h
+        src/Camera.cpp
+        src/Camera.h
 )
 
 # NOTE: Add all defined targets (e.g. executables, libraries, etc. )

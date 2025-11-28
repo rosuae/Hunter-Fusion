@@ -8,6 +8,7 @@
 #include "Enemy.h"
 #include "Player.h"
 #include "settingsMenuState.h"
+#include "Camera.h"
 
 class Game {
 
@@ -22,11 +23,9 @@ class Game {
     void updateSounds();
 
     sf::RenderWindow m_window;
-    sf::View m_camera;
-    sf::Vector2f m_cameraPos;
+    std::unique_ptr<Camera> m_camera;
     unsigned int m_width;
     unsigned int m_height;
-    const float m_cameraSpeed = 5.f;
 
     ResourceManager& m_resManager;
     settingsMenuState settings;

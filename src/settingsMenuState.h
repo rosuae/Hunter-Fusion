@@ -20,7 +20,7 @@ public:
         return isFullscreen ? sf::State::Fullscreen : sf::State::Windowed;
     }
 
-    sf::Vector2u GetResolution() {
+    sf::Vector2u GetResolution() const{
         return {width, height};
     }
 };

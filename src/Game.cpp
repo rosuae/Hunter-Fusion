@@ -94,9 +94,11 @@ void Game::instanceObjects() {
     m_window.setFramerateLimit(90);
     // m_window.setVerticalSyncEnabled(true);
 
-    m_camera = sf::View(sf::FloatRect(sf::Vector2f(0.f, 0.f), sf::Vector2f(static_cast<float>(m_width), static_cast<float>(m_height))));
-    m_window.setView(m_camera);
-    m_cameraPos = m_player->getPos();
+    m_camera = std::make_unique<Camera>(m_width, m_height);
+    m_camera->snapToTarget(m_player->getPos());
+
+    m_camera->initHud(m_player, m_playerWeapon, m_resManager);
+    m_window.setView(m_camera->getView());
 }
 
 Game::Game() :
@@ -258,26 +260,10 @@ void Game::handleCollisions() {
 }
 
 void Game::updateCamera(float deltaTime) {
-    sf::Vector2f targetPos = m_player->getPos();
+    if (!m_player) return;
 
-    constexpr float deadZone = 8.f;
-    float diffX = targetPos.x - m_cameraPos.x;
-    float diffY = targetPos.y - m_cameraPos.y - static_cast<float>(m_height) / 6;
-
-    if (std::abs(diffX) > deadZone) {
-        m_cameraPos.x += diffX * m_cameraSpeed * deltaTime;
-    } else {
-        m_cameraPos.x = targetPos.x;
-    }
-
-    if (std::abs(diffY) > deadZone) {
-        m_cameraPos.y += diffY * m_cameraSpeed * deltaTime;
-    } else {
-        m_cameraPos.y = targetPos.y - static_cast<float>(m_height) / 6;
-    }
-
-    m_camera.setCenter(m_cameraPos);
-    m_window.setView(m_camera);
+    m_camera->update(deltaTime, m_player->getPos());
+    m_window.setView(m_camera->getView());
 }
 
 void Game::updateSounds() {
@@ -296,12 +282,9 @@ void Game::render() {
 
     m_map->drawMap(m_window);
     m_playerWeapon->drawProjectiles(m_window);
-
     m_player->draw(m_window);
-
     m_map->drawEntities(m_window);
-
     m_player->drawDamageEffect(m_window);
-
+    m_camera->drawHud(m_window);
     m_window.display();
 }

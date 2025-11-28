@@ -9,6 +9,7 @@ ResourceManager::ResourceManager() {
     loadTextures("assets/textures","backgroudtile.png");
     loadTextures("assets/textures/map","background.bmp");
     loadTextures("assets/textures","settingsmenu.png");
+    loadTextures("assets/textures","hud.png");
 
     loadSounds("assets/sound","jump.wav");
     loadSounds("assets/sound","reload.wav");
