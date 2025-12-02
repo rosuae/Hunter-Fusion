@@ -31,13 +31,13 @@ Hud::Hud(const std::unique_ptr<Player>& player, const std::unique_ptr<Weapon>& w
     m_healthBar.setSize(sf::Vector2f(m_barMaxWidth, m_barHeight));
 
     m_healthText.setCharacterSize(25);
-    m_healthText.setFillColor(sf::Color::White);
+    m_healthText.setFillColor(sf::Color::Magenta);
     m_healthText.setPosition({m_healthBar.getPosition().x + 470.f, m_healthBar.getPosition().y + 20.f});
     m_healthText.setOutlineColor(sf::Color::Black);
     m_healthText.setOutlineThickness(1.f);
 
     m_ammoText.setCharacterSize(20);
-    m_ammoText.setFillColor(sf::Color::White);
+    m_ammoText.setFillColor(sf::Color::Magenta);
     m_ammoText.setPosition({m_backgroundSprite.getPosition().x + AMMO_OFFSET_X,
                            m_backgroundSprite.getPosition().y + AMMO_OFFSET_Y});
 }

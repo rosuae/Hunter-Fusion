@@ -13,6 +13,8 @@
 class Game {
 
     void instanceObjects();
+    void loadLevel(const std::string& mapFile, sf::Vector2f spawnPos = sf::Vector2f(-1.f, -1.f));
+    void spawnEnemies();
     void handleEvents();
     void update(float deltaTime);
     void render();
@@ -40,6 +42,7 @@ class Game {
     sf::Clock m_damageClock;
 
     std::list <sf::Sound> m_playingSounds;
+    std::vector<std::string> m_enemyNames;
 public:
     Game();
     ~Game();

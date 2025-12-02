@@ -24,9 +24,63 @@ Map::Map(std::string n, const std::string& filePath, ResourceManager& resManager
     }
 
     std::string line;
+    std::vector<sf::Vector2i> doorLocations;
+
+    int y_ = 0;
     while (std::getline(file, line)) {
-        mapLayout.push_back(line);
+        if (line.find("DATA") != std::string::npos) break;
+        if (line.empty()) continue;
+        if (line.front() == '#') {
+            mapLayout.push_back(line);
+            for (int x = 0; static_cast<size_t>(x) < line.size(); ++x) {
+                if (line[x] == 'D') {
+                    doorLocations.emplace_back(x, y_);
+                }
+            }
+            y_++;
+        }
     }
+
+    int currentDoorIndex = 0;
+    do {
+        if (line.empty()) continue;
+        if (line.find("PORTAL") != std::string::npos) {
+            std::istringstream iss(line);
+            std::string word;
+            iss >> word;
+            if (word == "DATA") {
+                iss >> word;
+            }
+            if (word == "PORTAL") {
+                if (static_cast<size_t>(currentDoorIndex) >= doorLocations.size()) {
+                    std::cout << "Warning: Not enough portals defined for 'D' blocks on map" << std::endl;
+                    continue;
+                }
+                std::string fileName;
+                float spawnX, spawnY;
+                if (iss >> fileName >> spawnX >> spawnY) {
+                    Portal newPortal;
+                    int autoX = doorLocations[currentDoorIndex].x;
+                    int autoY = doorLocations[currentDoorIndex].y;
+
+                    newPortal.bounds = sf::FloatRect(sf::Vector2f(
+                        static_cast<float>(autoX) * TILE_SIZE,
+                        static_cast<float>(autoY) * TILE_SIZE),
+                        sf::Vector2f(TILE_SIZE, TILE_SIZE)
+                    );
+
+                    float finalX = spawnX * TILE_SIZE;
+                    float finalY = spawnY * TILE_SIZE;
+
+                    newPortal.playerSpawnPosition = sf::Vector2f(finalX, finalY);
+                    newPortal.nextMapFile = fileName;
+
+                    portals.push_back(newPortal);
+                    currentDoorIndex++;
+                }
+            }
+        }
+    } while (std::getline(file, line));
 
     file.close();
 
@@ -42,7 +96,7 @@ Map::Map(std::string n, const std::string& filePath, ResourceManager& resManager
             }
         }
     if (!playerFound) {
-        throw ResourceException("No playerSpawn found: " + filePath);
+        // throw ResourceException("No playerSpawn found: " + filePath);
     }
 }
 
@@ -86,6 +140,15 @@ void Map::drawEntities(sf::RenderWindow& window) const{
     for (const auto& ent : entities) {
         ent->draw(window);
     }
+}
+
+const Portal* Map::getPortalCollision(const sf::FloatRect& playerBounds) const {
+    for (const auto& portal : portals) {
+        if (portal.bounds.findIntersection(playerBounds).has_value()) {
+            return &portal;
+        }
+    }
+    return nullptr;
 }
 
 std::pair<float, float> Map::generateEnemySpawn() const {

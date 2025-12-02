@@ -2,6 +2,7 @@
 #define OOP_MAP_H
 
 #include <iostream>
+#include <sstream>
 #include <utility>
 #include <fstream>
 #include <vector>
@@ -12,11 +13,18 @@ class Entity;
 class Enemy;
 class ResourceManager;
 
+struct Portal {
+    sf::FloatRect bounds;
+    std::string nextMapFile;
+    sf::Vector2f playerSpawnPosition;
+};
+
 class Map {
     std::string MapNume;
     std::vector<std::unique_ptr<Entity>> entities;
     std::vector<std::string> mapLayout;
     std::vector<std::pair<float, float>> enemySpawns;
+    std::vector<Portal> portals;
     std::pair<float, float> playerSpawn;
     const float TILE_SIZE = 96.f;
     sf::Sprite tileSprite;
@@ -26,12 +34,9 @@ public:
     Map(std::string n, const std::string& filePath, ResourceManager& resManager);
 
     void drawMap(sf::RenderWindow& window);
-
     void addEntity(std::unique_ptr<Entity> entity);
-
     void updateEntities(float deltaTime);
     void drawEntities(sf::RenderWindow& window) const;
-
 
     [[nodiscard]]int removeDeadEntities();
 
@@ -42,6 +47,7 @@ public:
         return out;
     }
 
+    const Portal* getPortalCollision(const sf::FloatRect& playerBounds) const;
     [[nodiscard]]std::pair<float, float> generateEnemySpawn () const;
     [[nodiscard]]std::pair<float, float> getPlayerSpawn() const;
     [[nodiscard]]bool isWall (const sf::FloatRect& bounds) const;

@@ -22,22 +22,6 @@ void Game::instanceObjects() {
         throw ResourceException("File: date.txt ; incomplete or currupted");
     }
 
-    m_map = std::make_unique<Map>(
-    mapName,
-    "assets/textures/map/harta.txt",
-    m_resManager
-    );
-
-    auto [xPlayer, yPlayer] = m_map->getPlayerSpawn();
-    m_player = std::make_unique<Player>(
-    playerName,
-    m_resManager.getTexture("samussheet.png"),
-    xPlayer,
-    yPlayer,
-    m_playingSounds,
-    m_resManager.getSound("jump.wav")
-    );
-
     m_playerWeapon = std::make_unique<Weapon>(
     playerWeapon,
     projectileName,
@@ -60,35 +44,27 @@ void Game::instanceObjects() {
     m_resManager.getSound("reload.wav")
     );
 
-    std::vector<std::string> enemyNames;
+    m_enemyNames.clear();
     std::string enemyName;
     while (fin >> enemyName) {
-        enemyNames.push_back(enemyName);
+        m_enemyNames.push_back(enemyName);
     }
     fin.close();
 
-    for (const auto& name: enemyNames) {
+    loadLevel("assets/textures/map/harta.txt");
 
-        auto [x, y] = m_map->generateEnemySpawn();
-        auto newEnemy = std::make_unique<Enemy>(
-            name,
-            m_enemyWeapon,
-            x,
-            y,
-            m_resManager.getTexture("enemy.png"),
-            m_playingSounds,
-            m_resManager.getSound("enemydamage.wav"),
-            m_resManager.getSound("enemydeath.wav")
-        );
+    auto [xPlayer, yPlayer] = m_map->getPlayerSpawn();
 
-        newEnemy->setTarget(m_player.get());
-        try{
-        m_map->addEntity(std::move(newEnemy));
-        }
-        catch (const MapEntityException& e) {
-            std::cout << e.what() << std::endl;
-        }
-    }
+    m_player = std::make_unique<Player>(
+        playerName,
+        m_resManager.getTexture("samussheet.png"),
+        xPlayer,
+        yPlayer,
+        m_playingSounds,
+        m_resManager.getSound("jump.wav")
+    );
+
+    spawnEnemies();
 
     m_window.create(sf::VideoMode({m_width, m_height}), "Hunter Fusion", settings.GetWindowStyle());
     m_window.setFramerateLimit(90);
@@ -96,9 +72,64 @@ void Game::instanceObjects() {
 
     m_camera = std::make_unique<Camera>(m_width, m_height);
     m_camera->snapToTarget(m_player->getPos());
-
     m_camera->initHud(m_player, m_playerWeapon, m_resManager);
+
     m_window.setView(m_camera->getView());
+}
+
+void Game::loadLevel(const std::string& mapFile, sf::Vector2f spawnPos) {
+    if (m_map) {
+        m_map.reset();
+    }
+
+    m_map = std::make_unique<Map>(
+        "CurrentRoom",
+        mapFile,
+        m_resManager
+    );
+    sf::Vector2f finalPos;
+
+    if (spawnPos.x < 0 && spawnPos.y < 0) {
+        auto [x, y] = m_map->getPlayerSpawn();
+        finalPos = sf::Vector2f(x, y);
+    } else {
+        finalPos = spawnPos;
+    }
+
+    if (m_player) {
+        m_player->setPosition(finalPos.x, finalPos.y);
+        if (m_camera) {
+            m_camera->snapToTarget(finalPos);
+        }
+        spawnEnemies();
+    }
+    m_clock.restart();
+}
+
+void Game::spawnEnemies() {
+    if (!m_map || !m_player || m_enemyNames.empty()) return;
+
+    for (const auto& name : m_enemyNames) {
+        try {
+            auto [x, y] = m_map->generateEnemySpawn();
+            auto newEnemy = std::make_unique<Enemy>(
+                name,
+                m_enemyWeapon,
+                x,
+                y,
+                m_resManager.getTexture("enemy.png"),
+                m_playingSounds,
+                m_resManager.getSound("enemydamage.wav"),
+                m_resManager.getSound("enemydeath.wav")
+            );
+
+            newEnemy->setTarget(m_player.get());
+            m_map->addEntity(std::move(newEnemy));
+        }
+        catch (const MapEntityException& e) {
+            std::cout << e.what() << "Info: No enemy spawn in this room." << std::endl;
+        }
+    }
 }
 
 Game::Game() :
@@ -204,6 +235,16 @@ void Game::updateEntities(float deltaTime) {
 }
 
 void Game::handleCollisions() {
+
+    if (m_player && m_map) {
+        if (const Portal* portal = m_map->getPortalCollision(m_player->getBounds()); portal != nullptr) {
+            std::string nextMapPath = portal->nextMapFile;
+            sf::Vector2f nextSpawnPos = portal->playerSpawnPosition;
+            loadLevel(nextMapPath, nextSpawnPos);
+            return;
+        }
+    }
+
     for (auto& proj : m_playerWeapon->getProjectiles()) {
         if (!proj.isActive()) continue;
         for (const auto& en : m_map->getEntities()) {
