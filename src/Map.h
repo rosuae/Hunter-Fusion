@@ -6,7 +6,9 @@
 #include <utility>
 #include <fstream>
 #include <vector>
+#include <list>
 #include <SFML/Graphics.hpp>
+#include <SFML/Audio.hpp>
 
 class Player;
 class Entity;
@@ -21,6 +23,7 @@ struct Portal {
 
 class Map {
     std::string MapNume;
+    ResourceManager& resManager;
     std::vector<std::unique_ptr<Entity>> entities;
     std::vector<std::string> mapLayout;
     std::vector<std::pair<float, float>> enemySpawns;
@@ -29,15 +32,20 @@ class Map {
     const float TILE_SIZE = 96.f;
     sf::Sprite tileSprite;
     sf::Sprite tileBackgroundSprite;
+
+    Player* playerTarget = nullptr;
+    std::list <sf::Sound> playingSounds;
+    std::vector<std::pair<std::string, int>> enemies;
 public:
 
-    Map(std::string n, const std::string& filePath, ResourceManager& resManager);
+    Map(std::string n, const std::string& filePath, ResourceManager& resManager, std::list<sf::Sound>& playingSounds_);
 
+    void spawnEnemies();
     void drawMap(sf::RenderWindow& window);
     void addEntity(std::unique_ptr<Entity> entity);
     void updateEntities(float deltaTime);
     void drawEntities(sf::RenderWindow& window) const;
-
+    void setPlayerTarget(Player* p) {playerTarget = p;}
     [[nodiscard]]int removeDeadEntities();
 
     ~Map();

@@ -8,8 +8,9 @@
 class Map;
 
 class Enemy : public Entity{
+    int damage;
     Entity* target;
-    std::shared_ptr<Weapon> fists;
+    // std::shared_ptr<Weapon> fists;
 
     std::list<sf::Sound>* activeSounds;
     const sf::SoundBuffer* hitSound;
@@ -24,7 +25,7 @@ class Enemy : public Entity{
 
 public:
     Enemy(const std::string& n,
-        std::shared_ptr<Weapon> f,
+        int damage_,
         float posx_, float posy_,
         sf::Texture& tex,
         std::list<sf::Sound>& activeSounds_,
@@ -34,7 +35,7 @@ public:
     void setTarget (Entity* playerTarget);
 
     friend std::ostream& operator<< (std::ostream& out, const Enemy& e) {
-        out << " Nume inamic: " << e.name << " Pos X: " << e.posX << " Pos Y: " << e.posY << " Viata inamic: " << e.health << " Viteza imanic: " << e.speed << " " << *e.fists;
+        out << " Nume inamic: " << e.name << " Pos X: " << e.posX << " Pos Y: " << e.posY << " Viata inamic: " << e.health << " Viteza imanic: " << e.speed;
         return out;
     }
 
@@ -42,7 +43,7 @@ public:
         using std::swap;
         swap(static_cast<Entity &>(lhs), static_cast<Entity &>(rhs));
         swap(lhs.target, rhs.target);
-        swap(lhs.fists, rhs.fists);
+        // swap(lhs.fists, rhs.fists);
         swap(lhs.activeSounds, rhs.activeSounds);
         swap(lhs.hitSound, rhs.hitSound);
         swap(lhs.deathSound, rhs.deathSound);

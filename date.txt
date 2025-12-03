@@ -1,7 +1,3 @@
 Samus
 PlasmaGun
 PlasmaOrb
-Map
-fists
-melee
-Metroid

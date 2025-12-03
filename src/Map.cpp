@@ -7,16 +7,18 @@
 #include <random>
 
 namespace {
-    int randomInt(const int min, const int max) {
+    int randomInt(const int min , const int max) {
         static std::mt19937 gen(std::random_device{}());
         return std::uniform_int_distribution(min, max)(gen);
     }
 }
 
-Map::Map(std::string n, const std::string& filePath, ResourceManager& resManager):
+Map::Map(std::string n, const std::string& filePath, ResourceManager& resManager_, std::list<sf::Sound>& playingSounds_):
     MapNume{std::move(n)},
+    resManager{resManager_},
     tileSprite{resManager.getTexture("tile.png")},
-    tileBackgroundSprite{resManager.getTexture("backgroudtile.png")} {
+    tileBackgroundSprite{resManager.getTexture("backgroudtile.png")},
+    playingSounds{playingSounds_} {
 
     std::ifstream file(filePath);
     if (!file.is_open()) {
@@ -27,34 +29,34 @@ Map::Map(std::string n, const std::string& filePath, ResourceManager& resManager
     std::vector<sf::Vector2i> doorLocations;
 
     int y_ = 0;
-    while (std::getline(file, line)) {
-        if (line.find("DATA") != std::string::npos) break;
-        if (line.empty()) continue;
-        if (line.front() == '#') {
-            mapLayout.push_back(line);
-            for (int x = 0; static_cast<size_t>(x) < line.size(); ++x) {
-                if (line[x] == 'D') {
-                    doorLocations.emplace_back(x, y_);
-                }
-            }
-            y_++;
-        }
-    }
-
     int currentDoorIndex = 0;
-    do {
+    bool readingMapLayout = true;
+
+    while (std::getline(file, line)) {
         if (line.empty()) continue;
-        if (line.find("PORTAL") != std::string::npos) {
-            std::istringstream iss(line);
-            std::string word;
-            iss >> word;
-            if (word == "DATA") {
-                iss >> word;
+        std::istringstream iss(line);
+        std::string firstWord;
+        iss >> firstWord;
+
+        if (firstWord == "DATA") {
+            readingMapLayout = false;
+            iss >> firstWord;
+        }
+        if (readingMapLayout) {
+            if (line.front() == '#') {
+                mapLayout.push_back(line);
+                for (int x = 0; static_cast<size_t>(x) < line.size(); ++x) {
+                    if (line[x] == 'D') {
+                        doorLocations.emplace_back(x, y_);
+                    }
+                }
+                y_++;
             }
-            if (word == "PORTAL") {
+        }
+        else {
+            if (firstWord == "PORTAL") {
                 if (static_cast<size_t>(currentDoorIndex) >= doorLocations.size()) {
-                    std::cout << "Warning: Not enough portals defined for 'D' blocks on map" << std::endl;
-                    continue;
+                    throw ResourceException("Warning: Defined more PORTALS in text than 'D' blocks on map.");
                 }
                 std::string fileName;
                 float spawnX, spawnY;
@@ -63,24 +65,27 @@ Map::Map(std::string n, const std::string& filePath, ResourceManager& resManager
                     int autoX = doorLocations[currentDoorIndex].x;
                     int autoY = doorLocations[currentDoorIndex].y;
 
-                    newPortal.bounds = sf::FloatRect(sf::Vector2f(
+                    newPortal.bounds = sf::FloatRect(sf::Vector2f{
                         static_cast<float>(autoX) * TILE_SIZE,
-                        static_cast<float>(autoY) * TILE_SIZE),
-                        sf::Vector2f(TILE_SIZE, TILE_SIZE)
+                        static_cast<float>(autoY) * TILE_SIZE},
+                        sf::Vector2f{TILE_SIZE, TILE_SIZE}
                     );
-
-                    float finalX = spawnX * TILE_SIZE;
-                    float finalY = spawnY * TILE_SIZE;
-
-                    newPortal.playerSpawnPosition = sf::Vector2f(finalX, finalY);
+                    newPortal.playerSpawnPosition = sf::Vector2f(spawnX * TILE_SIZE, spawnY * TILE_SIZE);
                     newPortal.nextMapFile = fileName;
 
                     portals.push_back(newPortal);
                     currentDoorIndex++;
                 }
             }
+            else if (firstWord == "ENEMIES") {
+                std::string eName;
+                int eDmg;
+                if (iss >> eName >> eDmg) {
+                    enemies.emplace_back(eName, eDmg);
+                }
+            }
         }
-    } while (std::getline(file, line));
+    }
 
     file.close();
 
@@ -95,8 +100,34 @@ Map::Map(std::string n, const std::string& filePath, ResourceManager& resManager
                 playerFound = true;
             }
         }
+
     if (!playerFound) {
-        // throw ResourceException("No playerSpawn found: " + filePath);
+        playerSpawn = {1, 1};
+    }
+}
+
+void Map::spawnEnemies() {
+    if (enemySpawns.empty() || enemies.empty()) return;
+
+    for (const auto& enemy_ : enemies) {
+        try {
+            auto [x, y] = generateEnemySpawn();
+            auto newEnemy = std::make_unique<Enemy>(
+                enemy_.first,
+                enemy_.second,
+                x,
+                y,
+                resManager.getTexture("enemy.png"),
+                playingSounds,
+                resManager.getSound("enemydamage.wav"),
+                resManager.getSound("enemydeath.wav")
+            );
+            newEnemy->setTarget(playerTarget);
+            addEntity(std::move(newEnemy));
+        }
+        catch (const MapEntityException& e) {
+            std::cout << e.what() << "Info: No enemy spawn in this room." << std::endl;
+        }
     }
 }
 

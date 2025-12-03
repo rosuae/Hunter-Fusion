@@ -17,8 +17,8 @@ void Game::instanceObjects() {
         throw ResourceException("Couldn't load file: date.txt");
     }
 
-    std::string playerName, playerWeapon, projectileName, mapName, enemyWeapon, enemyProj;
-    if (!(fin >> playerName >> playerWeapon >> projectileName >> mapName >> enemyWeapon >> enemyProj)) {
+    std::string playerName, playerWeapon, projectileName;
+    if (!(fin >> playerName >> playerWeapon >> projectileName)) {
         throw ResourceException("File: date.txt ; incomplete or currupted");
     }
 
@@ -33,22 +33,6 @@ void Game::instanceObjects() {
     m_resManager.getSound("reload.wav")
     );
 
-    m_enemyWeapon = std::make_shared<Weapon>(
-    enemyWeapon,
-    enemyProj,
-    10,
-    m_resManager.getTexture("projectile.png"),
-    1000,
-    m_playingSounds,
-    m_resManager.getSound("shoot.wav"),
-    m_resManager.getSound("reload.wav")
-    );
-
-    m_enemyNames.clear();
-    std::string enemyName;
-    while (fin >> enemyName) {
-        m_enemyNames.push_back(enemyName);
-    }
     fin.close();
 
     loadLevel("assets/textures/map/harta.txt");
@@ -64,7 +48,10 @@ void Game::instanceObjects() {
         m_resManager.getSound("jump.wav")
     );
 
-    spawnEnemies();
+    if (m_map) {
+        m_map->setPlayerTarget(m_player.get());
+        m_map->spawnEnemies();
+    }
 
     m_window.create(sf::VideoMode({m_width, m_height}), "Hunter Fusion", settings.GetWindowStyle());
     m_window.setFramerateLimit(90);
@@ -85,7 +72,8 @@ void Game::loadLevel(const std::string& mapFile, sf::Vector2f spawnPos) {
     m_map = std::make_unique<Map>(
         "CurrentRoom",
         mapFile,
-        m_resManager
+        m_resManager,
+        m_playingSounds
     );
     sf::Vector2f finalPos;
 
@@ -101,35 +89,10 @@ void Game::loadLevel(const std::string& mapFile, sf::Vector2f spawnPos) {
         if (m_camera) {
             m_camera->snapToTarget(finalPos);
         }
-        spawnEnemies();
+        m_map->setPlayerTarget(m_player.get());
+        m_map->spawnEnemies();
     }
     m_clock.restart();
-}
-
-void Game::spawnEnemies() {
-    if (!m_map || !m_player || m_enemyNames.empty()) return;
-
-    for (const auto& name : m_enemyNames) {
-        try {
-            auto [x, y] = m_map->generateEnemySpawn();
-            auto newEnemy = std::make_unique<Enemy>(
-                name,
-                m_enemyWeapon,
-                x,
-                y,
-                m_resManager.getTexture("enemy.png"),
-                m_playingSounds,
-                m_resManager.getSound("enemydamage.wav"),
-                m_resManager.getSound("enemydeath.wav")
-            );
-
-            newEnemy->setTarget(m_player.get());
-            m_map->addEntity(std::move(newEnemy));
-        }
-        catch (const MapEntityException& e) {
-            std::cout << e.what() << "Info: No enemy spawn in this room." << std::endl;
-        }
-    }
 }
 
 Game::Game() :
@@ -171,7 +134,7 @@ void Game::handleEvents() {
             if (keyPress->scancode == sf::Keyboard::Scancode::Escape) {
                 m_window.close();
             }
-            if (keyPress->scancode == sf::Keyboard::Scancode::R) {
+            else if (keyPress->scancode == sf::Keyboard::Scancode::R) {
                 try {
                     m_playerWeapon->reload();
                 }
@@ -179,9 +142,7 @@ void Game::handleEvents() {
                     std::cout << e.what() << std::endl;
                 }
             }
-        }
 
-        if (const auto* keyPress = event->getIf<sf::Event::KeyPressed>()) {
             sf::Vector2f shootDirection;
             bool isShooting = false;
 
@@ -277,7 +238,7 @@ void Game::handleCollisions() {
     if (enemiesToSpawn > 0) {
         Enemy prototype(
             "Metroid",
-            m_enemyWeapon,
+            20,
             0, 0,
             m_resManager.getTexture("enemy.png"),
             m_playingSounds,

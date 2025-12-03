@@ -246,15 +246,6 @@ void Player::resetDamageEffect() {
 }
 
 void Player::doDraw(sf::RenderWindow& window) const {
-    sf::RectangleShape healthbar(sf::Vector2f(100.f, 5.f));
-
-    float healthbarY = posY - static_cast<float>(frameSize.y) - 15.f;
-
-    healthbar.setPosition(sf::Vector2f(posX - 50.f, healthbarY));
-    healthbar.setFillColor(sf::Color::Green);
-    healthbar.setSize(sf::Vector2f(static_cast<float>(health), 5.f));
-
-    window.draw(healthbar);
     window.draw(sprite);
 }
 

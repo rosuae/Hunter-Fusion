@@ -3,16 +3,14 @@
 #include <SFML/Audio.hpp>
 #include <iostream>
 
-Enemy::Enemy(const std::string& n,
-    std::shared_ptr<Weapon> f,
-    float posx_, float posy_,
-    sf::Texture& tex,
+Enemy::Enemy(const std::string& n, const int damage_, float posx_, float posy_, sf::Texture& tex,
     std::list<sf::Sound>& activeSounds_,
     const sf::SoundBuffer& hitSound_,
     const sf::SoundBuffer& deathSound_)
     : Entity(n, posx_, posy_, 300.f, 1000.f, tex),
+    damage{damage_},
     target{nullptr},
-    fists{std::move(f)},
+    // fists{std::move(f)},
     activeSounds{&activeSounds_},
     hitSound{&hitSound_},
     deathSound{&deathSound_}
@@ -26,8 +24,8 @@ Enemy::Enemy(const std::string& n,
 
 Enemy::Enemy (const Enemy& other)
 : Entity(other),
+damage{other.damage},
 target{other.target},
-fists{other.fists},
 activeSounds{other.activeSounds},
 hitSound{other.hitSound},
 deathSound{other.deathSound}
@@ -139,5 +137,5 @@ void Enemy::setTarget(Entity *playerTarget) {
 }
 
 int Enemy::getContactDamage() const {
-    return fists->getDmg();
+    return damage;
 }

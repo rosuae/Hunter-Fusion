@@ -14,7 +14,6 @@ class Game {
 
     void instanceObjects();
     void loadLevel(const std::string& mapFile, sf::Vector2f spawnPos = sf::Vector2f(-1.f, -1.f));
-    void spawnEnemies();
     void handleEvents();
     void update(float deltaTime);
     void render();
@@ -35,14 +34,13 @@ class Game {
     std::unique_ptr<Player> m_player;
     std::unique_ptr<Weapon> m_playerWeapon;
     std::unique_ptr<Map> m_map;
-    std::shared_ptr<Weapon> m_enemyWeapon;
+    // std::shared_ptr<Weapon> m_enemyWeapon;
 
     sf::Clock m_clock;
     sf::Clock m_playerDamageCooldown;
     sf::Clock m_damageClock;
 
     std::list <sf::Sound> m_playingSounds;
-    std::vector<std::string> m_enemyNames;
 public:
     Game();
     ~Game();
