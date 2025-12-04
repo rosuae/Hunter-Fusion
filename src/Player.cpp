@@ -214,6 +214,18 @@ void Player::updateAnimation(float deltaTime) {
     int rectTop = row * frameSize.y;
 
     sprite.setTextureRect(sf::IntRect(sf::Vector2i(rectLeft, rectTop), frameSize));
+
+    float originBaseY = static_cast<float>(frameSize.y) - 7.f;
+    float originBaseX = static_cast<float>(frameSize.x) / 2.f;
+
+    float yOffset = 0.f;
+    if (animationRow == 1) {
+        yOffset = 2.5f;
+    }
+    else if (animationRow == 2) {
+        yOffset = 4.5f;
+    }
+    sprite.setOrigin(sf::Vector2f(originBaseX, originBaseY + yOffset));
 }
 
 void Player::shootAnimation() {
