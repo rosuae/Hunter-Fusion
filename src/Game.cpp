@@ -48,10 +48,8 @@ void Game::instanceObjects() {
         m_resManager.getSound("jump.wav")
     );
 
-    if (m_map) {
-        m_map->setPlayerTarget(m_player.get());
-        m_map->spawnEnemies();
-    }
+    m_map->setPlayerTarget(m_player.get());
+    m_map->spawnEnemies();
 
     m_window.create(sf::VideoMode({m_width, m_height}), "Hunter Fusion", settings.GetWindowStyle());
     m_window.setFramerateLimit(90);
@@ -210,7 +208,7 @@ void Game::handleCollisions() {
         if (!proj.isActive()) continue;
         for (const auto& en : m_map->getEntities()) {
             if (en->isAlive() && intersects(proj.getBounds(), en->getBounds())) {
-                en->takeDamage(proj.getDamage());
+                en->takeDamage(m_playerWeapon->getDmg());
                 proj.deactivate();
                 break;
             }

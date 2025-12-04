@@ -72,10 +72,6 @@ sf::FloatRect Projectile::getBounds() const {
     return sprite.getGlobalBounds();
 }
 
-int Projectile::getDamage() const {
-    return dmg;
-}
-
 bool Projectile::isActive() const {
     return active;
 }
