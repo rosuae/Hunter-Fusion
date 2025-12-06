@@ -4,15 +4,17 @@
 
 #include "Portal.h"
 
+#include <utility>
+
 Portal::Portal(const std::string& n,
         float posx_, float posy_,
         sf::Texture& tex,
-        std::string nextMapFile_,
+        std::string  nextMapFile_,
         sf::Vector2f playerSpawnPosition_,
         std::list<sf::Sound>& activeSounds_,
         const sf::SoundBuffer& activationSound_)
     : Entity(n, posx_, posy_, 0, 0, tex, 100, 288),
-    nextMapFile{nextMapFile_},
+    nextMapFile{std::move(nextMapFile_)},
     playerSpawnPosition{playerSpawnPosition_},
     activeSounds{&activeSounds_},
     activationSound{&activationSound_},

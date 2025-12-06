@@ -51,7 +51,7 @@ void ResourceManager::loadSounds(const std::string &path, const std::string &sou
 }
 
 sf::Texture& ResourceManager::getTexture (const std::string& texture_name) {
-    if (m_textures.find(texture_name) == m_textures.end()) {
+    if (!m_textures.contains(texture_name)) {
         throw ResourceException("Texture: " + texture_name + " wasn't found");
     }
 
@@ -59,7 +59,7 @@ sf::Texture& ResourceManager::getTexture (const std::string& texture_name) {
 }
 
 sf::SoundBuffer& ResourceManager::getSound(const std::string& sound_name) {
-    if (m_sounds.find(sound_name) == m_sounds.end()) {
+    if (!m_sounds.contains(sound_name)) {
         throw ResourceException("Sound: " + sound_name + " wasn't found");
     }
 

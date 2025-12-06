@@ -7,7 +7,6 @@
 #include "Map.h"
 #include "Enemy.h"
 #include "Player.h"
-#include "Portal.h"
 #include "settingsMenuState.h"
 #include "Camera.h"
 
@@ -45,4 +44,5 @@ public:
     Game();
     ~Game();
     void run();
+    static int generateRandomInt(int min, int max);
 };

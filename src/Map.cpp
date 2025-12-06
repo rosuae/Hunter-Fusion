@@ -1,18 +1,13 @@
 #include "Map.h"
+#include "Game.h"
 #include "Player.h"
 #include "Enemy.h"
 #include "Portal.h"
 #include "Entity.h"
 #include "ResourceManager.h"
 #include "GameExceptions.h"
+#include "EnemyFactory.h"
 #include <random>
-
-namespace {
-    int randomInt(const int min , const int max) {
-        static std::mt19937 gen(std::random_device{}());
-        return std::uniform_int_distribution(min, max)(gen);
-    }
-}
 
 Map::Map(std::string n, const std::string& filePath, ResourceManager& resManager_, std::list<sf::Sound>& playingSounds_):
     MapNume{std::move(n)},
@@ -60,21 +55,20 @@ Map::Map(std::string n, const std::string& filePath, ResourceManager& resManager
                     throw ResourceException("Warning: Defined more PORTALS in text than 'D' blocks on map.");
                 }
                 std::string fileName;
-                float spawnX, spawnY;
+                int spawnX, spawnY;
                 if (iss >> fileName >> spawnX >> spawnY) {
                     int autoX = doorLocations[currentDoorIndex].x;
                     int autoY = doorLocations[currentDoorIndex].y;
 
-                    float worldX = static_cast<float>(autoX) * TILE_SIZE;
-                    float worldY = static_cast<float>(autoY) * TILE_SIZE;
+                    sf::Vector2f world = gridToWorld(autoX, autoY);
 
                     auto newPortal = std::make_unique<Portal>(
                         "Portal",
-                        worldX,
-                        worldY,
+                        world.x,
+                        world.y,
                         resManager.getTexture("portal.png"),
                         fileName,
-                        sf::Vector2f(spawnX * TILE_SIZE, spawnY * TILE_SIZE),
+                        gridToWorld(spawnX, spawnY),
                         playingSounds,
                         resManager.getSound("portalactive.wav")
                     );
@@ -125,18 +119,18 @@ void Map::spawnEnemies() {
     for (const auto& enemy_ : enemies) {
         try {
             auto [x, y] = generateEnemySpawn();
-            auto newEnemy = std::make_unique<Enemy>(
+            auto newEnemy = EnemyFactory::createEnemy(
                 enemy_.first,
                 enemy_.second,
                 x,
                 y,
-                resManager.getTexture("enemy.png"),
+                resManager,
                 playingSounds,
-                resManager.getSound("enemydamage.wav"),
-                resManager.getSound("enemydeath.wav")
+                playerTarget
             );
-            newEnemy->setTarget(playerTarget);
-            addEntity(std::move(newEnemy));
+            if (newEnemy) {
+                addEntity(std::move(newEnemy));
+            }
         }
         catch (const MapEntityException& e) {
             std::cout << e.what() << "Info: No enemy spawn in this room." << std::endl;
@@ -151,11 +145,11 @@ void Map::drawMap(sf::RenderWindow& window) {
             char tileType = mapLayout[y][x];
 
             if (tileType == '#') {
-                tileSprite.setPosition(sf::Vector2f (static_cast<float>(x) * TILE_SIZE, static_cast<float> (y) * TILE_SIZE));
+                tileSprite.setPosition(gridToWorld(static_cast<int>(x), static_cast<int>(y)));
                 window.draw(tileSprite);
             }else
                 {
-                tileBackgroundSprite.setPosition(sf::Vector2f (static_cast<float>(x) * TILE_SIZE, static_cast<float> (y) * TILE_SIZE));
+                tileBackgroundSprite.setPosition(gridToWorld(static_cast<int>(x), static_cast<int>(y)));
                 window.draw(tileBackgroundSprite);
             }
         }
@@ -176,8 +170,8 @@ void Map::addEntity(std::unique_ptr<Entity> entity) {
     entities.push_back(std::move(entity));
 }
 
-void Map::updateEntities(float deltaTime) {
-    for (auto& ent : entities) {
+void Map::updateEntities(float deltaTime) const {
+    for (const auto& ent : entities) {
         ent->behavior(deltaTime, *this);
     }
 }
@@ -207,12 +201,19 @@ const Portal* Map::getPortalCollision(const sf::FloatRect& playerBounds) const {
     return nullptr;
 }
 
+const float Map::TILE_SIZE = 96.0f;
+
+sf::Vector2f Map::gridToWorld(int x, int y) {
+    return {static_cast<float>(x) * TILE_SIZE,
+                        static_cast<float>(y) * TILE_SIZE};
+}
+
 std::pair<float, float> Map::generateEnemySpawn() const {
     if (enemySpawns.empty()) {
         throw MapEntityException("Symbol 'E' missing form map generation. No existing enemy spawns.", {-999.f, -999.f});
     }
 
-    int randomIndex = randomInt(0, static_cast<int>(enemySpawns.size()) - 1);
+    int randomIndex = Game::generateRandomInt(0, static_cast<int>(enemySpawns.size()) - 1);
 
     auto spawnGrid = enemySpawns[randomIndex];
 

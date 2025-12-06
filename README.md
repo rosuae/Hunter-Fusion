@@ -18,6 +18,7 @@ Gameplay-ul se bazează pe controlul unui personaj care poate merge, sări, trag
 - *Player:* https://www.spriters-resource.com/browser_games/supermariobroscrossover/asset/177036/
 - *Enemies:* https://www.spriters-resource.com/snes/smetroid/asset/1725/
 - *Tiles:* https://www.spriters-resource.com/snes/smetroid/asset/144515/
+- *More Sprites:* https://www.spriters-resource.com/snes/smetroid/
 - *Sounds:*
   - https://sounds.spriters-resource.com/wii_u/nintendoland/asset/426887/
   - https://sounds.spriters-resource.com/snes/smetroid/asset/439917/
@@ -90,7 +91,7 @@ Gameplay-ul se bazează pe controlul unui personaj care poate merge, sări, trag
     - clasele de excepții trebuie să trateze categorii de erori distincte (exemplu de erori echivalente: citire fișiere cu diverse extensii)
   - [x] utilizare cu sens: de exemplu, `throw` în constructor (sau funcție care întoarce un obiect), `try`/`catch` în `main`
   - această ierarhie va fi complet independentă de ierarhia cu funcții virtuale
-- [ ] funcții și atribute `static`
+- [x] funcții și atribute `static`
 - [x] STL
 - [x] cât mai multe `const`
 - [ ] funcții *de nivel înalt*, de eliminat cât mai mulți getters/setters/funcții low-level

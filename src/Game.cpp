@@ -1,15 +1,10 @@
 #include "Game.h"
+#include "Portal.h"
 #include "ResourceManager.h"
 #include "GameExceptions.h"
 #include <iostream>
 #include <fstream>
 #include <random>
-
-namespace {
-    bool intersects(const sf::FloatRect& rect1, const sf::FloatRect& rect2) {
-        return rect1.findIntersection(rect2).has_value();
-    }
-}
 
 void Game::instanceObjects() {
     std::ifstream fin("date.txt");
@@ -201,7 +196,7 @@ void Game::handleCollisions() {
     for (auto& proj : m_playerWeapon->getProjectiles()) {
         if (!proj.isActive()) continue;
         for (const auto& en : m_map->getEntities()) {
-            if (en->isAlive() && intersects(proj.getBounds(), en->getBounds())) {
+            if (en->isAlive() && proj.getBounds().findIntersection(en->getBounds()).has_value()) {
                 en->takeDamage(m_playerWeapon->getDmg());
                 proj.deactivate();
                 break;
@@ -212,7 +207,7 @@ void Game::handleCollisions() {
     int totalDamageThisFrame = 0;
     for (const auto& en : m_map->getEntities()) {
         if (const auto enPtr = dynamic_cast<const Enemy*>(en.get()))
-            if (enPtr->isAlive() && m_player->isAlive() && intersects(m_player->getBounds(), enPtr->getBounds())) {
+            if (enPtr->isAlive() && m_player->isAlive() && m_player->getBounds().findIntersection(enPtr->getBounds()).has_value()) {
                 totalDamageThisFrame += enPtr->getContactDamage();
             }
     }
@@ -227,27 +222,26 @@ void Game::handleCollisions() {
     int enemiesDied = m_map->removeDeadEntities();
     int enemiesToSpawn = enemiesDied * 2;
 
-    if (enemiesToSpawn > 0) {
-        Enemy prototype(
-            "Metroid",
-            20,
-            0, 0,
-            m_resManager.getTexture("enemy.png"),
-            m_playingSounds,
-            m_resManager.getSound("enemydamage.wav"),
-            m_resManager.getSound("enemydeath.wav")
-        );
-        prototype.setTarget(m_player.get());
-
+    if (enemiesToSpawn > 0 && Enemy::getActiveEnemyCount() < 12) {
         for (int i = 0; i < enemiesToSpawn; ++i) {
-            auto newEnemy = std::make_unique<Enemy>(prototype);
             auto [x, y] = m_map->generateEnemySpawn();
-            newEnemy->setPosition(x, y);
-            try {
-                m_map->addEntity(std::move(newEnemy));
-            }
-            catch (const MapEntityException& e) {
-                std::cout << e.what() << std::endl;
+
+            auto newEnemy = EnemyFactory::createEnemy(
+                "Metroid",
+                20,
+                x, y,
+                m_resManager,
+                m_playingSounds,
+                m_player.get()
+                );
+
+            if (newEnemy) {
+                try {
+                    m_map->addEntity(std::move(newEnemy));
+                }
+                catch (const MapEntityException& e) {
+                    std::cout << e.what() << std::endl;
+                }
             }
         }
     }
@@ -281,4 +275,9 @@ void Game::render() {
     m_player->drawDamageEffect(m_window);
     m_camera->drawHud(m_window);
     m_window.display();
+}
+
+int Game::generateRandomInt(int min, int max) {
+    static std::mt19937 gen(std::random_device{}());
+    return std::uniform_int_distribution(min, max)(gen);
 }

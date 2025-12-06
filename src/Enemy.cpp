@@ -1,12 +1,12 @@
 #include "Enemy.h"
 #include "Map.h"
 #include <SFML/Audio.hpp>
-#include <iostream>
+#include "Player.h"
 
 Enemy::Enemy(const std::string& n, const int damage_, float posx_, float posy_, sf::Texture& tex,
-    std::list<sf::Sound>& activeSounds_,
-    const sf::SoundBuffer& hitSound_,
-    const sf::SoundBuffer& deathSound_)
+             std::list<sf::Sound>& activeSounds_,
+             const sf::SoundBuffer& hitSound_,
+             const sf::SoundBuffer& deathSound_)
     : Entity(n, posx_, posy_, 300.f, 1000.f, tex, 120, 120),
     damage{damage_},
     target{nullptr},
@@ -21,6 +21,7 @@ Enemy::Enemy(const std::string& n, const int damage_, float posx_, float posy_, 
                                     );
     sprite.setScale(sf::Vector2f(1.f, 1.f));
     updateHitbox();
+    activeEnemyCount++;
 }
 
 Enemy::Enemy (const Enemy& other)
@@ -31,14 +32,20 @@ activeSounds{other.activeSounds},
 hitSound{other.hitSound},
 deathSound{other.deathSound}
 {
-    std::cout<<"Constructor de copiere\n";
+    activeEnemyCount++;
 }
 
 std::unique_ptr<Entity> Enemy::clone() const{
     return std::make_unique<Enemy>(*this);
 }
 
-Enemy::~Enemy() {std::cout << "S a apelat destructor Enemy \n";}
+Enemy::~Enemy() {activeEnemyCount--;}
+
+void Enemy::tryAttack(Player& player) const {
+    if (this->getBounds().findIntersection(player.getBounds())) {
+        player.takeDamage(this->damage);
+    }
+}
 
 void Enemy::moveTowardsPlayer(sf::Vector2f playerPos, float deltaTime) {
     if (posX >= playerPos.x) {
@@ -109,4 +116,10 @@ void Enemy::setTarget(Entity *playerTarget) {
 
 int Enemy::getContactDamage() const {
     return damage;
+}
+
+int Enemy::activeEnemyCount = 0;
+
+int Enemy::getActiveEnemyCount() {
+    return activeEnemyCount;
 }

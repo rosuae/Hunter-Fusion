@@ -86,6 +86,8 @@ add_executable(${MAIN_EXECUTABLE_NAME}
         src/Camera.h
         src/Portal.cpp
         src/Portal.h
+        src/EnemyFactory.cpp
+        src/EnemyFactory.h
 )
 
 # NOTE: Add all defined targets (e.g. executables, libraries, etc. )

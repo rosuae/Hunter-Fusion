@@ -35,7 +35,7 @@ public:
     Portal(const std::string& n,
         float posx_, float posy_,
         sf::Texture& tex,
-        std::string nextMapFile_,
+        std::string  nextMapFile_,
         sf::Vector2f playerSpawnPosition_,
         std::list<sf::Sound>& activeSounds_,
         const sf::SoundBuffer& activationSound_);

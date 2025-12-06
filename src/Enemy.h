@@ -4,13 +4,14 @@
 #include <list>
 #include "Weapon.h"
 #include "Entity.h"
+#include "EnemyFactory.h"
 
 class Map;
 
 class Enemy : public Entity{
     int damage;
+    static int activeEnemyCount;
     Entity* target;
-    // std::shared_ptr<Weapon> fists;
 
     std::list<sf::Sound>* activeSounds;
     const sf::SoundBuffer* hitSound;
@@ -22,7 +23,9 @@ class Enemy : public Entity{
     void applyGravity(float deltaTime) override;
     void moveTowardsPlayer(sf::Vector2f playerPos, float deltaTime);
 
-public:
+    friend class EnemyFactory;
+protected:
+
     Enemy(const std::string& n,
         int damage_,
         float posx_, float posy_,
@@ -31,7 +34,9 @@ public:
         const sf::SoundBuffer& hitSound_,
         const sf::SoundBuffer& deathSound_);
 
+public:
     void setTarget (Entity* playerTarget);
+    void tryAttack(Player& player) const;
 
     friend std::ostream& operator<< (std::ostream& out, const Enemy& e) {
         out << " Nume inamic: " << e.name << " Pos X: " << e.posX << " Pos Y: " << e.posY << " Viata inamic: " << e.health << " Viteza imanic: " << e.speed;
@@ -42,7 +47,6 @@ public:
         using std::swap;
         swap(static_cast<Entity &>(lhs), static_cast<Entity &>(rhs));
         swap(lhs.target, rhs.target);
-        // swap(lhs.fists, rhs.fists);
         swap(lhs.activeSounds, rhs.activeSounds);
         swap(lhs.hitSound, rhs.hitSound);
         swap(lhs.deathSound, rhs.deathSound);
@@ -61,7 +65,8 @@ public:
     std::unique_ptr<Entity> clone() const override;
     ~Enemy() override;
 
-    [[nodiscard]]int getContactDamage() const;
+    int getContactDamage() const;
+    static int getActiveEnemyCount();
 };
 
 #endif

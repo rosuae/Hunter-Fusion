@@ -1,7 +1,6 @@
 #ifndef OOP_MAP_H
 #define OOP_MAP_H
 
-#include <iostream>
 #include <sstream>
 #include <utility>
 #include <fstream>
@@ -23,7 +22,7 @@ class Map {
     std::vector<std::string> mapLayout;
     std::vector<std::pair<float, float>> enemySpawns;
     std::pair<float, float> playerSpawn;
-    const float TILE_SIZE = 96.f;
+    static const float TILE_SIZE;
     sf::Sprite tileSprite;
     sf::Sprite tileBackgroundSprite;
 
@@ -38,7 +37,7 @@ public:
     void spawnEnemies();
     void drawMap(sf::RenderWindow& window);
     void addEntity(std::unique_ptr<Entity> entity);
-    void updateEntities(float deltaTime);
+    void updateEntities(float deltaTime) const;
     void drawEntities(sf::RenderWindow& window) const;
     void setPlayerTarget(Player* p) {playerTarget = p;}
     [[nodiscard]]int removeDeadEntities();
@@ -46,11 +45,12 @@ public:
     ~Map();
 
     friend std::ostream& operator<< (std::ostream& out, const Map& m) {
-        out << " Nume harta: " << m.MapNume << " Dimensiune Tile: " << m.TILE_SIZE;
+        out << " Nume harta: " << m.MapNume << " Dimensiune Tile: " << TILE_SIZE;
         return out;
     }
 
     const Portal* getPortalCollision(const sf::FloatRect& playerBounds) const;
+    [[nodiscard]]static sf::Vector2f gridToWorld(int x, int y);
     [[nodiscard]]std::pair<float, float> generateEnemySpawn () const;
     [[nodiscard]]std::pair<float, float> getPlayerSpawn() const;
     [[nodiscard]]bool isWall (const sf::FloatRect& bounds, bool checkEntities = false) const;

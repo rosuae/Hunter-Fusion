@@ -33,7 +33,7 @@ speed{other.speed},
 gravity{other.gravity},
 texture{other.texture},
 sprite{other.sprite}{
-    std::cout << "S a apelat constructor copiere entity";
+    std::cout << "S a apelat constructor copiere entity \n";
 }
 
 void Entity::updateSpritePosition() {
