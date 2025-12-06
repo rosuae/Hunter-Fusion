@@ -7,13 +7,11 @@
 
 #include "Entity.h"
 #include <list>
-#include "SFML/Audio.hpp"
+#include <SFML/Audio.hpp>
 #include <iostream>
 
 class Portal : public Entity {
 
-    sf::FloatRect bounds;
-    sf::FloatRect hitbox;
     std::string nextMapFile;
     sf::Vector2f playerSpawnPosition;
     std::list<sf::Sound>* activeSounds;
@@ -37,7 +35,6 @@ public:
     Portal(const std::string& n,
         float posx_, float posy_,
         sf::Texture& tex,
-        sf::FloatRect bounds_,
         std::string nextMapFile_,
         sf::Vector2f playerSpawnPosition_,
         std::list<sf::Sound>& activeSounds_,
@@ -65,7 +62,7 @@ public:
     ~Portal() override;
     void flipHorizontally();
     [[nodiscard]]sf::Vector2f getNextPlayerSpawn() const;
-    [[nodiscard]]std::string getNextMapFile() const;
+    [[nodiscard]]const std::string& getNextMapFile() const;
     [[nodiscard]] bool isOpen() const;
 };
 

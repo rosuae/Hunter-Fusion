@@ -11,7 +11,6 @@ class Player : public Entity {
     float velocity;
     float maxJump;
 
-    sf::FloatRect hitbox;
     sf::Vector2i frameSize;
 
     float animationTimer;
@@ -45,7 +44,6 @@ public:
     std::unique_ptr<Entity> clone() const override;
     ~Player() override;
 
-    void updateHitbox();
     void updateAnimation(float deltaTime);
     void shootAnimation();
     void setFacing(bool isFacingRight);

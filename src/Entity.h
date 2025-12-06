@@ -16,6 +16,7 @@ class Entity {
 protected:
     std::string name;
     int health;
+    sf::FloatRect hitbox;
     int hitboxWidth;
     int hitboxHeight;
     float posX;
@@ -58,6 +59,7 @@ public:
     virtual std::unique_ptr<Entity> clone() const = 0;
     virtual ~Entity();
 
+    void updateHitbox();
     void draw(sf::RenderWindow& window) const;
     void behavior(float deltaTime, const Map& map);
     void takeDamage(int damageAmount);

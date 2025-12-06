@@ -68,14 +68,11 @@ Map::Map(std::string n, const std::string& filePath, ResourceManager& resManager
                     float worldX = static_cast<float>(autoX) * TILE_SIZE;
                     float worldY = static_cast<float>(autoY) * TILE_SIZE;
 
-                    sf::FloatRect bounds({worldX, worldY}, {TILE_SIZE, TILE_SIZE});
-
                     auto newPortal = std::make_unique<Portal>(
                         "Portal",
                         worldX,
                         worldY,
                         resManager.getTexture("portal.png"),
-                        bounds,
                         fileName,
                         sf::Vector2f(spawnX * TILE_SIZE, spawnY * TILE_SIZE),
                         playingSounds,

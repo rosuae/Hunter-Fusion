@@ -136,14 +136,6 @@ void Player::doBehavior(float deltaTime, const Map& map) {
     updateAnimation(deltaTime);
 }
 
-void Player::updateHitbox() {
-    hitbox.position.x = posX - static_cast<float>(hitboxWidth) / 2.0f;
-    hitbox.position.y = posY - static_cast<float>(hitboxHeight);
-    hitbox.size.x = static_cast<float>(hitboxWidth);
-    hitbox.size.y = static_cast<float>(hitboxHeight);
-}
-
-
 void Player::updateAnimation(float deltaTime) {
     if (shootingTimer > 0.0f) {
         shootingTimer -= deltaTime;

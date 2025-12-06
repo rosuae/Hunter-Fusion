@@ -20,6 +20,7 @@ Enemy::Enemy(const std::string& n, const int damage_, float posx_, float posy_, 
                                     static_cast<float>(texture->getSize().y) - 10.f)
                                     );
     sprite.setScale(sf::Vector2f(1.f, 1.f));
+    updateHitbox();
 }
 
 Enemy::Enemy (const Enemy& other)
@@ -49,10 +50,7 @@ void Enemy::moveTowardsPlayer(sf::Vector2f playerPos, float deltaTime) {
 }
 
 sf::FloatRect Enemy::doGetBounds() const{
-    float left = posX - static_cast<float>(hitboxWidth) / 2.0f;
-    float top = posY - static_cast<float>(hitboxHeight);
-    return sf::FloatRect({left, top},
-        {static_cast<float>(hitboxWidth), static_cast<float>(hitboxHeight)});
+    return hitbox;
 }
 
 void Enemy::doTakeDamage(int damageAmount) {
@@ -73,54 +71,32 @@ void Enemy::doTakeDamage(int damageAmount) {
 }
 
 void Enemy::doBehavior(float deltaTime, const Map& map) {
-
-    if (!target || !target->isAlive()) {
-        float lastY = posY;
-        applyGravity(deltaTime);
-
-        float topLeftX = posX - static_cast<float>(hitboxWidth) / 2.f;
-        float topLeftY = posY - static_cast<float>(hitboxHeight);
-        sf::FloatRect enemyBoundsY(
-                sf::Vector2f(topLeftX, topLeftY),
-                sf::Vector2f(static_cast<float>(hitboxWidth), static_cast<float>(hitboxHeight))
-                );
-
-        if (map.isWall(enemyBoundsY, true)) { posY = lastY; }
-
-        return;
-    }
-
     float lastX = posX;
 
-    moveTowardsPlayer(sf::Vector2f(target->getPos()), deltaTime);
+    if (target && target->isAlive()) {
+        moveTowardsPlayer(target->getPos(), deltaTime);
+    }
 
-    float topLeftX = posX - static_cast<float>(hitboxWidth) / 2.f;
-    float topLeftY = posY - static_cast<float>(hitboxHeight);
-
-    sf::FloatRect enemyBoundsX(
-        sf::Vector2f(topLeftX, topLeftY),
-        sf::Vector2f(static_cast<float>(hitboxWidth), static_cast<float>(hitboxHeight))
-        );
-
-    if (map.isWall(enemyBoundsX, true)) {
-        posX = lastX;
+    if (posX != lastX) {
+        updateHitbox();
+        if (map.isWall(hitbox, true)) {
+            posX = lastX;
+            updateHitbox();
+        }
     }
 
     float lastY = posY;
 
     applyGravity(deltaTime);
 
-    topLeftX = posX - static_cast<float>(hitboxWidth) / 2.f;
-    topLeftY = posY - static_cast<float>(hitboxHeight);
-
-    sf::FloatRect enemyBoundsY(
-        sf::Vector2f(topLeftX, topLeftY),
-        sf::Vector2f(static_cast<float>(hitboxWidth), static_cast<float>(hitboxHeight))
-        );
-
-    if (map.isWall(enemyBoundsY, true)) {
-        posY = lastY;
+    if (posY != lastY) {
+        updateHitbox();
+        if (map.isWall(hitbox, true)) {
+            posY = lastY;
+            updateHitbox();
+        }
     }
+    sprite.setPosition({posX, posY});
 }
 
 void Enemy::applyGravity(float deltaTime) {

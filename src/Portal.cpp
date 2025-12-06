@@ -7,13 +7,11 @@
 Portal::Portal(const std::string& n,
         float posx_, float posy_,
         sf::Texture& tex,
-        sf::FloatRect bounds_,
         std::string nextMapFile_,
         sf::Vector2f playerSpawnPosition_,
         std::list<sf::Sound>& activeSounds_,
         const sf::SoundBuffer& activationSound_)
     : Entity(n, posx_, posy_, 0, 0, tex, 100, 288),
-    bounds{bounds_},
     nextMapFile{nextMapFile_},
     playerSpawnPosition{playerSpawnPosition_},
     activeSounds{&activeSounds_},
@@ -59,9 +57,6 @@ std::unique_ptr<Entity> Portal::clone() const {
 Portal::~Portal() {std::cout<<"Portal destructor \n";}
 
 sf::FloatRect Portal::doGetBounds() const {
-    // return sf::FloatRect({posX, posY},
-    //     {static_cast<float>(hitboxWidth),
-    //         static_cast<float>(hitboxHeight)});
     return sprite.getTransform().transformRect(hitbox);
 }
 
@@ -115,7 +110,7 @@ sf::Vector2f Portal::getNextPlayerSpawn() const {
     return playerSpawnPosition;
 }
 
-std::string Portal::getNextMapFile() const{
+const std::string& Portal::getNextMapFile() const{
     return nextMapFile;
 }
 

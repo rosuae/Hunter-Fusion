@@ -47,6 +47,13 @@ void Entity::checkDeath() {
     }
 }
 
+void Entity::updateHitbox() {
+    hitbox.position.x = posX - static_cast<float>(hitboxWidth) / 2.0f;
+    hitbox.position.y = posY - static_cast<float>(hitboxHeight);
+    hitbox.size.x = static_cast<float>(hitboxWidth);
+    hitbox.size.y = static_cast<float>(hitboxHeight);
+}
+
 void Entity::draw(sf::RenderWindow& window) const {
     if (!alive) return;
     window.draw(sprite);
