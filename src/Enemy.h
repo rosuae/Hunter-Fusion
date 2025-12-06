@@ -36,7 +36,6 @@ protected:
 
 public:
     void setTarget (Entity* playerTarget);
-    void tryAttack(Player& player) const;
 
     friend std::ostream& operator<< (std::ostream& out, const Enemy& e) {
         out << " Nume inamic: " << e.name << " Pos X: " << e.posX << " Pos Y: " << e.posY << " Viata inamic: " << e.health << " Viteza imanic: " << e.speed;

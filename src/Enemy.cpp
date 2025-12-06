@@ -41,12 +41,6 @@ std::unique_ptr<Entity> Enemy::clone() const{
 
 Enemy::~Enemy() {activeEnemyCount--;}
 
-void Enemy::tryAttack(Player& player) const {
-    if (this->getBounds().findIntersection(player.getBounds())) {
-        player.takeDamage(this->damage);
-    }
-}
-
 void Enemy::moveTowardsPlayer(sf::Vector2f playerPos, float deltaTime) {
     if (posX >= playerPos.x) {
         posX -= speed * deltaTime;
