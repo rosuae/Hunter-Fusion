@@ -28,6 +28,7 @@ Gameplay-ul se bazează pe controlul unui personaj care poate merge, sări, trag
 ## To do:
  
 - More enemies + Bosses
+- Room progress save when exiting
 - PowerUps + Ammo and Health Drops
 - More types of ammo
 - Enemies damage should influence the player movement behavior
@@ -72,7 +73,7 @@ Gameplay-ul se bazează pe controlul unui personaj care poate merge, sări, trag
 
 #### Cerințe
 - [x] separarea codului din clase în `.h` (sau `.hpp`) și `.cpp`
-- [ ] moșteniri:
+- [x] moșteniri:
   - minim o clasă de bază și **3 clase derivate** din aceeași ierarhie
   - ierarhia trebuie să fie cu bază proprie, nu derivată dintr-o clasă predefinită
   - [x] funcții virtuale (pure) apelate prin pointeri de bază din clasa care conține atributul de tip pointer de bază
@@ -90,7 +91,7 @@ Gameplay-ul se bazează pe controlul unui personaj care poate merge, sări, trag
   - [x] utilizare cu sens: de exemplu, `throw` în constructor (sau funcție care întoarce un obiect), `try`/`catch` în `main`
   - această ierarhie va fi complet independentă de ierarhia cu funcții virtuale
 - [ ] funcții și atribute `static`
-- [ ] STL
+- [x] STL
 - [x] cât mai multe `const`
 - [ ] funcții *de nivel înalt*, de eliminat cât mai mulți getters/setters/funcții low-level
 - [x] minim 75-80% din codul propriu să fie C++

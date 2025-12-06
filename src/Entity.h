@@ -9,15 +9,15 @@ class Map;
 class Entity {
 
     bool alive;
-
     virtual sf::FloatRect doGetBounds() const = 0;
-    virtual void doDraw(sf::RenderWindow& window) const = 0;
     virtual void doTakeDamage(int damageAmount) = 0;
-    virtual void doBehavior(float deltaTime, const Map&) = 0;
+    virtual void doBehavior(float deltaTime, const Map& map) = 0;
     virtual void applyGravity(float deltaTime) = 0;
 protected:
     std::string name;
     int health;
+    int hitboxWidth;
+    int hitboxHeight;
     float posX;
     float posY;
     float speed;
@@ -29,7 +29,7 @@ protected:
     void checkDeath();
 
 public:
-    Entity(std::string n, float x, float y, float spd, float grav, sf::Texture& tex);
+    Entity(std::string n, float x, float y, float spd, float grav, sf::Texture& tex, int w, int h);
     Entity (const Entity& other);
 
     friend void swap(Entity &lhs, Entity &rhs) noexcept {
@@ -54,6 +54,7 @@ public:
         return *this;
     }
 
+    virtual bool isObstacle() const { return false; }
     virtual std::unique_ptr<Entity> clone() const = 0;
     virtual ~Entity();
 

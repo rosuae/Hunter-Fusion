@@ -84,6 +84,8 @@ add_executable(${MAIN_EXECUTABLE_NAME}
         src/Hud.h
         src/Camera.cpp
         src/Camera.h
+        src/Portal.cpp
+        src/Portal.h
 )
 
 # NOTE: Add all defined targets (e.g. executables, libraries, etc. )

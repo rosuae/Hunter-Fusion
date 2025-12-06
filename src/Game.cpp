@@ -63,18 +63,16 @@ void Game::instanceObjects() {
 }
 
 void Game::loadLevel(const std::string& mapFile, sf::Vector2f spawnPos) {
-    if (m_map) {
-        m_map.reset();
-    }
-
-    m_map = std::make_unique<Map>(
+    auto tempMap = std::make_unique<Map>(
         "CurrentRoom",
         mapFile,
         m_resManager,
         m_playingSounds
     );
-    sf::Vector2f finalPos;
 
+    m_map = std::move(tempMap);
+
+    sf::Vector2f finalPos;
     if (spawnPos.x < 0 && spawnPos.y < 0) {
         auto [x, y] = m_map->getPlayerSpawn();
         finalPos = sf::Vector2f(x, y);
@@ -166,19 +164,12 @@ void Game::handleEvents() {
 }
 
 void Game::update(float deltaTime) {
-    updateEntities(deltaTime);
-    handleCollisions();
-    updateCamera(deltaTime);
-    updateSounds();
-}
-
-void Game::updateEntities(float deltaTime) {
-
     m_player->behavior(deltaTime, *m_map);
-
+    m_playerWeapon->update(deltaTime);
     m_map->updateEntities(deltaTime);
 
-    m_playerWeapon->update(deltaTime);
+    handleCollisions();
+
     m_playerWeapon->updateProjectiles(deltaTime, *m_map);
 
     if (m_player->isHit()) {
@@ -191,17 +182,20 @@ void Game::updateEntities(float deltaTime) {
             m_player->resetDamageEffect();
         }
     }
+
+    updateSounds();
+    updateCamera(deltaTime);
 }
 
 void Game::handleCollisions() {
 
-    if (m_player && m_map) {
-        if (const Portal* portal = m_map->getPortalCollision(m_player->getBounds()); portal != nullptr) {
-            std::string nextMapPath = portal->nextMapFile;
-            sf::Vector2f nextSpawnPos = portal->playerSpawnPosition;
-            loadLevel(nextMapPath, nextSpawnPos);
-            return;
-        }
+    const Portal* hitPortal = m_map->getPortalCollision(m_player->getBounds());
+
+    if (hitPortal != nullptr && hitPortal->isOpen()) {
+        std::string nextMap = hitPortal->getNextMapFile();
+        sf::Vector2f nextSpawn = hitPortal->getNextPlayerSpawn();
+
+        loadLevel(nextMap, nextSpawn);
     }
 
     for (auto& proj : m_playerWeapon->getProjectiles()) {

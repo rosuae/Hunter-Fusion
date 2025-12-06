@@ -38,7 +38,7 @@ void Projectile::updatePosition(float deltaTime, const Map& map) {
         sf::Vector2f(spriteWidth, spriteHeight)
         );
 
-    if (map.isWall(testBoundsX))
+    if (map.isWall(testBoundsX, false))
         deactivate();
 
     sprite.setPosition(position);
@@ -54,6 +54,7 @@ Projectile::Projectile(std::string n, int d, const sf::Texture& tex, sf::Vector2
 {
     calculateDirection(playerPos, targetPos);
     setupSprite(tex);
+    sprite.setPosition(position);
 }
 
 void Projectile::drawProjectile(sf::RenderWindow& window) const{

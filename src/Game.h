@@ -7,6 +7,7 @@
 #include "Map.h"
 #include "Enemy.h"
 #include "Player.h"
+#include "Portal.h"
 #include "settingsMenuState.h"
 #include "Camera.h"
 
@@ -18,7 +19,6 @@ class Game {
     void update(float deltaTime);
     void render();
 
-    void updateEntities(float deltaTime);
     void handleCollisions();
     void updateCamera(float deltaTime);
     void updateSounds();

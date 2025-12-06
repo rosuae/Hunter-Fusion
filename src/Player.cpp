@@ -2,6 +2,7 @@
 #include "Map.h"
 #include "GameExceptions.h"
 #include <iostream>
+#include "Portal.h"
 
 void Player::updateSpriteDirection() {
     if (facingRight)
@@ -16,12 +17,10 @@ void Player::applyGravity(float deltaTime) {
 }
 
 Player::Player(const std::string& n, sf::Texture& tex, float posx_, float posy_, std::list<sf::Sound>& activeSounds_, const sf::SoundBuffer& jumpSound_)
-    : Entity(n, posx_, posy_, 900.0f, 2500.f, tex),
+    : Entity(n, posx_, posy_, 900.0f, 2500.f, tex, 120, 120),
       velocity{0.0f},
       maxJump{-1450.f},
       frameSize{sf::Vector2i(224, 222)},
-      hitboxWidth{120},
-      hitboxHeight{120},
       animationTimer{0.0f},
       frameDuration{0.12f},
       shootingTimer{0.0f},
@@ -46,7 +45,7 @@ Player::Player(const std::string& n, sf::Texture& tex, float posx_, float posy_,
                                    );
     sprite.scale(sf::Vector2f(1.f, 1.f));
     sprite.setTextureRect(sf::IntRect(sf::Vector2i(0, 0), frameSize));
-
+    updateHitbox();
     jumpSound.setVolume(50); //until volume settings feature
 }
 
@@ -70,7 +69,7 @@ void Player::doBehavior(float deltaTime, const Map& map) {
                     sf::Vector2f(static_cast<float>(hitboxWidth) - 20.f, 10.f)
                 );
 
-                if (!map.isWall(groundCheck)) {
+                if (!map.isWall(groundCheck, true)) {
                     throw InvalidActionException("Jump", "Player is in mid air (falling)");
                 }
                 velocity = maxJump;
@@ -86,16 +85,8 @@ void Player::doBehavior(float deltaTime, const Map& map) {
          }
 
     float lastPosX = posX;
-    bool movedLeft = false;
-    bool movedRight = false;
-
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A)) {
-        movedLeft = true;
-    }
-
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D)) {
-        movedRight = true;
-    }
+    bool movedLeft = sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A);
+    bool movedRight = sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D);
 
     if (movedLeft && !movedRight) {
         posX -= speed * deltaTime;
@@ -113,43 +104,45 @@ void Player::doBehavior(float deltaTime, const Map& map) {
         this->isRunning = false;
     }
 
-    float testTopLeftX = posX - static_cast<float>(hitboxWidth) / 2.0f;
-    float testTopLeftY = posY - static_cast<float>(hitboxHeight);
-    sf::FloatRect testBoundsX(sf::Vector2f(testTopLeftX, testTopLeftY),
-                            sf::Vector2f(static_cast<float>(hitboxWidth),
-                                static_cast<float>(hitboxHeight)));
-
-    if (map.isWall(testBoundsX)) {
-        posX = lastPosX;
+    if (posX != lastPosX) {
+        updateHitbox();
+        if (map.isWall(hitbox, true)) {
+            posX = lastPosX;
+            updateHitbox();
+        }
     }
 
     float lastPosY = posY;
-
     applyGravity(deltaTime);
 
-    testTopLeftX = posX - static_cast<float>(hitboxWidth) / 2.0f;
-    testTopLeftY = posY - static_cast<float>(hitboxHeight);
-    sf::FloatRect testBoundsY(sf::Vector2f(testTopLeftX, testTopLeftY),
-                            sf::Vector2f(static_cast<float>(hitboxWidth),
-                                static_cast<float>(hitboxHeight))
-                                );
+    if (posY != lastPosY) {
+        updateHitbox();
 
-    if (map.isWall(testBoundsY)) {
-        if (velocity > 0) {
-
-            posY = lastPosY;
-            velocity = 0;
-            isJumping = false;
-        }
-        else if (velocity < 0) {
-            posY = lastPosY;
-            velocity = 0;
+        if (map.isWall(hitbox, true)) {
+            if (velocity > 0) {
+                posY = lastPosY;
+                velocity = 0;
+                isJumping = false;
+            }
+            else if (velocity < 0) {
+                posY = lastPosY;
+                velocity = 0;
+            }
+            updateHitbox();
         }
     }
 
     updateSpriteDirection();
     updateAnimation(deltaTime);
 }
+
+void Player::updateHitbox() {
+    hitbox.position.x = posX - static_cast<float>(hitboxWidth) / 2.0f;
+    hitbox.position.y = posY - static_cast<float>(hitboxHeight);
+    hitbox.size.x = static_cast<float>(hitboxWidth);
+    hitbox.size.y = static_cast<float>(hitboxHeight);
+}
+
 
 void Player::updateAnimation(float deltaTime) {
     if (shootingTimer > 0.0f) {
@@ -257,10 +250,6 @@ void Player::resetDamageEffect() {
     damageOverlay.setFillColor(sf::Color(255, 0, 0, 0));
 }
 
-void Player::doDraw(sf::RenderWindow& window) const {
-    window.draw(sprite);
-}
-
 void Player::drawDamageEffect(sf::RenderWindow& window) const {
     const sf::View currentView = window.getView();
 
@@ -276,7 +265,7 @@ sf::Vector2f Player::getWeaponTipPos() const {
 
     if (facingRight) {
         if (facingUp) offsetX = 10.f;
-        else offsetX = static_cast<float>(frameSize.x) * 0.3f;
+        else offsetX = static_cast<float>(frameSize.x) * 0.25f;
     }
     else {
         if (facingUp) offsetX = -10.f;
@@ -293,12 +282,7 @@ sf::Vector2f Player::getWeaponTipPos() const {
 }
 
 sf::FloatRect Player::doGetBounds() const {
-    float left = posX - static_cast<float>(hitboxWidth) / 2.0f;
-    float top = posY - static_cast<float>(hitboxHeight);
-    return {sf::Vector2f(left, top),
-                            sf::Vector2f(
-                            static_cast<float>(hitboxWidth),
-                                static_cast<float>(hitboxHeight))};
+    return hitbox;
 }
 
 bool Player::isHit() const {

@@ -10,12 +10,14 @@ ResourceManager::ResourceManager() {
     loadTextures("assets/textures/map","background.bmp");
     loadTextures("assets/textures","settingsmenu.png");
     loadTextures("assets/textures","hud.png");
+    loadTextures("assets/textures","portal.png");
 
     loadSounds("assets/sound","jump.wav");
     loadSounds("assets/sound","reload.wav");
     loadSounds("assets/sound","shoot.wav");
     loadSounds("assets/sound","enemydeath.wav");
     loadSounds("assets/sound","enemydamage.wav");
+    loadSounds("assets/sound","portalactive.wav");
 }
 
 ResourceManager& ResourceManager::Instance() {

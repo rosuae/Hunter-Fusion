@@ -1,0 +1,124 @@
+//
+// Created by rosua on 12/5/2025.
+//
+
+#include "Portal.h"
+
+Portal::Portal(const std::string& n,
+        float posx_, float posy_,
+        sf::Texture& tex,
+        sf::FloatRect bounds_,
+        std::string nextMapFile_,
+        sf::Vector2f playerSpawnPosition_,
+        std::list<sf::Sound>& activeSounds_,
+        const sf::SoundBuffer& activationSound_)
+    : Entity(n, posx_, posy_, 0, 0, tex, 100, 288),
+    bounds{bounds_},
+    nextMapFile{nextMapFile_},
+    playerSpawnPosition{playerSpawnPosition_},
+    activeSounds{&activeSounds_},
+    activationSound{&activationSound_},
+    frameSize{sf::Vector2i(190, 288)},
+    currentFrame{0},
+    animationFrameCount{5},
+    animationTimer{0.0f},
+    frameDuration{0.15f},
+    isAnimating{false},
+    isActive{false}
+{
+    sprite.setTextureRect(sf::IntRect({0, 0}, {frameSize.x, frameSize.y}));
+
+    sprite.setPosition(sf::Vector2f(posX, posY));
+    sprite.setScale(sf::Vector2f(1.f, 1.f));
+
+    hitbox = sf::FloatRect({0, 0.f},
+        {static_cast<float>(hitboxWidth),
+        static_cast<float>(hitboxHeight)}
+    );
+}
+
+
+Portal::Portal (const Portal& other)
+    : Entity{other},
+    activeSounds{other.activeSounds},
+    activationSound{other.activationSound},
+    currentFrame{other.currentFrame},
+    animationFrameCount{other.animationFrameCount},
+    animationTimer{other.animationTimer},
+    frameDuration{other.frameDuration},
+    isAnimating{other.isAnimating},
+    isActive{other.isActive}
+    {
+    std::cout << "Portal copy constructor \n";
+}
+
+std::unique_ptr<Entity> Portal::clone() const {
+    return std::make_unique<Portal>(*this);
+}
+
+Portal::~Portal() {std::cout<<"Portal destructor \n";}
+
+sf::FloatRect Portal::doGetBounds() const {
+    // return sf::FloatRect({posX, posY},
+    //     {static_cast<float>(hitboxWidth),
+    //         static_cast<float>(hitboxHeight)});
+    return sprite.getTransform().transformRect(hitbox);
+}
+
+void Portal::doTakeDamage(int damageAmount) {
+    health += damageAmount;
+
+    if (!isActive && !isAnimating) {
+        animationTimer = 0.0f;
+        isAnimating = true;
+
+        if (activeSounds && activationSound) {
+            activeSounds->emplace_back(*activationSound);
+            activeSounds->back().play();
+        }
+    }
+}
+
+void Portal::doBehavior(float deltaTime, const Map&) {
+    if (!isAnimating || isActive) {
+        return;
+    }
+
+    animationTimer += deltaTime;
+
+    if (animationTimer >= frameDuration) {
+        animationTimer -= frameDuration;
+        if (currentFrame < animationFrameCount - 1) {
+            currentFrame++;
+
+            int rectLeft = currentFrame * frameSize.y;
+            int rectTop = 0;
+            sprite.setTextureRect(sf::IntRect({rectLeft, rectTop}, {frameSize.x, frameSize.y}));}
+        else {
+            isActive = true;
+            isAnimating = false;
+        }
+    }
+}
+
+void Portal::applyGravity(float deltaTime) {
+    posY += gravity * deltaTime;
+}
+
+void Portal::flipHorizontally() {
+    sprite.setOrigin({static_cast<float>(hitboxWidth), 0.f});
+    sprite.setScale({-1.f, 1.f});
+}
+
+
+sf::Vector2f Portal::getNextPlayerSpawn() const {
+    return playerSpawnPosition;
+}
+
+std::string Portal::getNextMapFile() const{
+    return nextMapFile;
+}
+
+bool Portal::isOpen() const {
+    return isActive;
+}

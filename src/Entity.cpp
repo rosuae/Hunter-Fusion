@@ -2,16 +2,19 @@
 #include <cmath>
 #include <iostream>
 
-Entity::Entity(std::string n, const float x, const float y, const float spd, const float grav, sf::Texture& tex)
-    : alive{true},
-      name{std::move(n)},
-      health{100},
-      posX{x},
-      posY{y},
-      speed{spd},
-      gravity{grav},
-      texture{&tex},
-      sprite{*texture} {
+Entity::Entity(std::string n, const float x, const float y, const float spd, const float grav, sf::Texture& tex, const int w, const int h)
+    :
+    alive{true},
+    name{std::move(n)},
+    health{100},
+    hitboxWidth{w},
+    hitboxHeight{h},
+    posX{x},
+    posY{y},
+    speed{spd},
+    gravity{grav},
+    texture{&tex},
+    sprite{*texture} {
 }
 
 Entity::~Entity() {
@@ -22,6 +25,8 @@ Entity::Entity (const Entity& other):
 alive{other.alive},
 name{other.name},
 health{other.health},
+hitboxWidth{other.hitboxWidth},
+hitboxHeight{other.hitboxHeight},
 posX{other.posX},
 posY{other.posY},
 speed{other.speed},
@@ -44,7 +49,7 @@ void Entity::checkDeath() {
 
 void Entity::draw(sf::RenderWindow& window) const {
     if (!alive) return;
-    doDraw(window);
+    window.draw(sprite);
 }
 
 void Entity::behavior(float deltaTime, const Map &map) {

@@ -1,6 +1,7 @@
 #include "Map.h"
 #include "Player.h"
 #include "Enemy.h"
+#include "Portal.h"
 #include "Entity.h"
 #include "ResourceManager.h"
 #include "GameExceptions.h"
@@ -61,19 +62,34 @@ Map::Map(std::string n, const std::string& filePath, ResourceManager& resManager
                 std::string fileName;
                 float spawnX, spawnY;
                 if (iss >> fileName >> spawnX >> spawnY) {
-                    Portal newPortal;
                     int autoX = doorLocations[currentDoorIndex].x;
                     int autoY = doorLocations[currentDoorIndex].y;
 
-                    newPortal.bounds = sf::FloatRect(sf::Vector2f{
-                        static_cast<float>(autoX) * TILE_SIZE,
-                        static_cast<float>(autoY) * TILE_SIZE},
-                        sf::Vector2f{TILE_SIZE, TILE_SIZE}
-                    );
-                    newPortal.playerSpawnPosition = sf::Vector2f(spawnX * TILE_SIZE, spawnY * TILE_SIZE);
-                    newPortal.nextMapFile = fileName;
+                    float worldX = static_cast<float>(autoX) * TILE_SIZE;
+                    float worldY = static_cast<float>(autoY) * TILE_SIZE;
 
-                    portals.push_back(newPortal);
+                    sf::FloatRect bounds({worldX, worldY}, {TILE_SIZE, TILE_SIZE});
+
+                    auto newPortal = std::make_unique<Portal>(
+                        "Portal",
+                        worldX,
+                        worldY,
+                        resManager.getTexture("portal.png"),
+                        bounds,
+                        fileName,
+                        sf::Vector2f(spawnX * TILE_SIZE, spawnY * TILE_SIZE),
+                        playingSounds,
+                        resManager.getSound("portalactive.wav")
+                    );
+
+                    if (autoX + 1 < static_cast<int>(mapLayout[autoY].size())) {
+                        if (mapLayout[autoY][autoX + 1] == '#') {
+                            newPortal->flipHorizontally();
+                        }
+                    }
+
+                    solidEntitiesCache.push_back(newPortal.get());
+                    entities.push_back(std::move(newPortal));
                     currentDoorIndex++;
                 }
             }
@@ -152,10 +168,12 @@ void Map::addEntity(std::unique_ptr<Entity> entity) {
     if (!entity)
         return;
 
-    if (isWall(entity->getBounds())) {
-        const sf::Vector2f pos = entity->getPos();
+    if (isWall(entity->getBounds(), false)) {
+        throw MapEntityException("Unreachable position ", entity->getPos());
+    }
 
-        throw MapEntityException("Unreachable position ", pos);
+    if (entity->isObstacle()) {
+        solidEntitiesCache.push_back(entity.get());
     }
 
     entities.push_back(std::move(entity));
@@ -170,13 +188,23 @@ void Map::updateEntities(float deltaTime) {
 void Map::drawEntities(sf::RenderWindow& window) const{
     for (const auto& ent : entities) {
         ent->draw(window);
+        sf::FloatRect bounds = ent->getBounds();
+        sf::RectangleShape debugRect;
+        debugRect.setPosition(bounds.position);
+        debugRect.setSize(bounds.size);
+        debugRect.setFillColor(sf::Color::Transparent);
+        debugRect.setOutlineColor(sf::Color::Red);
+        debugRect.setOutlineThickness(2.0f);
+        window.draw(debugRect);
     }
 }
 
 const Portal* Map::getPortalCollision(const sf::FloatRect& playerBounds) const {
-    for (const auto& portal : portals) {
-        if (portal.bounds.findIntersection(playerBounds).has_value()) {
-            return &portal;
+    for (const auto& ent : entities) {
+        if (auto portalPtr = dynamic_cast<const Portal*>(ent.get())) {
+            if (portalPtr->getBounds().findIntersection(playerBounds).has_value()) {
+                return portalPtr;
+            }
         }
     }
     return nullptr;
@@ -206,6 +234,10 @@ std::pair<float, float> Map::getPlayerSpawn() const {
 }
 
 int Map::removeDeadEntities() {
+    std::erase_if(solidEntitiesCache, [](const Entity* e) {
+        return !e->isAlive();
+    });
+
     int deadcount = 0;
     for (const auto& ent : entities)
         if (!ent->isAlive()) {
@@ -222,7 +254,7 @@ int Map::removeDeadEntities() {
 
 Map::~Map() { std::cout << "S a apelat destructor Map \n";}
 
-bool Map::isWall(const sf::FloatRect& bounds) const {
+bool Map::isWall(const sf::FloatRect& bounds, bool checkEntities) const {
     int startX = static_cast<int> (bounds.position.x / TILE_SIZE);
     int startY = static_cast<int> (bounds.position.y / TILE_SIZE);
     int endX = static_cast<int> ((bounds.position.x + bounds.size.x) / TILE_SIZE);
@@ -241,6 +273,15 @@ bool Map::isWall(const sf::FloatRect& bounds) const {
                     );
                 if (tileBounds.findIntersection(bounds).has_value())
                     return true;
+            }
+        }
+    }
+    if (checkEntities) {
+        for (const auto* ent : solidEntitiesCache) {
+            if (ent->isObstacle()) {
+                if (ent->getBounds().findIntersection(bounds).has_value()) {
+                    return true;
+                }
             }
         }
     }

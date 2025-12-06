@@ -7,7 +7,7 @@ Enemy::Enemy(const std::string& n, const int damage_, float posx_, float posy_, 
     std::list<sf::Sound>& activeSounds_,
     const sf::SoundBuffer& hitSound_,
     const sf::SoundBuffer& deathSound_)
-    : Entity(n, posx_, posy_, 300.f, 1000.f, tex),
+    : Entity(n, posx_, posy_, 300.f, 1000.f, tex, 120, 120),
     damage{damage_},
     target{nullptr},
     // fists{std::move(f)},
@@ -17,7 +17,7 @@ Enemy::Enemy(const std::string& n, const int damage_, float posx_, float posy_, 
 {
     sprite.setPosition(sf::Vector2f(posX, posY));
     sprite.setOrigin(sf::Vector2f(static_cast<float>(texture->getSize().x) / 2.f,
-                                    static_cast<float>(texture->getSize().y))
+                                    static_cast<float>(texture->getSize().y) - 10.f)
                                     );
     sprite.setScale(sf::Vector2f(1.f, 1.f));
 }
@@ -49,11 +49,10 @@ void Enemy::moveTowardsPlayer(sf::Vector2f playerPos, float deltaTime) {
 }
 
 sf::FloatRect Enemy::doGetBounds() const{
-    return sprite.getGlobalBounds();
-}
-
-void Enemy::doDraw(sf::RenderWindow& window) const{
-    window.draw(sprite);
+    float left = posX - static_cast<float>(hitboxWidth) / 2.0f;
+    float top = posY - static_cast<float>(hitboxHeight);
+    return sf::FloatRect({left, top},
+        {static_cast<float>(hitboxWidth), static_cast<float>(hitboxHeight)});
 }
 
 void Enemy::doTakeDamage(int damageAmount) {
@@ -75,22 +74,18 @@ void Enemy::doTakeDamage(int damageAmount) {
 
 void Enemy::doBehavior(float deltaTime, const Map& map) {
 
-    sf::FloatRect localBounds = sprite.getLocalBounds();
-    float spriteWidth = localBounds.size.x;
-    float spriteHeigth = localBounds.size.y;
-
     if (!target || !target->isAlive()) {
         float lastY = posY;
         applyGravity(deltaTime);
 
-        float topLeftX = posX - spriteWidth / 2.f;
-        float topLeftY = posY - spriteHeigth;
+        float topLeftX = posX - static_cast<float>(hitboxWidth) / 2.f;
+        float topLeftY = posY - static_cast<float>(hitboxHeight);
         sf::FloatRect enemyBoundsY(
                 sf::Vector2f(topLeftX, topLeftY),
-                sf::Vector2f(spriteWidth, spriteHeigth)
+                sf::Vector2f(static_cast<float>(hitboxWidth), static_cast<float>(hitboxHeight))
                 );
 
-        if (map.isWall(enemyBoundsY)) { posY = lastY; }
+        if (map.isWall(enemyBoundsY, true)) { posY = lastY; }
 
         return;
     }
@@ -99,15 +94,15 @@ void Enemy::doBehavior(float deltaTime, const Map& map) {
 
     moveTowardsPlayer(sf::Vector2f(target->getPos()), deltaTime);
 
-    float topLeftX = posX - spriteWidth / 2.f;
-    float topLeftY = posY - spriteHeigth;
+    float topLeftX = posX - static_cast<float>(hitboxWidth) / 2.f;
+    float topLeftY = posY - static_cast<float>(hitboxHeight);
 
     sf::FloatRect enemyBoundsX(
         sf::Vector2f(topLeftX, topLeftY),
-        sf::Vector2f(spriteWidth, spriteHeigth)
+        sf::Vector2f(static_cast<float>(hitboxWidth), static_cast<float>(hitboxHeight))
         );
 
-    if (map.isWall(enemyBoundsX)) {
+    if (map.isWall(enemyBoundsX, true)) {
         posX = lastX;
     }
 
@@ -115,15 +110,15 @@ void Enemy::doBehavior(float deltaTime, const Map& map) {
 
     applyGravity(deltaTime);
 
-    topLeftX = posX - spriteWidth / 2.f;
-    topLeftY = posY - spriteHeigth;
+    topLeftX = posX - static_cast<float>(hitboxWidth) / 2.f;
+    topLeftY = posY - static_cast<float>(hitboxHeight);
 
     sf::FloatRect enemyBoundsY(
         sf::Vector2f(topLeftX, topLeftY),
-        sf::Vector2f(spriteWidth, spriteHeigth)
+        sf::Vector2f(static_cast<float>(hitboxWidth), static_cast<float>(hitboxHeight))
         );
 
-    if (map.isWall(enemyBoundsY)) {
+    if (map.isWall(enemyBoundsY, true)) {
         posY = lastY;
     }
 }

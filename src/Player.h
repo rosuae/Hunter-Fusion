@@ -11,9 +11,8 @@ class Player : public Entity {
     float velocity;
     float maxJump;
 
+    sf::FloatRect hitbox;
     sf::Vector2i frameSize;
-    int hitboxWidth;
-    int hitboxHeight;
 
     float animationTimer;
     float frameDuration;
@@ -36,7 +35,6 @@ class Player : public Entity {
     sf::Sound jumpSound;
 
     sf::FloatRect doGetBounds() const override;
-    void doDraw(sf::RenderWindow &window) const override;
     void doTakeDamage(int damageAmount) override;
     void doBehavior(float deltaTime, const Map&) override;
     void applyGravity(float deltaTime) override;
@@ -47,6 +45,7 @@ public:
     std::unique_ptr<Entity> clone() const override;
     ~Player() override;
 
+    void updateHitbox();
     void updateAnimation(float deltaTime);
     void shootAnimation();
     void setFacing(bool isFacingRight);

@@ -17,9 +17,8 @@ class Enemy : public Entity{
     const sf::SoundBuffer* deathSound;
 
     sf::FloatRect doGetBounds() const override;
-    void doDraw(sf::RenderWindow& window) const override;
     void doTakeDamage(int damageAmount) override;
-    void doBehavior(float deltaTime, const Map &) override;
+    void doBehavior(float deltaTime, const Map& map) override;
     void applyGravity(float deltaTime) override;
     void moveTowardsPlayer(sf::Vector2f playerPos, float deltaTime);
 
