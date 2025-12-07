@@ -10,30 +10,24 @@
 std::unique_ptr<Enemy> EnemyFactory::metroidPrototype = nullptr;
 
 std::unique_ptr<Enemy> EnemyFactory::createEnemy(const std::string &type,
-    const int damage,
-    float x, float y,
+    const float x, const float y,
     ResourceManager &resManager,
     std::list<sf::Sound> &playingSounds,
     Entity *target)
 {
-    std::unique_ptr<Entity> clonedEntity = nullptr;
+    std::unique_ptr<Enemy> enemy = nullptr;
 
     if (type == "Metroid") {
-        if (!metroidPrototype) {
-            metroidPrototype = std::unique_ptr<Enemy>(new Enemy(
-                type,
-                damage,
-                0, 0,
-                resManager.getTexture("enemy.png"),
-                playingSounds,
-                resManager.getSound("enemydamage.wav"),
-                resManager.getSound("enemydeath.wav")
-            ));
-        }
-        clonedEntity = metroidPrototype->clone();
+        enemy.reset(new Enemy(
+            type,
+            20,
+            x, y,
+            resManager.getTexture("enemy.png"),
+            playingSounds,
+            resManager.getSound("enemydamage.wav"),
+            resManager.getSound("enemydeath.wav")
+        ));
     }
-    auto enemy = std::unique_ptr<Enemy>(dynamic_cast<Enemy*>(clonedEntity.release()));
-
     if (enemy) {
         enemy->setPosition(x, y);
         enemy->setTarget(target);

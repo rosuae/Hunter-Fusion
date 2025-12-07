@@ -45,6 +45,7 @@ public:
     friend void swap(Enemy &lhs, Enemy &rhs) noexcept {
         using std::swap;
         swap(static_cast<Entity &>(lhs), static_cast<Entity &>(rhs));
+        swap(lhs.damage, rhs.damage);
         swap(lhs.target, rhs.target);
         swap(lhs.activeSounds, rhs.activeSounds);
         swap(lhs.hitSound, rhs.hitSound);
@@ -56,6 +57,7 @@ public:
             auto copie = other.clone();
             using std::swap;
             swap(*this, *copie);
+            std::cout << "COPY AND SWAP!!!!!!!!!!!!!!!!!!!!!!!!!!\n";
         }
         return *this;
     }

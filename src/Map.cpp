@@ -121,7 +121,6 @@ void Map::spawnEnemies() {
             auto [x, y] = generateEnemySpawn();
             auto newEnemy = EnemyFactory::createEnemy(
                 enemy_.first,
-                enemy_.second,
                 x,
                 y,
                 resManager,
@@ -163,11 +162,12 @@ void Map::addEntity(std::unique_ptr<Entity> entity) {
         throw MapEntityException("Unreachable position ", entity->getPos());
     }
 
-    if (entity->isObstacle()) {
-        solidEntitiesCache.push_back(entity.get());
-    }
-
+    bool isObs = entity->isObstacle();
     entities.push_back(std::move(entity));
+
+    if (isObs) {
+        solidEntitiesCache.push_back(entities.back().get());
+    }
 }
 
 void Map::updateEntities(float deltaTime) const {
@@ -232,22 +232,22 @@ std::pair<float, float> Map::getPlayerSpawn() const {
 }
 
 int Map::removeDeadEntities() {
-    std::erase_if(solidEntitiesCache, [](const Entity* e) {
-        return !e->isAlive();
+    int deadCount = 0;
+    std::erase_if(entities, [&](const std::unique_ptr<Entity>& en) {
+        if (!en->isAlive()) {
+            deadCount++;
+            return true;
+        }
+        return false;
     });
 
-    int deadcount = 0;
-    for (const auto& ent : entities)
-        if (!ent->isAlive()) {
-            deadcount++;
+    solidEntitiesCache.clear();
+    for (const auto& ent : entities) {
+        if (ent && ent->isObstacle()) {
+            solidEntitiesCache.push_back(ent.get());
         }
-
-    std::erase_if(entities,
-        [](const std::unique_ptr<Entity>& en) {
-            return !en->isAlive();
-        });
-
-    return deadcount;
+    }
+    return deadCount;
 }
 
 Map::~Map() { std::cout << "S a apelat destructor Map \n";}
@@ -276,6 +276,7 @@ bool Map::isWall(const sf::FloatRect& bounds, bool checkEntities) const {
     }
     if (checkEntities) {
         for (const auto* ent : solidEntitiesCache) {
+            if (ent == nullptr) continue;
             if (ent->isObstacle()) {
                 if (ent->getBounds().findIntersection(bounds).has_value()) {
                     return true;

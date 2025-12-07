@@ -96,11 +96,12 @@ Game::Game() :
 }
 
 Game::~Game() {
-    m_resManager.cleanup();
     for (auto& sound : m_playingSounds) {
         sound.stop();
     }
+    m_map.reset();
     m_playingSounds.clear();
+    m_resManager.cleanup();
 }
 
 void Game::run() {
@@ -182,15 +183,49 @@ void Game::update(float deltaTime) {
     updateCamera(deltaTime);
 }
 
-void Game::handleCollisions() {
+void Game::handleEnemyRespawn(const int enemiesDied) {
+    const int enemiesRequested = enemiesDied * 2;
+    if (enemiesRequested <= 0) return;
 
+    constexpr int maxEnemies = 12;
+    const int currentEnemies = Enemy::getActiveEnemyCount();
+    const int slotsAvailable = maxEnemies - currentEnemies;
+
+    if (slotsAvailable <= 0) return;
+    const int countToSpawn = std::min(enemiesRequested, slotsAvailable);
+
+    const auto prototype = EnemyFactory::createEnemy(
+            "Metroid",
+            0, 0,
+            m_resManager,
+            m_playingSounds,
+            m_player.get()
+    );
+    if (!prototype) return;
+
+    for (int i = 0; i < countToSpawn; ++i) {
+        auto [x, y] = m_map->generateEnemySpawn();
+        try {
+            auto newEnemy = std::make_unique<Enemy>(*prototype);
+
+            newEnemy->setPosition(x, y);
+            m_map->addEntity(std::move(newEnemy));
+        }
+        catch (const MapEntityException& e) {
+            std::cout << e.what() << std::endl;
+        }
+    }
+}
+
+void Game::handleCollisions() {
     const Portal* hitPortal = m_map->getPortalCollision(m_player->getBounds());
 
     if (hitPortal != nullptr && hitPortal->isOpen()) {
-        std::string nextMap = hitPortal->getNextMapFile();
-        sf::Vector2f nextSpawn = hitPortal->getNextPlayerSpawn();
+        const std::string nextMap = hitPortal->getNextMapFile();
+        const sf::Vector2f nextSpawn = hitPortal->getNextPlayerSpawn();
 
         loadLevel(nextMap, nextSpawn);
+        return;
     }
 
     for (auto& proj : m_playerWeapon->getProjectiles()) {
@@ -219,31 +254,8 @@ void Game::handleCollisions() {
         m_playerDamageCooldown.restart();
     }
 
-    int enemiesDied = m_map->removeDeadEntities();
-    int enemiesToSpawn = enemiesDied * 2;
-
-    if (enemiesToSpawn > 0 && Enemy::getActiveEnemyCount() < 12) {
-        for (int i = 0; i < enemiesToSpawn; ++i) {
-            auto [x, y] = m_map->generateEnemySpawn();
-
-            auto newEnemy = EnemyFactory::createEnemy(
-                "Metroid",
-                20,
-                x, y,
-                m_resManager,
-                m_playingSounds,
-                m_player.get()
-                );
-
-            if (newEnemy) {
-                try {
-                    m_map->addEntity(std::move(newEnemy));
-                }
-                catch (const MapEntityException& e) {
-                    std::cout << e.what() << std::endl;
-                }
-            }
-        }
+    if (const int enemiesDied = m_map->removeDeadEntities(); enemiesDied > 0) {
+        handleEnemyRespawn(enemiesDied);
     }
 }
 

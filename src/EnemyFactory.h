@@ -19,7 +19,6 @@ class EnemyFactory {
 public:
     static std::unique_ptr<Enemy> createEnemy(
         const std::string& type,
-        int damage,
         float x, float y,
         ResourceManager& resManager,
         std::list<sf::Sound>& playingSounds,

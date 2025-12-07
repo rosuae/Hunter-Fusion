@@ -17,7 +17,7 @@ class Game {
     void handleEvents();
     void update(float deltaTime);
     void render();
-
+    void handleEnemyRespawn(int enemiesDied);
     void handleCollisions();
     void updateCamera(float deltaTime);
     void updateSounds();
