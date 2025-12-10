@@ -44,6 +44,7 @@ Gameplay-ul se bazează pe controlul unui personaj care poate merge, sări, trag
 ## Known Bugs:
 
 - Player can run out of ammo. Drops system will be implemented
+- Bullets keeping their position when map transitioning
 
 ### Tema 0
 

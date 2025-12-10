@@ -18,13 +18,14 @@ class Enemy : public Entity{
     const sf::SoundBuffer* deathSound;
 
     sf::FloatRect doGetBounds() const override;
+    void applyGravity(float deltaTime) override;
+
     void takeDamage(int damageAmount) override;
     void doBehavior(float deltaTime, const Map& map) override;
-    void applyGravity(float deltaTime) override;
-    void moveTowardsPlayer(sf::Vector2f playerPos, float deltaTime);
+    void updateAI(float deltaTime);
+    void updatePhysics(float deltaTime, const Map& map);
 
     friend class EnemyFactory;
-protected:
 
     Enemy(const std::string& n,
         int damage_,
@@ -36,8 +37,6 @@ protected:
         Entity* target_);
 
 public:
-    void setTarget (Entity* playerTarget);
-
     friend std::ostream& operator<< (std::ostream& out, const Enemy& e) {
         out << " Nume inamic: " << e.name << " Pos X: " << e.posX << " Pos Y: " << e.posY << " Viata inamic: " << e.health << " Viteza imanic: " << e.speed;
         return out;
@@ -58,7 +57,7 @@ public:
             auto copie = other.clone();
             using std::swap;
             swap(*this, *copie);
-            std::cout << "COPY AND SWAP!!!!!!!!!!!!!!!!!!!!!!!!!!\n";
+            std::cout << "Copy and swap\n";
         }
         return *this;
     }
@@ -67,8 +66,8 @@ public:
     std::unique_ptr<Entity> clone() const override;
     ~Enemy() override;
 
-    int getContactDamage() const;
     static int getActiveEnemyCount();
+    [[nodiscard]] int attackPlayer() const;
 };
 
 #endif

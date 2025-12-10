@@ -24,16 +24,15 @@ Weapon::Weapon(std::string n, std::string projName, int projDmg, sf::Texture& te
     projectileTex{&tex},
     activeSounds{activeSounds_},
     shootSound{shootSound_},
-    reloadSound{reloadSound_} {
-
+    reloadSound{reloadSound_}
+{
     shootSound.setVolume(30); //until volume settings feature
     reloadSound.setVolume(30);
 }
 
-void Weapon::fire(Player& player, const sf::Vector2f direction) {
+void Weapon::fire(const Player& player, const sf::Vector2f direction) {
     if (canFire(player)) {
         sf::Vector2f spawnPoint = player.getWeaponTipPos();
-
         sf::Vector2f calculatedTarget = spawnPoint + direction * 1000.f;
 
         projectiles.emplace_back(projectileName, projectileDmg, *projectileTex, spawnPoint, calculatedTarget);

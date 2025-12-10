@@ -42,12 +42,15 @@ std::unique_ptr<Entity> Enemy::clone() const{
 
 Enemy::~Enemy() {activeEnemyCount--;}
 
-void Enemy::moveTowardsPlayer(sf::Vector2f playerPos, float deltaTime) {
-    if (posX >= playerPos.x) {
-        posX -= speed * deltaTime;
-    }
-    if (posX <= playerPos.x) {
-        posX += speed * deltaTime;
+void Enemy::updateAI(float deltaTime) {
+    if (target && target->isAlive()) {
+        if (posX > target->getPos().x) {
+            posX -= speed * deltaTime;
+            sprite.setScale({-1.f, 1.f});
+        } else {
+            posX += speed * deltaTime;
+            sprite.setScale({1.f, 1.f});
+        }
     }
 }
 
@@ -56,9 +59,7 @@ sf::FloatRect Enemy::doGetBounds() const{
 }
 
 void Enemy::takeDamage(int damageAmount) {
-
     bool wasAlive = this->isAlive();
-
     health -= damageAmount;
     checkDeath();
 
@@ -73,22 +74,30 @@ void Enemy::takeDamage(int damageAmount) {
 }
 
 void Enemy::doBehavior(float deltaTime, const Map& map) {
-    float lastX = posX;
+    updateAI(deltaTime);
+    updatePhysics(deltaTime, map);
+    sprite.setPosition(sf::Vector2f(posX, posY));
+}
 
-    if (target && target->isAlive()) {
-        moveTowardsPlayer(target->getPos(), deltaTime);
-    }
+int Enemy::attackPlayer() const {
+    if (!target || !target->isAlive()) return 0;
+    if (!isAlive()) return 0;
 
-    if (posX != lastX) {
+    if (hitbox.findIntersection(target->getBounds()).has_value())
+        return damage;
+
+    return 0;
+}
+
+void Enemy::updatePhysics(float deltaTime, const Map &map) {
+    updateHitbox();
+    if (map.isWall(hitbox, true)) {
+        const float direction = sprite.getScale().x > 0.f ? 1.f : -1.f;
+        posX -= speed * direction * deltaTime;
         updateHitbox();
-        if (map.isWall(hitbox, true)) {
-            posX = lastX;
-            updateHitbox();
-        }
     }
 
     float lastY = posY;
-
     applyGravity(deltaTime);
 
     if (posY != lastY) {
@@ -98,19 +107,10 @@ void Enemy::doBehavior(float deltaTime, const Map& map) {
             updateHitbox();
         }
     }
-    sprite.setPosition({posX, posY});
 }
 
 void Enemy::applyGravity(float deltaTime) {
     posY += gravity * deltaTime;
-}
-
-void Enemy::setTarget(Entity *playerTarget) {
-    this->target = playerTarget;
-}
-
-int Enemy::getContactDamage() const {
-    return damage;
 }
 
 int Enemy::activeEnemyCount = 0;

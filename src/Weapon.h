@@ -39,7 +39,7 @@ public:
         return out;
     }
 
-    void fire(Player& player, sf::Vector2f direction);
+    void fire(const Player& player, sf::Vector2f direction);
     void updateProjectiles(float deltaTime, const Map& map);
     void reload();
     void update(float deltaTime);

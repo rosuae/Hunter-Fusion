@@ -226,9 +226,7 @@ void Game::handleCollisions() {
     int totalDamageThisFrame = 0;
     for (const auto& en : m_map->getEntities()) {
         if (const auto enPtr = dynamic_cast<const Enemy*>(en.get()))
-            if (enPtr->isAlive() && m_player->isAlive() && m_player->getBounds().findIntersection(enPtr->getBounds()).has_value()) {
-                totalDamageThisFrame += enPtr->getContactDamage();
-            }
+            totalDamageThisFrame += enPtr->attackPlayer();
     }
 
     if (totalDamageThisFrame > 0 && m_playerDamageCooldown.getElapsedTime().asSeconds() > 1.f) {
