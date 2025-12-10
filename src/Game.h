@@ -31,7 +31,6 @@ class Game {
     settingsMenuState settings;
 
     std::unique_ptr<Player> m_player;
-    std::unique_ptr<Weapon> m_playerWeapon;
     std::unique_ptr<Map> m_map;
     // std::shared_ptr<Weapon> m_enemyWeapon;
 

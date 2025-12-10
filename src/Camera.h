@@ -12,7 +12,7 @@ public:
     Camera(unsigned int width, unsigned int height);
     ~Camera();
 
-    void initHud(const std::unique_ptr<Player>& player, const std::unique_ptr<Weapon>& weapon, ResourceManager& resManager);
+    void initHud(const std::unique_ptr<Player>& player, ResourceManager& resManager);
 
     void update(float deltaTime, sf::Vector2f targetPosition);
     void drawHud(sf::RenderWindow& window) const;

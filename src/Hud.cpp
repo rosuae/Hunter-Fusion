@@ -4,6 +4,7 @@
 
 #include "Hud.h"
 #include "GameExceptions.h"
+#include "Weapon.h"
 #include <string>
 
 #define BAR_OFFSET_X 133.f
@@ -11,9 +12,9 @@
 #define AMMO_OFFSET_X 647.f
 #define AMMO_OFFSET_Y 35.f
 
-Hud::Hud(const std::unique_ptr<Player>& player, const std::unique_ptr<Weapon>& weapon, ResourceManager& resManager)
+Hud::Hud(const std::unique_ptr<Player>& player, ResourceManager& resManager)
     : m_player{player.get()},
-      m_weapon{weapon.get()},
+      m_weapon{m_player->getWeapon()},
       m_backgroundSprite{resManager.getTexture("hud.png")},
       m_healthText{font},
       m_ammoText{font},

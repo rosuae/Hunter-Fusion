@@ -30,7 +30,11 @@ Weapon::Weapon(std::string n, std::string projName, int projDmg, sf::Texture& te
     reloadSound.setVolume(30);
 }
 
-void Weapon::fire(const Player& player, const sf::Vector2f direction) {
+std::unique_ptr<Weapon> Weapon::clone() const {
+    return std::make_unique<Weapon>(*this);
+}
+
+bool Weapon::fire(const Player& player, const sf::Vector2f direction) {
     if (canFire(player)) {
         sf::Vector2f spawnPoint = player.getWeaponTipPos();
         sf::Vector2f calculatedTarget = spawnPoint + direction * 1000.f;
@@ -42,22 +46,13 @@ void Weapon::fire(const Player& player, const sf::Vector2f direction) {
 
         activeSounds.emplace_back(shootSound);
         activeSounds.back().play();
+
+        return true;
     }
+    return false;
 }
 
-void Weapon::updateProjectiles(float deltaTime, const Map& map) {
-    for (auto& proj : projectiles) {
-        if (proj.isActive()) {
-            proj.projectileTravel(deltaTime, map);
-        }
-    }
-
-    std::erase_if(projectiles, [](const Projectile& p) {
-        return p.shouldBeRemoved();
-    });
-}
-
-void Weapon::reload() {
+bool Weapon::reload() {
     if (reloada >= 30) {
         throw InvalidActionException("Reload" , "Magazine Full");
     }
@@ -71,19 +66,42 @@ void Weapon::reload() {
 
     activeSounds.emplace_back(reloadSound);
     activeSounds.back().play();
+
+    return true;
 }
 
-void Weapon::update(float deltaTime) {
+void Weapon::update(float deltaTime, const Map& map) {
     if (fireTimer > 0.0f) {
         fireTimer -= deltaTime;
     }
+
+    for (auto& proj : projectiles) {
+        if (proj.isActive()) {
+            proj.update(deltaTime, map);
+        }
+    }
+
+    std::erase_if(projectiles, [](const Projectile& p) {
+        return p.shouldBeRemoved();
+    });
 }
 
-void Weapon::drawProjectiles(sf::RenderWindow& window) const {
+void Weapon::draw(sf::RenderWindow& window) const {
     for (const auto& proj : projectiles) {
         proj.drawProjectile(window);
     }
 }
+
+void Weapon::handleCollisions(const std::vector<std::unique_ptr<Entity> > &targets) {
+    for (auto& proj : projectiles) {
+        if (!proj.isActive()) continue;
+
+        for (const auto& target : targets)
+            if (proj.tryHit(*target))
+                break;
+    }
+}
+
 
 Weapon::~Weapon() { std::cout << "S a apelat destructor Weapon \n";}
 
@@ -91,12 +109,8 @@ Weapon::~Weapon() { std::cout << "S a apelat destructor Weapon \n";}
     return projectiles;
 }
 
-[[nodiscard]]int Weapon::getDmg() const{
-    return projectileDmg;
-}
-
 [[nodiscard]]bool Weapon::canFire(const Player& player) const {
-    const bool weaponReady = (reloada > 0 && fireTimer <= 0.0f);
-    const bool playerReady = player.canAttack();
+    const bool weaponReady = reloada > 0 && fireTimer <= 0.0f;
+    const bool playerReady = player.canAttack() && player.isAlive();
     return weaponReady && playerReady;
 }

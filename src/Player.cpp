@@ -3,6 +3,7 @@
 #include "GameExceptions.h"
 #include <iostream>
 #include "Portal.h"
+#include "Weapon.h"
 
 void Player::updateSpriteDirection() {
     if (facingRight)
@@ -16,10 +17,15 @@ void Player::applyGravity(float deltaTime) {
     posY += velocity * deltaTime;
 }
 
-Player::Player(const std::string& n, sf::Texture& tex, float posx_, float posy_, std::list<sf::Sound>& activeSounds_, const sf::SoundBuffer& jumpSound_)
+Player::Player(const std::string& n, sf::Texture& tex,
+    float posx_, float posy_,
+    std::list<sf::Sound>& activeSounds_,
+    const sf::SoundBuffer& jumpSound_,
+    std::unique_ptr<Weapon> startingWeapon)
     : Entity(n, posx_, posy_, 600.0f, 2500.f, tex, 120, 120),
     velocity{0.0f},
     maxJump{-1450.f},
+    weapon{std::move(startingWeapon)},
     animationTimer{0.0f},
     frameDuration{0.12f},
     shootingTimer{0.0f},
@@ -59,7 +65,6 @@ Player::~Player() {
 }
 
 void Player::doBehavior(float deltaTime, const Map& map) {
-
     handleInput(deltaTime, map);
 
     const float lastPosY = posY;
@@ -82,6 +87,7 @@ void Player::doBehavior(float deltaTime, const Map& map) {
         }
     }
 
+    weapon->update(deltaTime, map);
     updateSpriteDirection();
     updateAnimation(deltaTime);
     updateDamageEffect(deltaTime);
@@ -225,21 +231,25 @@ void Player::updateAnimation(float deltaTime) {
     sprite.setOrigin(sf::Vector2f(originBaseX, originBaseY + yOffset));
 }
 
-void Player::shoot(const sf::Vector2f& direction) {
-    shootingTimer = shootingDuration;
+void Player::fire(const sf::Vector2f& direction) {
+    if (weapon->fire(*this, direction)) {
+        shootingTimer = shootingDuration;
 
-    if (direction.y < 0)
-        facingUp = true;
-    else {
-        facingUp = false;
-
-        if (direction.x > 0)
-            facingRight = true;
-        else if (direction.x < 0)
-            facingRight = false;
-
-        updateSpriteDirection();
+        if (direction.y < 0) facingUp = true;
+        else {
+            facingUp = false;
+            facingRight = (direction.x > 0);
+            updateSpriteDirection();
+        }
     }
+}
+
+void Player::reload() const {
+    weapon->reload();
+}
+
+void Player::checkProjectileCollisions(const std::vector<std::unique_ptr<Entity>>& targets) const {
+    weapon->handleCollisions(targets);
 }
 
 void Player::takeDamage(int damageAmount) {
@@ -268,6 +278,7 @@ void Player::updateDamageEffect(float deltaTime) {
 
 void Player::draw(sf::RenderWindow &window) const {
     if(isAlive()) {
+        weapon->draw(window);
         window.draw(sprite);
         if (damageOverlay.getFillColor().a > 0) {
             sf::View currentView = window.getView();

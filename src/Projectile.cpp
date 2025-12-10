@@ -1,6 +1,7 @@
 #include "Projectile.h"
 #include "Map.h"
-#include "Player.h"
+#include "Entity.h"
+#include <cmath>
 
 void Projectile::setupSprite(const sf::Texture& tex) {
     sprite.setOrigin(sf::Vector2f(static_cast<float>(tex.getSize().x),
@@ -21,25 +22,34 @@ void Projectile::calculateDirection(sf::Vector2f playerPos, sf::Vector2f targetP
     }
 }
 
-void Projectile::updatePosition(float deltaTime, const Map& map) {
+bool Projectile::tryHit(Entity &target) {
+    if (!active || !target.isAlive()) return false;
 
-    sf::FloatRect localBounds = sprite.getLocalBounds();
-    float spriteWidth = localBounds.size.x;
-    float spriteHeight = localBounds.size.y;
+    if (getBounds().findIntersection(target.getBounds()).has_value()) {
+        target.tryHit(dmg);
+        active = false;
+        return true;
+    }
+    return false;
+}
 
-    position.x += direction.x * speed * deltaTime;
-    position.y += direction.y * speed * deltaTime;
+void Projectile::update(float deltaTime, const Map& map) {
+    if (!active) return;
 
-    float centerX = position.x - spriteWidth / 2.f;
-    float centerY = position.y - spriteHeight / 2.f;
+    position += direction * speed * deltaTime;
 
-    sf::FloatRect testBoundsX (
+    const sf::FloatRect localBounds = sprite.getLocalBounds();
+
+    const float centerX = position.x - localBounds.size.x / 2.f;
+    const float centerY = position.y - localBounds.size.y / 2.f;
+
+    const sf::FloatRect testBoundsX (
         sf::Vector2f(centerX, centerY),
-        sf::Vector2f(spriteWidth, spriteHeight)
+        sf::Vector2f(localBounds.size.x * 0.1f, localBounds.size.y * 0.1f)
         );
 
     if (map.isWall(testBoundsX, false))
-        deactivate();
+        active = false;
 
     sprite.setPosition(position);
 }
@@ -59,14 +69,6 @@ Projectile::Projectile(std::string n, int d, const sf::Texture& tex, sf::Vector2
 
 void Projectile::drawProjectile(sf::RenderWindow& window) const{
     window.draw(sprite);
-}
-
-void Projectile::projectileTravel (float deltaTime, const Map& map) {
-    updatePosition(deltaTime, map);
-}
-
-void Projectile::deactivate() {
-    active = false;
 }
 
 sf::FloatRect Projectile::getBounds() const {

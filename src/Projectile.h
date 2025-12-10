@@ -2,11 +2,11 @@
 #define OOP_PROJECTILE_H
 
 #include <iostream>
-#include <cmath>
 
 #include <SFML/Graphics.hpp>
 
 class Map;
+class Entity;
 
 class Projectile {
     std::string nume;
@@ -19,7 +19,6 @@ class Projectile {
 
     void setupSprite(const sf::Texture& tex);
     void calculateDirection(sf::Vector2f playerPos, sf::Vector2f targetPos);
-    void updatePosition(float deltaTime, const Map& map);
 
 public:
     Projectile(std::string n, int d, const sf::Texture& tex, sf::Vector2f playerPos, sf::Vector2f targetPos);
@@ -29,9 +28,9 @@ public:
         return out;
     }
 
+    bool tryHit(Entity& target);
     void drawProjectile(sf::RenderWindow& window) const;
-    void projectileTravel (float deltaTime,  const Map& map);
-    void deactivate();
+    void update (float deltaTime,  const Map& map);
 
     ~Projectile() = default;
 

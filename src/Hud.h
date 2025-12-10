@@ -8,7 +8,6 @@
 #include <SFML/Graphics.hpp>
 #include <memory>
 #include "Player.h"
-#include "Weapon.h"
 #include "ResourceManager.h"
 
 class Hud {
@@ -28,7 +27,7 @@ class Hud {
     float m_barHeight;
 
 public:
-    Hud(const std::unique_ptr<Player>& player, const std::unique_ptr<Weapon>& weapon, ResourceManager& resManager);
+    Hud(const std::unique_ptr<Player>& player, ResourceManager& resManager);
 
     void update();
     void render(sf::RenderWindow& window) const;

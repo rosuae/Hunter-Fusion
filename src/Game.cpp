@@ -17,7 +17,7 @@ void Game::instanceObjects() {
         throw ResourceException("File: date.txt ; incomplete or currupted");
     }
 
-    m_playerWeapon = std::make_unique<Weapon>(
+    auto tempWeapon = std::make_unique<Weapon>(
     playerWeapon,
     projectileName,
     25,
@@ -40,7 +40,8 @@ void Game::instanceObjects() {
         xPlayer,
         yPlayer,
         m_playingSounds,
-        m_resManager.getSound("jump.wav")
+        m_resManager.getSound("jump.wav"),
+        std::move(tempWeapon)
     );
 
     m_map->setPlayerTarget(m_player.get());
@@ -52,7 +53,7 @@ void Game::instanceObjects() {
 
     m_camera = std::make_unique<Camera>(m_width, m_height);
     m_camera->snapToTarget(m_player->getPos());
-    m_camera->initHud(m_player, m_playerWeapon, m_resManager);
+    m_camera->initHud(m_player, m_resManager);
 
     m_window.setView(m_camera->getView());
 }
@@ -128,7 +129,7 @@ void Game::handleEvents() {
             }
             else if (keyPress->scancode == sf::Keyboard::Scancode::R) {
                 try {
-                    m_playerWeapon->reload();
+                    m_player->reload();
                 }
                 catch (const InvalidActionException& e) {
                     std::cout << e.what() << std::endl;
@@ -151,9 +152,8 @@ void Game::handleEvents() {
                 isShooting = true;
             }
 
-            if (isShooting && m_playerWeapon->canFire(*m_player) && m_player->isAlive()) {
-                m_player->shoot(shootDirection);
-                m_playerWeapon->fire(*m_player, shootDirection);
+            if (isShooting) {
+                m_player->fire(shootDirection);
             }
         }
     }
@@ -161,12 +161,9 @@ void Game::handleEvents() {
 
 void Game::update(float deltaTime) {
     m_player->behavior(deltaTime, *m_map);
-    m_playerWeapon->update(deltaTime);
     m_map->updateEntities(deltaTime);
 
     handleCollisions();
-
-    m_playerWeapon->updateProjectiles(deltaTime, *m_map);
 
     updateSounds();
     updateCamera(deltaTime);
@@ -203,25 +200,12 @@ void Game::handleEnemyRespawn(const int enemiesDied) {
 
 void Game::handleCollisions() {
     const Portal* hitPortal = m_map->getPortalCollision(m_player->getBounds());
-
     if (hitPortal != nullptr && hitPortal->isOpen()) {
-        const std::string nextMap = hitPortal->getNextMapFile();
-        const sf::Vector2f nextSpawn = hitPortal->getNextPlayerSpawn();
-
-        loadLevel(nextMap, nextSpawn);
+        loadLevel(hitPortal->getNextMapFile(), hitPortal->getNextPlayerSpawn());
         return;
     }
 
-    for (auto& proj : m_playerWeapon->getProjectiles()) {
-        if (!proj.isActive()) continue;
-        for (const auto& en : m_map->getEntities()) {
-            if (en->isAlive() && proj.getBounds().findIntersection(en->getBounds()).has_value()) {
-                en->tryHit(m_playerWeapon->getDmg());
-                proj.deactivate();
-                break;
-            }
-        }
-    }
+    m_player->checkProjectileCollisions(m_map->getEntities());
 
     int totalDamageThisFrame = 0;
     for (const auto& en : m_map->getEntities()) {
@@ -255,13 +239,12 @@ void Game::updateSounds() {
 void Game::render() {
     m_window.clear(sf::Color::Transparent);
 
-    if (!m_map || !m_playerWeapon || !m_player) {
+    if (!m_map || !m_player) {
         m_window.display();
         return;
     }
 
     m_map->drawMap(m_window);
-    m_playerWeapon->drawProjectiles(m_window);
     m_player->draw(m_window);
     m_map->drawEntities(m_window);
     m_camera->drawHud(m_window);

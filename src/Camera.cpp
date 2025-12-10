@@ -20,12 +20,12 @@ Camera::Camera(unsigned int width, unsigned int height)
 
 Camera::~Camera() = default;
 
-void Camera::initHud(const std::unique_ptr<Player>& player, const std::unique_ptr<Weapon>& weapon, ResourceManager& resManager) {
-    m_hud = std::make_unique<Hud>(player, weapon, resManager);
+void Camera::initHud(const std::unique_ptr<Player>& player, ResourceManager& resManager) {
+    m_hud = std::make_unique<Hud>(player, resManager);
 }
 
-void Camera::update(float deltaTime, sf::Vector2f rawTargetPosition) {
-    sf::Vector2f finalTarget = rawTargetPosition;
+void Camera::update(float deltaTime, sf::Vector2f targetPosition) {
+    sf::Vector2f finalTarget = targetPosition;
     finalTarget.y -= m_verticalOffset;
 
     float diffX = finalTarget.x - m_currentPos.x;

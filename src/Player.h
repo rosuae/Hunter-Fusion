@@ -4,12 +4,18 @@
 #include "Entity.h"
 #include <SFML/Audio.hpp>
 #include <list>
+#include <iostream>
+
+#include "Weapon.h"
 
 class Map;
+class Weapon;
 
 class Player : public Entity {
     float velocity;
     float maxJump;
+
+    std::unique_ptr<Weapon> weapon;
 
     float animationTimer;
     float frameDuration;
@@ -43,17 +49,84 @@ class Player : public Entity {
     void updateDamageEffect(float deltaTime);
 
 public:
-    Player(const std::string& n, sf::Texture& tex, float posx_, float posy_, std::list<sf::Sound>& activeSounds_, const sf::SoundBuffer& jumpSound_);
+    Player(const std::string& n, sf::Texture& tex,
+        float posx_, float posy_,
+        std::list<sf::Sound>& activeSounds_,
+        const sf::SoundBuffer& jumpSound_,
+        std::unique_ptr<Weapon> startingWeapon);
+
+    Player& operator=(const Player& other) {
+        if (this != &other){
+            auto copie = other.clone();
+            using std::swap;
+            swap(*this, *copie);
+            std::cout << "Copy and swap\n";
+        }
+        return *this;
+    }
+
+    Player(const Player &other)
+        : Entity(other),
+          velocity(other.velocity),
+          maxJump(other.maxJump),
+          weapon(other.weapon ? other.weapon->clone() : nullptr),
+          animationTimer(other.animationTimer),
+          frameDuration(other.frameDuration),
+          shootingTimer(other.shootingTimer),
+          damageEffectTimer(other.damageEffectTimer),
+          isRunning(other.isRunning),
+          isJumping(other.isJumping),
+          facingRight(other.facingRight),
+          facingUp(other.facingUp),
+          isHit(other.isHit),
+          frameSize(other.frameSize),
+          currentFrame(other.currentFrame),
+          animationRow(other.animationRow),
+          animationStartIndex(other.animationStartIndex),
+          animationFrameCount(other.animationFrameCount),
+          damageOverlay(other.damageOverlay),
+          activeSounds(other.activeSounds),
+          jumpSound(other.jumpSound) {
+    }
+
+    friend void swap(Player &lhs, Player &rhs) noexcept {
+        using std::swap;
+        swap(static_cast<Entity &>(lhs), static_cast<Entity &>(rhs));
+        swap(lhs.velocity, rhs.velocity);
+        swap(lhs.maxJump, rhs.maxJump);
+        swap(lhs.weapon, rhs.weapon);
+        swap(lhs.animationTimer, rhs.animationTimer);
+        swap(lhs.frameDuration, rhs.frameDuration);
+        swap(lhs.shootingTimer, rhs.shootingTimer);
+        swap(lhs.damageEffectTimer, rhs.damageEffectTimer);
+        swap(lhs.isRunning, rhs.isRunning);
+        swap(lhs.isJumping, rhs.isJumping);
+        swap(lhs.facingRight, rhs.facingRight);
+        swap(lhs.facingUp, rhs.facingUp);
+        swap(lhs.isHit, rhs.isHit);
+        swap(lhs.frameSize, rhs.frameSize);
+        swap(lhs.currentFrame, rhs.currentFrame);
+        swap(lhs.animationRow, rhs.animationRow);
+        swap(lhs.animationStartIndex, rhs.animationStartIndex);
+        swap(lhs.animationFrameCount, rhs.animationFrameCount);
+        swap(lhs.damageOverlay, rhs.damageOverlay);
+        swap(lhs.activeSounds, rhs.activeSounds);
+        swap(lhs.jumpSound, rhs.jumpSound);
+    }
+
     std::unique_ptr<Entity> clone() const override;
     ~Player() override;
 
     void spawn(float x, float y);
     void draw(sf::RenderWindow& window) const override;
-    void shoot(const sf::Vector2f& direction);
+    void fire(const sf::Vector2f& direction);
+    void reload() const;
+    void checkProjectileCollisions(const std::vector<std::unique_ptr<Entity>>& targets) const;
 
     sf::Vector2f getWeaponTipPos() const;
     bool hitAffected() const;
     [[nodiscard]]int getHealth() const { return health; }
+    [[nodiscard]]const Weapon* getWeapon() const { return weapon.get(); }
     [[nodiscard]]bool canAttack() const;
 };
 
