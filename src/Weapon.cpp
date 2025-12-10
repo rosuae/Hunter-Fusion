@@ -105,10 +105,6 @@ void Weapon::handleCollisions(const std::vector<std::unique_ptr<Entity> > &targe
 
 Weapon::~Weapon() { std::cout << "S a apelat destructor Weapon \n";}
 
-[[nodiscard]]std::vector<Projectile>& Weapon::getProjectiles() {
-    return projectiles;
-}
-
 [[nodiscard]]bool Weapon::canFire(const Player& player) const {
     const bool weaponReady = reloada > 0 && fireTimer <= 0.0f;
     const bool playerReady = player.canAttack() && player.isAlive();
