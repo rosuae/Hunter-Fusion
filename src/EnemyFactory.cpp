@@ -25,15 +25,13 @@ std::unique_ptr<Enemy> EnemyFactory::createEnemy(const std::string &type,
             resManager.getTexture("enemy.png"),
             playingSounds,
             resManager.getSound("enemydamage.wav"),
-            resManager.getSound("enemydeath.wav")
+            resManager.getSound("enemydeath.wav"),
+            target
         ));
     }
-    if (enemy) {
-        enemy->setPosition(x, y);
-        enemy->setTarget(target);
-    } else {
-        throw ResourceException("Unknown enemy type: " + type);
-    }
 
-    return enemy;
+    if (enemy)
+        return enemy;
+
+    throw ResourceException("Unknown enemy type: " + type);
 }

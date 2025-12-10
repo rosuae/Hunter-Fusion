@@ -30,20 +30,8 @@ Weapon::Weapon(std::string n, std::string projName, int projDmg, sf::Texture& te
     reloadSound.setVolume(30);
 }
 
-void Weapon::fire(Player& player, sf::Vector2f direction) {
-    if (direction.y < -0.1f) {
-        player.setFacingUp(true);
-    } else {
-        player.setFacingUp(false);
-    }
-
-    if (std::abs(direction.x) > 0.1f) {
-        bool shouldFaceRight = direction.x > 0;
-        player.setFacing(shouldFaceRight);
-    }
-
+void Weapon::fire(Player& player, const sf::Vector2f direction) {
     if (canFire(player)) {
-        player.shootAnimation();
         sf::Vector2f spawnPoint = player.getWeaponTipPos();
 
         sf::Vector2f calculatedTarget = spawnPoint + direction * 1000.f;
@@ -109,6 +97,7 @@ Weapon::~Weapon() { std::cout << "S a apelat destructor Weapon \n";}
 }
 
 [[nodiscard]]bool Weapon::canFire(const Player& player) const {
-    bool movementStateAllowsFiring = !player.Jumping() || player.getVelocityY() > 0.f;
-    return reloada > 0 && movementStateAllowsFiring && fireTimer <= 0.0f;
+    const bool weaponReady = (reloada > 0 && fireTimer <= 0.0f);
+    const bool playerReady = player.canAttack();
+    return weaponReady && playerReady;
 }

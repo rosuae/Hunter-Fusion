@@ -6,10 +6,11 @@
 Enemy::Enemy(const std::string& n, const int damage_, float posx_, float posy_, sf::Texture& tex,
              std::list<sf::Sound>& activeSounds_,
              const sf::SoundBuffer& hitSound_,
-             const sf::SoundBuffer& deathSound_)
-    : Entity(n, posx_, posy_, 300.f, 1000.f, tex, 120, 120),
+             const sf::SoundBuffer& deathSound_,
+             Entity* target_)
+    : Entity(n, posx_, posy_, 200.f, 1000.f, tex, 120, 120),
     damage{damage_},
-    target{nullptr},
+    target{target_},
     // fists{std::move(f)},
     activeSounds{&activeSounds_},
     hitSound{&hitSound_},
@@ -54,7 +55,7 @@ sf::FloatRect Enemy::doGetBounds() const{
     return hitbox;
 }
 
-void Enemy::doTakeDamage(int damageAmount) {
+void Enemy::takeDamage(int damageAmount) {
 
     bool wasAlive = this->isAlive();
 

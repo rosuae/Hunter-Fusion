@@ -11,54 +11,50 @@ class Player : public Entity {
     float velocity;
     float maxJump;
 
-    sf::Vector2i frameSize;
-
     float animationTimer;
     float frameDuration;
     float shootingTimer;
     static constexpr float shootingDuration = 0.3f;
+    float damageEffectTimer;
 
     bool isRunning;
     bool isJumping;
     bool facingRight;
     bool facingUp;
-    bool isHit_;
+    bool isHit;
 
+    sf::Vector2i frameSize;
     int currentFrame;
     int animationRow;
     int animationStartIndex;
     int animationFrameCount;
-
     sf::RectangleShape damageOverlay;
+
     std::list<sf::Sound>& activeSounds;
     sf::Sound jumpSound;
 
     sf::FloatRect doGetBounds() const override;
-    void doTakeDamage(int damageAmount) override;
+    void takeDamage(int damageAmount) override;
     void doBehavior(float deltaTime, const Map&) override;
     void applyGravity(float deltaTime) override;
     void updateSpriteDirection();
+    void updateAnimation(float deltaTime);
+    void handleInput (float deltaTime, const Map& map);
+    void updateDamageEffect(float deltaTime);
 
 public:
     Player(const std::string& n, sf::Texture& tex, float posx_, float posy_, std::list<sf::Sound>& activeSounds_, const sf::SoundBuffer& jumpSound_);
     std::unique_ptr<Entity> clone() const override;
     ~Player() override;
 
-    void updateAnimation(float deltaTime);
-    void shootAnimation();
-    void setFacing(bool isFacingRight);
-    void setFacingUp(bool isFacingUp);
-    void setHit(bool ok);
-    void alphaDamageEffect(int alpha);
-    void resetDamageEffect();
-
-    void drawDamageEffect(sf::RenderWindow& window) const;
+    void spawn(float x, float y);
+    void draw(sf::RenderWindow& window) const override;
+    void shoot(const sf::Vector2f& direction);
 
     sf::Vector2f getWeaponTipPos() const;
-    bool isHit() const;
-    bool Jumping() const;
-    float getVelocityY() const;
+    bool hitAffected() const;
     [[nodiscard]]int getHealth() const { return health; }
+    [[nodiscard]]bool canAttack() const;
 };
 
 #endif

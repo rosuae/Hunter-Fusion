@@ -27,7 +27,7 @@ class Portal : public Entity {
     bool isActive;
 
     sf::FloatRect doGetBounds() const override;
-    void doTakeDamage(int damageAmount) override;
+    void takeDamage(int damageAmount) override;
     void doBehavior(float deltaTime, const Map& map) override;
     void applyGravity(float deltaTime) override;
 

@@ -37,7 +37,6 @@ class Game {
 
     sf::Clock m_clock;
     sf::Clock m_playerDamageCooldown;
-    sf::Clock m_damageClock;
 
     std::list <sf::Sound> m_playingSounds;
 public:

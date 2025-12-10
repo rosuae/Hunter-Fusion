@@ -62,7 +62,7 @@ sf::FloatRect Portal::doGetBounds() const {
     return sprite.getTransform().transformRect(hitbox);
 }
 
-void Portal::doTakeDamage(int damageAmount) {
+void Portal::takeDamage(int damageAmount) {
     health += damageAmount;
 
     if (!isActive && !isAnimating) {

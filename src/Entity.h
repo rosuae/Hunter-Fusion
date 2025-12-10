@@ -7,12 +7,12 @@
 class Map;
 
 class Entity {
-
     bool alive;
     virtual sf::FloatRect doGetBounds() const = 0;
-    virtual void doTakeDamage(int damageAmount) = 0;
+    virtual void takeDamage(int damageAmount) = 0;
     virtual void doBehavior(float deltaTime, const Map& map) = 0;
     virtual void applyGravity(float deltaTime) = 0;
+
 protected:
     std::string name;
     int health;
@@ -26,6 +26,7 @@ protected:
 
     sf::Texture* texture;
     sf::Sprite sprite;
+    void setPosition(float x, float y);
     void updateSpritePosition();
     void checkDeath();
 
@@ -57,13 +58,12 @@ public:
 
     virtual bool isObstacle() const { return false; }
     virtual std::unique_ptr<Entity> clone() const = 0;
+    virtual void draw(sf::RenderWindow& window) const;
     virtual ~Entity();
 
     void updateHitbox();
-    void draw(sf::RenderWindow& window) const;
     void behavior(float deltaTime, const Map& map);
-    void takeDamage(int damageAmount);
-    void setPosition(float x, float y);
+    void tryHit(int damageAmount);
 
     bool isAlive() const;
 

@@ -36,6 +36,12 @@ sprite{other.sprite}{
     std::cout << "S a apelat constructor copiere entity \n";
 }
 
+void Entity::setPosition(const float x, const float y) {
+    posX = x;
+    posY = y;
+    updateSpritePosition();
+}
+
 void Entity::updateSpritePosition() {
     sprite.setPosition(sf::Vector2f(std::floor(posX), std::floor(posY)));
 }
@@ -67,10 +73,10 @@ void Entity::behavior(float deltaTime, const Map &map) {
     checkDeath();
 }
 
-void Entity::takeDamage(int damageAmount) {
+void Entity::tryHit(int damageAmount) {
     if (!alive) return;
 
-    doTakeDamage(damageAmount);
+    takeDamage(damageAmount);
     checkDeath();
 }
 
@@ -85,9 +91,4 @@ sf::FloatRect Entity::getBounds() const {
 
 sf::Vector2f Entity::getPos() const {
     return {posX, posY};
-}
-void Entity::setPosition(float x, float y) {
-    posX = x;
-    posY = y;
-    updateSpritePosition();
 }

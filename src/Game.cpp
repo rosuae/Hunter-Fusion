@@ -67,22 +67,22 @@ void Game::loadLevel(const std::string& mapFile, sf::Vector2f spawnPos) {
 
     m_map = std::move(tempMap);
 
-    sf::Vector2f finalPos;
+    sf::Vector2f newRoomPos;
     if (spawnPos.x < 0 && spawnPos.y < 0) {
         auto [x, y] = m_map->getPlayerSpawn();
-        finalPos = sf::Vector2f(x, y);
+        newRoomPos = sf::Vector2f(x, y);
     } else {
-        finalPos = spawnPos;
+        newRoomPos = spawnPos;
     }
 
     if (m_player) {
-        m_player->setPosition(finalPos.x, finalPos.y);
-        if (m_camera) {
-            m_camera->snapToTarget(finalPos);
-        }
-        m_map->setPlayerTarget(m_player.get());
-        m_map->spawnEnemies();
+        m_player->spawn(newRoomPos.x, newRoomPos.y);
+        m_camera->snapToTarget(newRoomPos);
     }
+
+    m_map->setPlayerTarget(m_player.get());
+    m_map->spawnEnemies();
+
     m_clock.restart();
 }
 
@@ -152,7 +152,7 @@ void Game::handleEvents() {
             }
 
             if (isShooting && m_playerWeapon->canFire(*m_player) && m_player->isAlive()) {
-
+                m_player->shoot(shootDirection);
                 m_playerWeapon->fire(*m_player, shootDirection);
             }
         }
@@ -167,17 +167,6 @@ void Game::update(float deltaTime) {
     handleCollisions();
 
     m_playerWeapon->updateProjectiles(deltaTime, *m_map);
-
-    if (m_player->isHit()) {
-        float elapsed = m_damageClock.getElapsedTime().asSeconds();
-        if (elapsed < 0.3f) {
-            int alpha = static_cast<int>(120 * (1.f - elapsed / 0.3f));
-            m_player->alphaDamageEffect(alpha);
-        } else {
-            m_player->setHit(false);
-            m_player->resetDamageEffect();
-        }
-    }
 
     updateSounds();
     updateCamera(deltaTime);
@@ -194,21 +183,16 @@ void Game::handleEnemyRespawn(const int enemiesDied) {
     if (slotsAvailable <= 0) return;
     const int countToSpawn = std::min(enemiesRequested, slotsAvailable);
 
-    const auto prototype = EnemyFactory::createEnemy(
-            "Metroid",
-            0, 0,
-            m_resManager,
-            m_playingSounds,
-            m_player.get()
-    );
-    if (!prototype) return;
-
     for (int i = 0; i < countToSpawn; ++i) {
-        auto [x, y] = m_map->generateEnemySpawn();
         try {
-            auto newEnemy = std::make_unique<Enemy>(*prototype);
-
-            newEnemy->setPosition(x, y);
+            auto [x, y] = m_map->generateEnemySpawn();
+            std::unique_ptr newEnemy = EnemyFactory::createEnemy(
+            "Metroid",
+             x, y,
+             m_resManager,
+             m_playingSounds,
+             m_player.get()
+            );
             m_map->addEntity(std::move(newEnemy));
         }
         catch (const MapEntityException& e) {
@@ -232,7 +216,7 @@ void Game::handleCollisions() {
         if (!proj.isActive()) continue;
         for (const auto& en : m_map->getEntities()) {
             if (en->isAlive() && proj.getBounds().findIntersection(en->getBounds()).has_value()) {
-                en->takeDamage(m_playerWeapon->getDmg());
+                en->tryHit(m_playerWeapon->getDmg());
                 proj.deactivate();
                 break;
             }
@@ -248,9 +232,7 @@ void Game::handleCollisions() {
     }
 
     if (totalDamageThisFrame > 0 && m_playerDamageCooldown.getElapsedTime().asSeconds() > 1.f) {
-        m_player->takeDamage(totalDamageThisFrame);
-        m_player->setHit(true);
-        m_damageClock.restart();
+        m_player->tryHit(totalDamageThisFrame);
         m_playerDamageCooldown.restart();
     }
 
@@ -284,12 +266,11 @@ void Game::render() {
     m_playerWeapon->drawProjectiles(m_window);
     m_player->draw(m_window);
     m_map->drawEntities(m_window);
-    m_player->drawDamageEffect(m_window);
     m_camera->drawHud(m_window);
     m_window.display();
 }
 
-int Game::generateRandomInt(int min, int max) {
+int Game::generateRandomInt(const int min, const int max) {
     static std::mt19937 gen(std::random_device{}());
     return std::uniform_int_distribution(min, max)(gen);
 }

@@ -114,12 +114,12 @@ Map::Map(std::string n, const std::string& filePath, ResourceManager& resManager
 }
 
 void Map::spawnEnemies() {
-    if (enemySpawns.empty() || enemies.empty()) return;
+    if (enemySpawns.empty() || enemies.empty() || !playerTarget) return;
 
     for (const auto& enemy_ : enemies) {
         try {
             auto [x, y] = generateEnemySpawn();
-            auto newEnemy = EnemyFactory::createEnemy(
+            std::unique_ptr newEnemy = EnemyFactory::createEnemy(
                 enemy_.first,
                 x,
                 y,
@@ -162,7 +162,7 @@ void Map::addEntity(std::unique_ptr<Entity> entity) {
         throw MapEntityException("Unreachable position ", entity->getPos());
     }
 
-    bool isObs = entity->isObstacle();
+    const bool isObs = entity->isObstacle();
     entities.push_back(std::move(entity));
 
     if (isObs) {
@@ -192,7 +192,7 @@ void Map::drawEntities(sf::RenderWindow& window) const{
 
 const Portal* Map::getPortalCollision(const sf::FloatRect& playerBounds) const {
     for (const auto& ent : entities) {
-        if (auto portalPtr = dynamic_cast<const Portal*>(ent.get())) {
+        if (const auto portalPtr = dynamic_cast<const Portal*>(ent.get())) {
             if (portalPtr->getBounds().findIntersection(playerBounds).has_value()) {
                 return portalPtr;
             }

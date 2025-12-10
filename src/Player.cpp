@@ -17,24 +17,25 @@ void Player::applyGravity(float deltaTime) {
 }
 
 Player::Player(const std::string& n, sf::Texture& tex, float posx_, float posy_, std::list<sf::Sound>& activeSounds_, const sf::SoundBuffer& jumpSound_)
-    : Entity(n, posx_, posy_, 900.0f, 2500.f, tex, 120, 120),
-      velocity{0.0f},
-      maxJump{-1450.f},
-      frameSize{sf::Vector2i(224, 222)},
-      animationTimer{0.0f},
-      frameDuration{0.12f},
-      shootingTimer{0.0f},
-      isRunning{false},
-      isJumping{false},
-      facingRight{true},
-      facingUp{false},
-      isHit_{false},
-      currentFrame{0},
-      animationRow{0},
-      animationStartIndex{0},
-      animationFrameCount{1},
-      activeSounds{activeSounds_},
-      jumpSound{jumpSound_}
+    : Entity(n, posx_, posy_, 600.0f, 2500.f, tex, 120, 120),
+    velocity{0.0f},
+    maxJump{-1450.f},
+    animationTimer{0.0f},
+    frameDuration{0.12f},
+    shootingTimer{0.0f},
+    damageEffectTimer{0.0f},
+    isRunning{false},
+    isJumping{false},
+    facingRight{true},
+    facingUp{false},
+    isHit{false},
+    frameSize{sf::Vector2i(224, 222)},
+    currentFrame{0},
+    animationRow{0},
+    animationStartIndex{0},
+    animationFrameCount{1},
+    activeSounds{activeSounds_},
+    jumpSound{jumpSound_}
 {
     damageOverlay.setSize(sf::Vector2f(3000.f, 3000.f));
     damageOverlay.setFillColor(sf::Color(255, 0, 0, 0));
@@ -56,63 +57,12 @@ std::unique_ptr<Entity> Player::clone() const {
 Player::~Player() {
     std::cout << "S a apelat destructor Player \n";
 }
+
 void Player::doBehavior(float deltaTime, const Map& map) {
 
-    if ((sf::Keyboard::isKeyPressed(sf::Keyboard::Key::W) ||
-         sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Space)) && !isJumping) {
-            try {
-                float testFeetX = posX - static_cast<float>(hitboxWidth) / 2.0f + 10.f;
-                float testFeetY = posY;
+    handleInput(deltaTime, map);
 
-                sf::FloatRect groundCheck(
-                    sf::Vector2f(testFeetX, testFeetY),
-                    sf::Vector2f(static_cast<float>(hitboxWidth) - 20.f, 10.f)
-                );
-
-                if (!map.isWall(groundCheck, true)) {
-                    throw InvalidActionException("Jump", "Player is in mid air (falling)");
-                }
-                velocity = maxJump;
-                isJumping = true;
-
-                activeSounds.emplace_back(jumpSound);
-                activeSounds.back().play();
-
-            }
-            catch (const InvalidActionException& e) {
-                std::cout << e.what() << std::endl;
-            }
-         }
-
-    float lastPosX = posX;
-    bool movedLeft = sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A);
-    bool movedRight = sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D);
-
-    if (movedLeft && !movedRight) {
-        posX -= speed * deltaTime;
-        if (shootingTimer <= 0.0f) {
-            facingRight = false;
-        }
-        this->isRunning = true;
-    } else if (movedRight && !movedLeft) {
-        posX += speed * deltaTime;
-        if (shootingTimer <= 0.0f) {
-            facingRight = true;
-        }
-        this->isRunning = true;
-    } else {
-        this->isRunning = false;
-    }
-
-    if (posX != lastPosX) {
-        updateHitbox();
-        if (map.isWall(hitbox, true)) {
-            posX = lastPosX;
-            updateHitbox();
-        }
-    }
-
-    float lastPosY = posY;
+    const float lastPosY = posY;
     applyGravity(deltaTime);
 
     if (posY != lastPosY) {
@@ -134,6 +84,74 @@ void Player::doBehavior(float deltaTime, const Map& map) {
 
     updateSpriteDirection();
     updateAnimation(deltaTime);
+    updateDamageEffect(deltaTime);
+}
+
+void Player::handleInput(float deltaTime, const Map& map) {
+    if ((sf::Keyboard::isKeyPressed(sf::Keyboard::Key::W) ||
+         sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Space)) && !isJumping) {
+        try {
+            float testFeetX = posX - static_cast<float>(hitboxWidth) / 2.0f + 10.f;
+            float testFeetY = posY;
+
+            sf::FloatRect groundCheck(
+                sf::Vector2f(testFeetX, testFeetY),
+                sf::Vector2f(static_cast<float>(hitboxWidth) - 20.f, 10.f)
+            );
+
+            if (!map.isWall(groundCheck, true)) {
+                throw InvalidActionException("Jump", "Player is in mid air (falling)");
+            }
+
+            velocity = maxJump;
+            isJumping = true;
+
+            activeSounds.emplace_back(jumpSound);
+            activeSounds.back().play();
+        }
+        catch (const InvalidActionException& e) {
+            std::cout << e.what() << std::endl;
+        }
+    }
+
+    float lastPosX = posX;
+    bool movedLeft = sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A);
+    bool movedRight = sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D);
+
+    isRunning = false;
+
+    if (movedLeft && !movedRight) {
+        posX -= speed * deltaTime;
+        if (shootingTimer <= 0.0f) {
+            facingRight = false;
+        }
+        isRunning = true;
+    }
+    else if (movedRight && !movedLeft) {
+        posX += speed * deltaTime;
+        if (shootingTimer <= 0.0f) {
+            facingRight = true;
+        }
+        isRunning = true;
+    }
+
+    if (posX != lastPosX) {
+        updateHitbox();
+        if (map.isWall(hitbox, true)) {
+            posX = lastPosX;
+            updateHitbox();
+        }
+    }
+}
+
+void Player::spawn(const float x, const float y) {
+    setPosition(x, y);
+    velocity = 0.f;
+    isRunning = false;
+    isJumping = false;
+    isHit = false;
+    damageOverlay.setFillColor(sf::Color(255, 0, 0, 0));
+    updateHitbox();
 }
 
 void Player::updateAnimation(float deltaTime) {
@@ -203,73 +221,67 @@ void Player::updateAnimation(float deltaTime) {
     float originBaseY = static_cast<float>(frameSize.y) - 7.f;
     float originBaseX = static_cast<float>(frameSize.x) / 2.f;
 
-    float yOffset = 0.f;
-    if (animationRow == 1) {
-        yOffset = 2.5f;
-    }
-    else if (animationRow == 2) {
-        yOffset = 4.5f;
-    }
+    float yOffset = animationRow == 1 ? 2.5f : animationRow == 2 ? 4.5f : 0.f;
     sprite.setOrigin(sf::Vector2f(originBaseX, originBaseY + yOffset));
 }
 
-void Player::shootAnimation() {
+void Player::shoot(const sf::Vector2f& direction) {
     shootingTimer = shootingDuration;
+
+    if (direction.y < 0)
+        facingUp = true;
+    else {
+        facingUp = false;
+
+        if (direction.x > 0)
+            facingRight = true;
+        else if (direction.x < 0)
+            facingRight = false;
+
+        updateSpriteDirection();
+    }
 }
 
-void Player::setFacing(bool isFacingRight) {
-    facingRight = isFacingRight;
-    updateSpriteDirection();
-}
-
-void Player::setFacingUp(bool isFacingUp) {
-    facingUp = isFacingUp;
-}
-
-void Player::doTakeDamage(int damageAmount) {
+void Player::takeDamage(int damageAmount) {
     health -= damageAmount;
+    isHit = true;
+    damageEffectTimer = 0.3f;
+    damageOverlay.setFillColor(sf::Color(255, 0, 0, 150));
 }
 
-void Player::setHit(const bool ok) {
-    isHit_ = ok;
+void Player::updateDamageEffect(float deltaTime) {
+    if (damageEffectTimer > 0.0f) {
+        damageEffectTimer -= deltaTime;
+
+        const float ratio = damageEffectTimer / 0.3f;
+        int alpha = static_cast<int>(150 * ratio);
+        if (alpha < 0) alpha = 0;
+
+        damageOverlay.setFillColor(sf::Color(255, 0, 0, alpha));
+    }else {
+        if (hitAffected()){
+            isHit = false;
+            damageOverlay.setFillColor(sf::Color(255,0, 0, 0));
+        }
+    }
 }
 
-void Player::alphaDamageEffect(int alpha) {
-    damageOverlay.setFillColor(sf::Color(255, 0, 0, alpha));
+void Player::draw(sf::RenderWindow &window) const {
+    if(isAlive()) {
+        window.draw(sprite);
+        if (damageOverlay.getFillColor().a > 0) {
+            sf::View currentView = window.getView();
+            window.setView(window.getDefaultView());
+            window.draw(damageOverlay);
+            window.setView(currentView);
+        }
+    }
 }
-
-void Player::resetDamageEffect() {
-    damageOverlay.setFillColor(sf::Color(255, 0, 0, 0));
-}
-
-void Player::drawDamageEffect(sf::RenderWindow& window) const {
-    const sf::View currentView = window.getView();
-
-    window.setView(window.getDefaultView());
-    window.draw(damageOverlay);
-    window.setView(currentView);
-}
-
 
 sf::Vector2f Player::getWeaponTipPos() const {
-    float offsetX = 0.f;
-    float offsetY = 0.f;
-
-    if (facingRight) {
-        if (facingUp) offsetX = 10.f;
-        else offsetX = static_cast<float>(frameSize.x) * 0.25f;
-    }
-    else {
-        if (facingUp) offsetX = -10.f;
-        else offsetX = -static_cast<float>(frameSize.x) * 0.3f;
-    }
-
-    if (facingUp) {
-        offsetY = -(static_cast<float>(frameSize.y) * 0.9f);
-    } else {
-        offsetY = -(static_cast<float>(frameSize.y) * 0.5f);
-    }
-
+    const float offsetX = facingRight ? (facingUp ? 10.f : frameSize.x * 0.25f)
+                              : (facingUp ? -10.f : -frameSize.x * 0.3f);
+    const float offsetY = facingUp ? -(frameSize.y * 0.9f) : -(frameSize.y * 0.5f);
     return {posX + offsetX, posY + offsetY};
 }
 
@@ -277,14 +289,10 @@ sf::FloatRect Player::doGetBounds() const {
     return hitbox;
 }
 
-bool Player::isHit() const {
-    return isHit_;
+bool Player::hitAffected() const {
+    return isHit;
 }
 
-bool Player::Jumping() const {
-    return isJumping;
-}
-
-float Player::getVelocityY() const {
-    return velocity;
+bool Player::canAttack() const {
+    return !isJumping || velocity > 0;
 }
