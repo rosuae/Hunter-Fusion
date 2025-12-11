@@ -17,6 +17,7 @@ Portal::Portal(const std::string& n,
     : Entity(n, posx_, posy_, 0, 0, tex, 100, 288),
     nextMapFile{std::move(nextMapFile_)},
     playerSpawnPosition{playerSpawnPosition_},
+    nextLocation{nextMapFile, playerSpawnPosition},
     activeSounds{&activeSounds_},
     activationSound{&activationSound_},
     frameSize{sf::Vector2i(190, 288)},
@@ -110,10 +111,6 @@ void Portal::applyGravity(float deltaTime) {
     posY += gravity * deltaTime;
 }
 
-sf::Vector2f Portal::getNextPlayerSpawn() const {
-    return playerSpawnPosition;
-}
-
-const std::string& Portal::getNextMapFile() const{
-    return nextMapFile;
+const std::pair<std::string, sf::Vector2f>& Portal::teleportDestination() const{
+        return nextLocation;
 }

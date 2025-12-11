@@ -16,12 +16,13 @@ class Game {
 
     void instanceObjects();
     void loadLevel(const std::string& mapFile, sf::Vector2f spawnPos = sf::Vector2f(-1.f, -1.f));
+    void loadLevel(const std::pair<std::string, sf::Vector2f>& nextDestination);
     void handleEvents();
     void update(float deltaTime);
     void render();
-    void handleEnemyRespawn(int enemiesDied);
+
     void handleCollisions();
-    void updateCamera(float deltaTime);
+    void updateCamera(float deltaTime) const;
     void updateSounds();
 
     sf::RenderWindow m_window;

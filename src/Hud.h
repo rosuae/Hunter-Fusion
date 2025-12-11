@@ -6,15 +6,14 @@
 #define OOP_HUD_H
 
 #include <SFML/Graphics.hpp>
-#include <memory>
 #include "Player.h"
 #include "ResourceManager.h"
 
-class Hud {
-    const Player* m_player;
-    const Weapon* m_weapon;
+class Player;
+class Weapon;
 
-    sf::Font font;
+class Hud {
+    const Player& m_player;
 
     sf::Sprite m_backgroundSprite;
     sf::RectangleShape m_healthBar;
@@ -27,7 +26,7 @@ class Hud {
     float m_barHeight;
 
 public:
-    Hud(const std::unique_ptr<Player>& player, ResourceManager& resManager);
+    Hud(const Player& player, ResourceManager& resManager);
 
     void update();
     void render(sf::RenderWindow& window) const;

@@ -18,6 +18,8 @@ ResourceManager::ResourceManager() {
     loadSounds("assets/sound","enemydeath.wav");
     loadSounds("assets/sound","enemydamage.wav");
     loadSounds("assets/sound","portalactive.wav");
+
+    loadFonts("assets/textures", "Metroid-Fusion.ttf");
 }
 
 ResourceManager& ResourceManager::Instance() {
@@ -28,6 +30,7 @@ ResourceManager& ResourceManager::Instance() {
 void ResourceManager::cleanup() {
     m_textures.clear();
     m_sounds.clear();
+    m_fonts.clear();
 }
 
 void ResourceManager::loadTextures(const std::string &path, const std::string &texture_name) {
@@ -50,6 +53,16 @@ void ResourceManager::loadSounds(const std::string &path, const std::string &sou
     m_sounds[sound_name] = sound;
 }
 
+void ResourceManager::loadFonts(const std::string &path, const std::string &font_name) {
+    sf::Font font;
+
+    if (!font.openFromFile(path + '/' + font_name)) {
+        throw ResourceException("Font: " + path + '/' + font_name + " couldn't be loaded");
+    }
+
+    m_fonts[font_name] = font;
+}
+
 sf::Texture& ResourceManager::getTexture (const std::string& texture_name) {
     if (!m_textures.contains(texture_name)) {
         throw ResourceException("Texture: " + texture_name + " wasn't found");
@@ -64,4 +77,12 @@ sf::SoundBuffer& ResourceManager::getSound(const std::string& sound_name) {
     }
 
     return m_sounds[sound_name];
+}
+
+sf::Font& ResourceManager::getFont(const std::string& font_name) {
+    if (!m_fonts.contains(font_name)) {
+        throw ResourceException("Font: " + font_name + " wasn't found");
+    }
+
+    return m_fonts[font_name];
 }

@@ -14,6 +14,7 @@ class Portal : public Entity {
 
     std::string nextMapFile;
     sf::Vector2f playerSpawnPosition;
+    std::pair<std::string, sf::Vector2f> nextLocation;
     std::list<sf::Sound>* activeSounds;
     const sf::SoundBuffer* activationSound;
 
@@ -73,8 +74,7 @@ public:
     ~Portal() override;
 
     [[nodiscard]]bool isObstacle() const override { return !isActive; }
-    [[nodiscard]]sf::Vector2f getNextPlayerSpawn() const;
-    [[nodiscard]]const std::string& getNextMapFile() const;
+    [[nodiscard]]const std::pair<std::string, sf::Vector2f>& teleportDestination() const;
 };
 
 #endif //OOP_PORTAL_H

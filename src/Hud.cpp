@@ -4,6 +4,7 @@
 
 #include "Hud.h"
 #include "GameExceptions.h"
+#include "Player.h"
 #include "Weapon.h"
 #include <string>
 
@@ -12,19 +13,14 @@
 #define AMMO_OFFSET_X 647.f
 #define AMMO_OFFSET_Y 35.f
 
-Hud::Hud(const std::unique_ptr<Player>& player, ResourceManager& resManager)
-    : m_player{player.get()},
-      m_weapon{m_player->getWeapon()},
+Hud::Hud(const Player& player, ResourceManager& resManager)
+    : m_player{player},
       m_backgroundSprite{resManager.getTexture("hud.png")},
-      m_healthText{font},
-      m_ammoText{font},
+      m_healthText{resManager.getFont("Metroid-Fusion.ttf")},
+      m_ammoText{resManager.getFont("Metroid-Fusion.ttf")},
       m_barMaxWidth{483.f},
       m_barHeight{13.f}
 {
-    if (!font.openFromFile("assets/textures/Metroid-Fusion.ttf")) {
-        throw ResourceException("Failed to load font inside HUD");
-    }
-
     m_backgroundSprite.setPosition({1075.f, 10.f});
     m_healthBar.setFillColor(sf::Color(50, 205, 50));
     m_healthBar.setPosition({m_backgroundSprite.getPosition().x + BAR_OFFSET_X,
@@ -44,33 +40,29 @@ Hud::Hud(const std::unique_ptr<Player>& player, ResourceManager& resManager)
 }
 
 void Hud::update() {
-    if (!m_player || !m_weapon) return;
-
-    int currentHP = m_player->getHealth();
-    int maxHP = 100;
+    int currentHP = m_player.getHealth();
+    constexpr int maxHP = 100;
 
     if (currentHP < 0) currentHP = 0;
-    float hpRatio = static_cast<float>(currentHP) / static_cast<float>(maxHP);
+    const float hpRatio = static_cast<float>(currentHP) / static_cast<float>(maxHP);
 
     m_healthBar.setSize(sf::Vector2f(m_barMaxWidth * hpRatio, m_barHeight));
 
     m_healthText.setString( std::to_string(currentHP) + "  HEALTH");
 
-    int clip = m_weapon->getAmmoInClip();
-    int reserve = m_weapon->getTotalAmmo();
-
-    std::string ammoString = "AMMO " + std::to_string(clip) + " / " + std::to_string(reserve);
-    m_ammoText.setString(ammoString);
+    if (const Weapon* currentWeapon = m_player.getWeapon()){
+        const int clip = currentWeapon->getAmmoInClip();
+        const int reserve = currentWeapon->getTotalAmmo();
+        const std::string ammoString = "AMMO " + std::to_string(clip) + " / " + std::to_string(reserve);
+        m_ammoText.setString(ammoString);
+    } else {
+        m_ammoText.setString("NO WEAPON");
+    }
 }
 
 void Hud::render(sf::RenderWindow& window) const{
-    sf::View worldView = window.getView();
-
-    window.setView(window.getDefaultView());
-
     window.draw(m_backgroundSprite);
     window.draw(m_healthBar);
     window.draw(m_healthText);
     window.draw(m_ammoText);
-    window.setView(worldView);
 }

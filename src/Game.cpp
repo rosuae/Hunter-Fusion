@@ -35,32 +35,34 @@ void Game::instanceObjects() {
 
     fin.close();
 
-    loadLevel("assets/textures/map/harta.txt");
+    auto tempMap = std::make_unique<Map>(
+            "CurrentRoom",
+            "assets/textures/map/harta.txt",
+            m_resManager,
+            m_playingSounds
+        );
+    m_map = std::move(tempMap);
 
-    auto [xPlayer, yPlayer] = m_map->getPlayerSpawn();
+    sf::Vector2f spawnPos = m_map->getPlayerWorldSpawn();
 
     m_player = std::make_unique<Player>(
-        playerName,
-        m_resManager.getTexture("samussheet.png"),
-        xPlayer,
-        yPlayer,
-        m_playingSounds,
-        m_resManager.getSound("jump.wav"),
-        std::move(tempWeapon)
-    );
+            playerName,
+            m_resManager.getTexture("samussheet.png"),
+            spawnPos.x,
+            spawnPos.y,
+            m_playingSounds,
+            m_resManager.getSound("jump.wav"),
+            std::move(tempWeapon)
+        );
 
-    m_map->setPlayerTarget(m_player.get());
-    m_map->spawnEnemies();
+    m_map->initializeWithExistingPlayer(*m_player);
 
     m_window.create(sf::VideoMode({m_width, m_height}), "Hunter Fusion", settings.GetWindowStyle());
     m_window.setFramerateLimit(90);
     // m_window.setVerticalSyncEnabled(true);
 
-    m_camera = std::make_unique<Camera>(m_width, m_height);
-    m_camera->snapToTarget(m_player->getPos());
-    m_camera->initHud(m_player, m_resManager);
-
-    m_window.setView(m_camera->getView());
+    m_camera = std::make_unique<Camera>(m_width, m_height, *m_player, m_resManager);
+    m_camera->snapToPlayer();
 }
 
 void Game::loadLevel(const std::string& mapFile, const sf::Vector2f spawnPos) {
@@ -73,21 +75,44 @@ void Game::loadLevel(const std::string& mapFile, const sf::Vector2f spawnPos) {
 
     m_map = std::move(tempMap);
 
-    sf::Vector2f newRoomPos;
-    if (spawnPos.x < 0 && spawnPos.y < 0) {
-        auto [x, y] = m_map->getPlayerSpawn();
-        newRoomPos = sf::Vector2f(x, y);
-    } else {
-        newRoomPos = spawnPos;
+    if (m_player) {
+        if (spawnPos.x < 0 && spawnPos.y < 0) {
+            m_map->initializeWithPlayer(*m_player);
+        } else {
+            m_player->spawn(spawnPos.x, spawnPos.y);
+            m_map->initializeWithExistingPlayer(*m_player);
+        }
+
+        if (m_camera) {
+            m_camera->snapToPlayer();
+        }
     }
+
+    m_clock.restart();
+}
+
+void Game::loadLevel(const std::pair<std::string, sf::Vector2f>& nextDestination) {
+    auto tempMap = std::make_unique<Map>(
+        "CurrentRoom",
+        nextDestination.first,
+        m_resManager,
+        m_playingSounds
+    );
+
+    m_map = std::move(tempMap);
 
     if (m_player) {
-        m_player->spawn(newRoomPos.x, newRoomPos.y);
-        m_camera->snapToTarget(newRoomPos);
-    }
+        if (nextDestination.second.x < 0 && nextDestination.second.y < 0) {
+            m_map->initializeWithPlayer(*m_player);
+        } else {
+            m_player->spawn(nextDestination.second.x, nextDestination.second.y);
+            m_map->initializeWithExistingPlayer(*m_player);
+        }
 
-    m_map->setPlayerTarget(m_player.get());
-    m_map->spawnEnemies();
+        if (m_camera) {
+            m_camera->snapToPlayer();
+        }
+    }
 
     m_clock.restart();
 }
@@ -169,70 +194,30 @@ void Game::update(float deltaTime) {
     m_map->updateEntities(deltaTime);
 
     handleCollisions();
-
     updateSounds();
     updateCamera(deltaTime);
 }
 
-void Game::handleEnemyRespawn(const int enemiesDied) {
-    const int enemiesRequested = enemiesDied * 2;
-    if (enemiesRequested <= 0) return;
-
-    constexpr int maxEnemies = 12;
-    const int currentEnemies = Enemy::getActiveEnemyCount();
-    const int slotsAvailable = maxEnemies - currentEnemies;
-
-    if (slotsAvailable <= 0) return;
-    const int countToSpawn = std::min(enemiesRequested, slotsAvailable);
-
-    for (int i = 0; i < countToSpawn; ++i) {
-        try {
-            auto [x, y] = m_map->generateEnemySpawn();
-            std::unique_ptr newEnemy = EnemyFactory::createEnemy(
-            "Metroid",
-             x, y,
-             m_resManager,
-             m_playingSounds,
-             m_player.get()
-            );
-            m_map->addEntity(std::move(newEnemy));
-        }
-        catch (const MapEntityException& e) {
-            std::cout << e.what() << std::endl;
-        }
-    }
-}
-
 void Game::handleCollisions() {
-    const Portal* hitPortal = m_map->getPortalCollision(m_player->getBounds()); // should put teleport logic in portal class
-    if (hitPortal != nullptr && !hitPortal->isObstacle()) {
-        loadLevel(hitPortal->getNextMapFile(), hitPortal->getNextPlayerSpawn());
+    if (const auto destination = m_map->tryTeleport(m_player->getBounds())) {
+        loadLevel(*destination);
         return;
     }
 
-    m_player->checkProjectileCollisions(m_map->getEntities());
+    m_map->processProjectileCollisions();
 
-    int totalDamageThisFrame = 0;
-    for (const auto& en : m_map->getEntities()) {
-        if (const auto enPtr = dynamic_cast<const Enemy*>(en.get()))
-            totalDamageThisFrame += enPtr->attackPlayer();
-    }
-
-    if (totalDamageThisFrame > 0 && m_playerDamageCooldown.getElapsedTime().asSeconds() > 1.f) {
-        m_player->tryHit(totalDamageThisFrame);
+    const int totalDamage = m_map->processEnemyAttacks();
+    if (totalDamage > 0 && m_playerDamageCooldown.getElapsedTime().asSeconds() > 1.f) {
+        m_player->tryHit(totalDamage);
         m_playerDamageCooldown.restart();
     }
 
-    if (const int enemiesDied = m_map->removeDeadEntities(); enemiesDied > 0) {
-        handleEnemyRespawn(enemiesDied);
-    }
+    m_map->cleanupAndRespawn();
 }
 
-void Game::updateCamera(float deltaTime) {
+void Game::updateCamera(float deltaTime) const {
     if (!m_player) return;
-
-    m_camera->update(deltaTime, m_player->getPos());
-    m_window.setView(m_camera->getView());
+    m_camera->followPlayer(deltaTime);
 }
 
 void Game::updateSounds() {
@@ -249,6 +234,7 @@ void Game::render() {
         return;
     }
 
+    m_camera->prepareScene(m_window);
     m_map->drawMap(m_window);
     m_player->draw(m_window);
     m_map->drawEntities(m_window);

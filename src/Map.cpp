@@ -119,7 +119,7 @@ void Map::spawnEnemies() {
 
     for (const auto& enemy_ : enemies) {
         try {
-            auto [x, y] = generateEnemySpawn();
+            auto [x, y] = generateRandomEnemySpawn();
             std::unique_ptr newEnemy = EnemyFactory::createEnemy(
                 enemy_.first,
                 x,
@@ -129,7 +129,7 @@ void Map::spawnEnemies() {
                 playerTarget
             );
             if (newEnemy) {
-                addEntity(std::move(newEnemy));
+                spawnEntityAt(std::move(newEnemy));
             }
         }
         catch (const MapEntityException& e) {
@@ -155,7 +155,37 @@ void Map::drawMap(sf::RenderWindow& window) {
         }
 }
 
-void Map::addEntity(std::unique_ptr<Entity> entity) {
+void Map::processProjectileCollisions() const {
+    if (!playerTarget) return;
+
+    playerTarget->checkProjectileCollisions(entities);
+}
+
+void Map::spawnAdditionalEnemies(const int count) {
+    if (!playerTarget) return;
+
+    for (int i = 0; i < count; ++i) {
+        try {
+            auto [x, y] = generateRandomEnemySpawn();
+            std::unique_ptr newEnemy = EnemyFactory::createEnemy(
+                "Metroid",
+                x, y,
+                resManager,
+                playingSounds,
+                playerTarget
+            );
+            if (newEnemy) {
+                spawnEntityAt(std::move(newEnemy));
+            }
+        }
+        catch (const MapEntityException& e) {
+            std::cout << e.what() << std::endl;
+        }
+    }
+}
+
+
+void Map::spawnEntityAt(std::unique_ptr<Entity> entity) {
     if (!entity)
         return;
 
@@ -171,6 +201,20 @@ void Map::addEntity(std::unique_ptr<Entity> entity) {
     }
 }
 
+int Map::processEnemyAttacks() const {
+    int totalDamage = 0;
+
+    for (const auto& entity : entities) {
+        if (const auto enemyPtr = dynamic_cast<const Enemy*>(entity.get())) {
+            if (enemyPtr->isAlive()) {
+                totalDamage += enemyPtr->attackPlayer();
+            }
+        }
+    }
+
+    return totalDamage;
+}
+
 void Map::updateEntities(float deltaTime) const {
     for (const auto& ent : entities) {
         ent->behavior(deltaTime, *this);
@@ -180,7 +224,7 @@ void Map::updateEntities(float deltaTime) const {
 void Map::drawEntities(sf::RenderWindow& window) const{
     for (const auto& ent : entities) {
         ent->draw(window);
-        sf::FloatRect bounds = ent->getBounds();
+        const sf::FloatRect bounds = ent->getBounds();
         sf::RectangleShape debugRect;
         debugRect.setPosition(bounds.position);
         debugRect.setSize(bounds.size);
@@ -191,48 +235,71 @@ void Map::drawEntities(sf::RenderWindow& window) const{
     }
 }
 
-const Portal* Map::getPortalCollision(const sf::FloatRect& playerBounds) const {
+std::optional<std::pair<std::string, sf::Vector2f>> Map::tryTeleport(const sf::FloatRect& playerBounds) const {
     for (const auto& ent : entities) {
         if (const auto portalPtr = dynamic_cast<const Portal*>(ent.get())) {
             if (portalPtr->getBounds().findIntersection(playerBounds).has_value()) {
-                return portalPtr;
+                if (!portalPtr->isObstacle()) {
+                    return portalPtr->teleportDestination();
+                }
             }
         }
     }
-    return nullptr;
+    return std::nullopt;
 }
 
 const float Map::TILE_SIZE = 96.0f;
 
-sf::Vector2f Map::gridToWorld(int x, int y) {
+sf::Vector2f Map::gridToWorld(const int x, const int y) {
     return {static_cast<float>(x) * TILE_SIZE,
-                        static_cast<float>(y) * TILE_SIZE};
+            static_cast<float>(y) * TILE_SIZE};
 }
 
-std::pair<float, float> Map::generateEnemySpawn() const {
+std::pair<float, float> Map::generateRandomEnemySpawn() const{
     if (enemySpawns.empty()) {
-        throw MapEntityException("Symbol 'E' missing form map generation. No existing enemy spawns.", {-999.f, -999.f});
+        throw MapEntityException("Symbol 'E' missing form map generation. No existing enemy spawns.",
+            {-999.f, -999.f});
     }
 
-    int randomIndex = Game::generateRandomInt(0, static_cast<int>(enemySpawns.size()) - 1);
+    const int randomIndex = Game::generateRandomInt(0, static_cast<int>(enemySpawns.size()) - 1);
+    auto [x, y] = enemySpawns[randomIndex];
 
-    auto spawnGrid = enemySpawns[randomIndex];
-
-    float spawnX = spawnGrid.first * TILE_SIZE;
-    float spawnY = spawnGrid.second * TILE_SIZE;
-
-    return {spawnX, spawnY};
-}
-
-std::pair<float, float> Map::getPlayerSpawn() const {
-    auto spawnGrid = playerSpawn;
-    float spawnX = spawnGrid.first * TILE_SIZE;
-    float spawnY = spawnGrid.second * TILE_SIZE;
+    float spawnX = x * TILE_SIZE;
+    float spawnY = y * TILE_SIZE;
 
     return {spawnX, spawnY};
 }
 
-int Map::removeDeadEntities() {
+void Map::handleEnemyRespawn(const int enemiesDied) {
+    const int enemiesRequested = enemiesDied * 2;
+    if (enemiesRequested <= 0) return;
+
+    const int currentEnemies = Enemy::getActiveEnemyCount();
+    const int slotsAvailable = maxEnemiesAllowed - currentEnemies;
+
+    if (slotsAvailable <= 0) return;
+
+    const int countToSpawn = std::min(enemiesRequested, slotsAvailable);
+    spawnAdditionalEnemies(countToSpawn);
+}
+
+void Map::initializeWithPlayer(Player& player) {
+    playerTarget = &player;
+
+    auto [x, y] = playerSpawn;
+    const float spawnX = x * TILE_SIZE;
+    const float spawnY = y * TILE_SIZE;
+    player.spawn(spawnX, spawnY);
+
+    spawnEnemies();
+}
+
+void Map::initializeWithExistingPlayer(Player &player) {
+    playerTarget = &player;
+    spawnEnemies();
+}
+
+void Map::cleanupAndRespawn() {
     int deadCount = 0;
     std::erase_if(entities, [&](const std::unique_ptr<Entity>& en) {
         if (!en->isAlive()) {
@@ -248,16 +315,23 @@ int Map::removeDeadEntities() {
             solidEntitiesCache.push_back(ent.get());
         }
     }
-    return deadCount;
+    if (deadCount > 0) {
+        handleEnemyRespawn(deadCount);
+    }
 }
 
 Map::~Map() { std::cout << "S a apelat destructor Map \n";}
 
+sf::Vector2f Map::getPlayerWorldSpawn() const {
+    auto [x, y] = playerSpawn;
+    return sf::Vector2f(x * TILE_SIZE, y * TILE_SIZE);
+}
+
 bool Map::isWall(const sf::FloatRect& bounds, bool checkEntities) const {
-    int startX = static_cast<int> (bounds.position.x / TILE_SIZE);
-    int startY = static_cast<int> (bounds.position.y / TILE_SIZE);
-    int endX = static_cast<int> ((bounds.position.x + bounds.size.x) / TILE_SIZE);
-    int endY = static_cast<int> ((bounds.position.y + bounds.size.y) / TILE_SIZE);
+    const int startX = static_cast<int> (bounds.position.x / TILE_SIZE);
+    const int startY = static_cast<int> (bounds.position.y / TILE_SIZE);
+    const int endX = static_cast<int> ((bounds.position.x + bounds.size.x) / TILE_SIZE);
+    const int endY = static_cast<int> ((bounds.position.y + bounds.size.y) / TILE_SIZE);
 
     for (int y = startY; y <= endY; ++y) {
         if (y < 0 || y >= static_cast<int>(mapLayout.size()))
@@ -286,8 +360,4 @@ bool Map::isWall(const sf::FloatRect& bounds, bool checkEntities) const {
         }
     }
     return false;
-}
-
-std::vector<std::unique_ptr<Entity>>& Map::getEntities() {
-    return entities;
 }
