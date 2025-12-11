@@ -10,6 +10,7 @@ Portal::Portal(const std::string& n,
         float posx_, float posy_,
         sf::Texture& tex,
         std::string  nextMapFile_,
+        const bool facingRight_,
         sf::Vector2f playerSpawnPosition_,
         std::list<sf::Sound>& activeSounds_,
         const sf::SoundBuffer& activationSound_)
@@ -23,13 +24,20 @@ Portal::Portal(const std::string& n,
     animationFrameCount{5},
     animationTimer{0.0f},
     frameDuration{0.15f},
+    facingRight{facingRight_},
     isAnimating{false},
     isActive{false}
 {
     sprite.setTextureRect(sf::IntRect({0, 0}, {frameSize.x, frameSize.y}));
 
     sprite.setPosition(sf::Vector2f(posX, posY));
-    sprite.setScale(sf::Vector2f(1.f, 1.f));
+
+    if (facingRight) {
+        sprite.setScale(sf::Vector2f(1.f, 1.f));
+    } else {
+        sprite.setOrigin({static_cast<float>(hitboxWidth), 0.f});
+        sprite.setScale({-1.f, 1.f});
+    }
 
     hitbox = sf::FloatRect({0, 0.f},
         {static_cast<float>(hitboxWidth),
@@ -46,9 +54,9 @@ Portal::Portal (const Portal& other)
     animationFrameCount{other.animationFrameCount},
     animationTimer{other.animationTimer},
     frameDuration{other.frameDuration},
+    facingRight(other.facingRight),
     isAnimating{other.isAnimating},
-    isActive{other.isActive}
-    {
+    isActive{other.isActive} {
     std::cout << "Portal copy constructor \n";
 }
 
@@ -102,20 +110,10 @@ void Portal::applyGravity(float deltaTime) {
     posY += gravity * deltaTime;
 }
 
-void Portal::flipHorizontally() {
-    sprite.setOrigin({static_cast<float>(hitboxWidth), 0.f});
-    sprite.setScale({-1.f, 1.f});
-}
-
-
 sf::Vector2f Portal::getNextPlayerSpawn() const {
     return playerSpawnPosition;
 }
 
 const std::string& Portal::getNextMapFile() const{
     return nextMapFile;
-}
-
-bool Portal::isOpen() const {
-    return isActive;
 }

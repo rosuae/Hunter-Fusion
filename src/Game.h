@@ -4,11 +4,13 @@
 #include <SFML/Graphics.hpp>
 #include <SFML/Audio.hpp>
 
-#include "Map.h"
-#include "Enemy.h"
-#include "Player.h"
 #include "settingsMenuState.h"
 #include "Camera.h"
+
+class Player;
+class Map;
+class settingsMenuState;
+class Camera;
 
 class Game {
 

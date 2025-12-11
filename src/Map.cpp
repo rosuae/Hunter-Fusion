@@ -59,6 +59,12 @@ Map::Map(std::string n, const std::string& filePath, ResourceManager& resManager
                 if (iss >> fileName >> spawnX >> spawnY) {
                     int autoX = doorLocations[currentDoorIndex].x;
                     int autoY = doorLocations[currentDoorIndex].y;
+                    bool facingRight = true;
+
+                    if (autoX + 1 < static_cast<int>(mapLayout[autoY].size())) {
+                        if (mapLayout[autoY][autoX + 1] == '#')
+                            facingRight = false;
+                    }
 
                     sf::Vector2f world = gridToWorld(autoX, autoY);
 
@@ -68,16 +74,11 @@ Map::Map(std::string n, const std::string& filePath, ResourceManager& resManager
                         world.y,
                         resManager.getTexture("portal.png"),
                         fileName,
+                        facingRight,
                         gridToWorld(spawnX, spawnY),
                         playingSounds,
                         resManager.getSound("portalactive.wav")
                     );
-
-                    if (autoX + 1 < static_cast<int>(mapLayout[autoY].size())) {
-                        if (mapLayout[autoY][autoX + 1] == '#') {
-                            newPortal->flipHorizontally();
-                        }
-                    }
 
                     solidEntitiesCache.push_back(newPortal.get());
                     entities.push_back(std::move(newPortal));

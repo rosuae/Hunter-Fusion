@@ -1,7 +1,6 @@
 #ifndef OOP_ENEMY_H
 #define OOP_ENEMY_H
 
-#include <list>
 #include "Weapon.h"
 #include "Entity.h"
 #include "EnemyFactory.h"

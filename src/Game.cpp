@@ -1,5 +1,10 @@
 #include "Game.h"
 #include "Portal.h"
+#include "Enemy.h"
+#include "Player.h"
+#include "Map.h"
+#include "settingsMenuState.h"
+#include "Camera.h"
 #include "ResourceManager.h"
 #include "GameExceptions.h"
 #include <iostream>
@@ -58,7 +63,7 @@ void Game::instanceObjects() {
     m_window.setView(m_camera->getView());
 }
 
-void Game::loadLevel(const std::string& mapFile, sf::Vector2f spawnPos) {
+void Game::loadLevel(const std::string& mapFile, const sf::Vector2f spawnPos) {
     auto tempMap = std::make_unique<Map>(
         "CurrentRoom",
         mapFile,
@@ -199,8 +204,8 @@ void Game::handleEnemyRespawn(const int enemiesDied) {
 }
 
 void Game::handleCollisions() {
-    const Portal* hitPortal = m_map->getPortalCollision(m_player->getBounds());
-    if (hitPortal != nullptr && hitPortal->isOpen()) {
+    const Portal* hitPortal = m_map->getPortalCollision(m_player->getBounds()); // should put teleport logic in portal class
+    if (hitPortal != nullptr && !hitPortal->isObstacle()) {
         loadLevel(hitPortal->getNextMapFile(), hitPortal->getNextPlayerSpawn());
         return;
     }

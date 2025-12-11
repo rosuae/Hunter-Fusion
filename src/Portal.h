@@ -23,6 +23,7 @@ class Portal : public Entity {
     float animationTimer;
     float frameDuration;
 
+    bool facingRight;
     bool isAnimating;
     bool isActive;
 
@@ -36,6 +37,7 @@ public:
         float posx_, float posy_,
         sf::Texture& tex,
         std::string  nextMapFile_,
+        bool facingRight_,
         sf::Vector2f playerSpawnPosition_,
         std::list<sf::Sound>& activeSounds_,
         const sf::SoundBuffer& activationSound_);
@@ -43,8 +45,18 @@ public:
     friend void swap(Portal &lhs, Portal &rhs) noexcept {
         using std::swap;
         swap(static_cast<Entity &>(lhs), static_cast<Entity &>(rhs));
+        swap(lhs.nextMapFile, rhs.nextMapFile);
+        swap(lhs.playerSpawnPosition, rhs.playerSpawnPosition);
         swap(lhs.activeSounds, rhs.activeSounds);
         swap(lhs.activationSound, rhs.activationSound);
+        swap(lhs.frameSize, rhs.frameSize);
+        swap(lhs.currentFrame, rhs.currentFrame);
+        swap(lhs.animationFrameCount, rhs.animationFrameCount);
+        swap(lhs.animationTimer, rhs.animationTimer);
+        swap(lhs.frameDuration, rhs.frameDuration);
+        swap(lhs.facingRight, rhs.facingRight);
+        swap(lhs.isAnimating, rhs.isAnimating);
+        swap(lhs.isActive, rhs.isActive);
     }
 
     Portal& operator= (const Portal& other) {
@@ -57,13 +69,12 @@ public:
     }
 
     Portal (const Portal& other);
-    bool isObstacle() const override {return !isOpen();}
     std::unique_ptr<Entity> clone() const override;
     ~Portal() override;
-    void flipHorizontally();
+
+    [[nodiscard]]bool isObstacle() const override { return !isActive; }
     [[nodiscard]]sf::Vector2f getNextPlayerSpawn() const;
     [[nodiscard]]const std::string& getNextMapFile() const;
-    [[nodiscard]] bool isOpen() const;
 };
 
 #endif //OOP_PORTAL_H
