@@ -85,6 +85,7 @@ public:
     bool fire(const Player& player, sf::Vector2f direction);
     bool reload();
 
+    void clearProjectiles();
     void update(float deltaTime, const Map& map);
     void draw(sf::RenderWindow& window) const;
     void handleCollisions(const std::vector<std::unique_ptr<Entity>>& targets);

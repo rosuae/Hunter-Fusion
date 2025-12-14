@@ -29,14 +29,11 @@ Gameplay-ul se bazează pe controlul unui personaj care poate merge, sări, trag
 ## To do:
  
 - More enemies + Bosses
-- Room progress save when exiting
 - PowerUps + Ammo and Health Drops
 - More types of ammo
-- Enemies damage should influence the player movement behavior
-- Intro screen + Main menu screen + pause screen
+- Main menu screen + pause screen
 - Option to change the game volume
 - Ability to restart on the last room the player died in
-- Screen shake effect
 - Mini map
 - Change camera movement behavior
 - Ability to change player look
@@ -44,7 +41,6 @@ Gameplay-ul se bazează pe controlul unui personaj care poate merge, sări, trag
 ## Known Bugs:
 
 - Player can run out of ammo. Drops system will be implemented
-- Bullets keeping their position when map transitioning
 
 ### Tema 0
 

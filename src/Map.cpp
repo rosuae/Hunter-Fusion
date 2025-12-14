@@ -291,12 +291,19 @@ void Map::initializeWithPlayer(Player& player) {
     const float spawnY = y * TILE_SIZE;
     player.spawn(spawnX, spawnY);
 
-    spawnEnemies();
+    if (!hasSpawnedEnemies) {
+        spawnEnemies();
+        hasSpawnedEnemies = true;
+    }
 }
 
 void Map::initializeWithExistingPlayer(Player &player) {
     playerTarget = &player;
-    spawnEnemies();
+
+    if (!hasSpawnedEnemies) {
+        spawnEnemies();
+        hasSpawnedEnemies = true;
+    }
 }
 
 void Map::cleanupAndRespawn() {
@@ -324,7 +331,7 @@ Map::~Map() { std::cout << "S a apelat destructor Map \n";}
 
 sf::Vector2f Map::getPlayerWorldSpawn() const {
     auto [x, y] = playerSpawn;
-    return sf::Vector2f(x * TILE_SIZE, y * TILE_SIZE);
+    return {x * TILE_SIZE, y * TILE_SIZE};
 }
 
 bool Map::isWall(const sf::FloatRect& bounds, bool checkEntities) const {

@@ -4,11 +4,11 @@
 #include "GameExceptions.h"
 
 [[nodiscard]]int Weapon::calculateReloadAmount() const {
-    int needed = 30 - reloada;
+    const int needed = 30 - reloada;
     return std::min(needed, ammoamount);
 }
 
-void Weapon::transferAmmo(int amount) {
+void Weapon::transferAmmo(const int amount) {
     reloada += amount;
     ammoamount -= amount;
 }
@@ -68,6 +68,10 @@ bool Weapon::reload() {
     activeSounds.back().play();
 
     return true;
+}
+
+void Weapon::clearProjectiles() {
+    projectiles.clear();
 }
 
 void Weapon::update(float deltaTime, const Map& map) {

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <list>
+#include <map>
 #include <SFML/Graphics.hpp>
 #include <SFML/Audio.hpp>
 
@@ -41,6 +42,8 @@ class Game {
     sf::Clock m_playerDamageCooldown;
 
     std::list <sf::Sound> m_playingSounds;
+    std::string m_currentMapPath;
+    std::map<std::string, std::unique_ptr<Map>> m_savedMaps;
 public:
     Game();
     ~Game();

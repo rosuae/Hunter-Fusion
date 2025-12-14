@@ -5,6 +5,7 @@
 #include <utility>
 #include <fstream>
 #include <vector>
+#include <map>
 #include <list>
 #include <SFML/Graphics.hpp>
 #include <SFML/Audio.hpp>
@@ -33,6 +34,7 @@ class Map {
     std::vector<Entity*> solidEntitiesCache;
 
     int maxEnemiesAllowed = 12; // for the moment
+    bool hasSpawnedEnemies = false;
 
     void spawnEnemies();
     [[nodiscard]] std::pair<float, float> generateRandomEnemySpawn() const;

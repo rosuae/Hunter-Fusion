@@ -22,7 +22,7 @@ Player::Player(const std::string& n, sf::Texture& tex,
     std::list<sf::Sound>& activeSounds_,
     const sf::SoundBuffer& jumpSound_,
     std::unique_ptr<Weapon> startingWeapon)
-    : Entity(n, posx_, posy_, 600.0f, 2500.f, tex, 120, 120),
+    : Entity(n, posx_, posy_, 800.0f, 2500.f, tex, 120, 120),
     velocity{0.0f},
     maxJump{-1450.f},
     weapon{std::move(startingWeapon)},
@@ -250,6 +250,12 @@ void Player::reload() const {
 
 void Player::checkProjectileCollisions(const std::vector<std::unique_ptr<Entity>>& targets) const {
     weapon->handleCollisions(targets);
+}
+
+void Player::resetWeaponProjectiles() const {
+    if (weapon) {
+        weapon->clearProjectiles();
+    }
 }
 
 void Player::takeDamage(int damageAmount) {

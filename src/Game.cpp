@@ -35,9 +35,12 @@ void Game::instanceObjects() {
 
     fin.close();
 
+    std::string initialMapPath = "assets/textures/map/harta.txt";
+    m_currentMapPath = initialMapPath;
+
     auto tempMap = std::make_unique<Map>(
             "CurrentRoom",
-            "assets/textures/map/harta.txt",
+            initialMapPath,
             m_resManager,
             m_playingSounds
         );
@@ -92,23 +95,43 @@ void Game::loadLevel(const std::string& mapFile, const sf::Vector2f spawnPos) {
 }
 
 void Game::loadLevel(const std::pair<std::string, sf::Vector2f>& nextDestination) {
-    auto tempMap = std::make_unique<Map>(
-        "CurrentRoom",
-        nextDestination.first,
-        m_resManager,
-        m_playingSounds
-    );
+    std::string nextMapPath = nextDestination.first;
+    const sf::Vector2f spawnPos = nextDestination.second;
 
-    m_map = std::move(tempMap);
+    if (m_map) {
+        if (!m_currentMapPath.empty()) {
+            m_savedMaps[m_currentMapPath] = std::move(m_map);
+        }
+    }
 
     if (m_player) {
-        if (nextDestination.second.x < 0 && nextDestination.second.y < 0) {
-            m_map->initializeWithPlayer(*m_player);
+        m_player->resetWeaponProjectiles();
+    }
+    auto it = m_savedMaps.find(nextMapPath);
+
+    if (it != m_savedMaps.end()) {
+        m_map = std::move(it->second);
+        m_savedMaps.erase(it);
+    }
+    else {
+        auto tempMap = std::make_unique<Map>(
+            "CurrentRoom",
+            nextMapPath,
+            m_resManager,
+            m_playingSounds
+        );
+        m_map = std::move(tempMap);
+    }
+
+    m_currentMapPath = nextMapPath;
+
+    if (m_player) {
+        if (spawnPos.x < 0 && spawnPos.y < 0) {
+            m_map->initializeWithExistingPlayer(*m_player);
         } else {
-            m_player->spawn(nextDestination.second.x, nextDestination.second.y);
+            m_player->spawn(spawnPos.x, spawnPos.y);
             m_map->initializeWithExistingPlayer(*m_player);
         }
-
         if (m_camera) {
             m_camera->snapToPlayer();
         }

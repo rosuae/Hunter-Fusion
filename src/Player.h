@@ -122,6 +122,7 @@ public:
     void fire(const sf::Vector2f& direction);
     void reload() const;
     void checkProjectileCollisions(const std::vector<std::unique_ptr<Entity>>& targets) const;
+    void resetWeaponProjectiles() const;
 
     sf::Vector2f getWeaponTipPos() const;
     bool hitAffected() const;
