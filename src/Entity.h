@@ -7,7 +7,6 @@
 class Map;
 
 class Entity {
-    bool alive;
     virtual sf::FloatRect doGetBounds() const = 0;
     virtual void takeDamage(int damageAmount) = 0;
     virtual void doBehavior(float deltaTime, const Map& map) = 0;
@@ -15,6 +14,8 @@ class Entity {
 
 protected:
     std::string name;
+    bool alive;
+    int max_health;
     int health;
     sf::FloatRect hitbox;
     int hitboxWidth;

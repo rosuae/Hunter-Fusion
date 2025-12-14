@@ -13,7 +13,20 @@ class Map;
 class settingsMenuState;
 class Camera;
 
+enum class GameState {
+    MainMenu,
+    Playing,
+    Paused,
+    GameOver
+};
+
 class Game {
+    void renderUI(sf::RenderWindow& window);
+
+    void handleInputMenu(const sf::Event& event);
+    void handleInputPlaying(const sf::Event& event);
+    void handleInputPaused(const sf::Event& event);
+    void handleInputGameOver(const sf::Event& event);
 
     void instanceObjects();
     void loadLevel(const std::string& mapFile, sf::Vector2f spawnPos = sf::Vector2f(-1.f, -1.f));
@@ -25,18 +38,22 @@ class Game {
     void handleCollisions();
     void updateCamera(float deltaTime) const;
     void updateSounds();
+    void resetGame();
+    void respawnPlayer();
 
+    ResourceManager& m_resManager;
+    settingsMenuState settings;
+    GameState m_state = GameState::MainMenu;
+    sf::Text m_uiText;
     sf::RenderWindow m_window;
     std::unique_ptr<Camera> m_camera;
     unsigned int m_width;
     unsigned int m_height;
 
-    ResourceManager& m_resManager;
-    settingsMenuState settings;
-
     std::unique_ptr<Player> m_player;
     std::unique_ptr<Map> m_map;
-    // std::shared_ptr<Weapon> m_enemyWeapon;
+    std::string m_lastMapPath;
+    sf::Vector2f m_lastSpawnPos;
 
     sf::Clock m_clock;
     sf::Clock m_playerDamageCooldown;

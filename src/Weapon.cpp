@@ -13,11 +13,13 @@ void Weapon::transferAmmo(const int amount) {
     ammoamount -= amount;
 }
 
-Weapon::Weapon(std::string n, std::string projName, int projDmg, sf::Texture& tex, const int a, std::list<sf::Sound>& activeSounds_, const sf::SoundBuffer& shootSound_, const sf::SoundBuffer& reloadSound_):
+Weapon::Weapon(std::string n, std::string projName, const int projDmg, sf::Texture& tex, const int a, std::list<sf::Sound>& activeSounds_, const sf::SoundBuffer& shootSound_, const sf::SoundBuffer& reloadSound_):
     nume{std::move (n)},
     projectileName{std::move(projName)},
     reloada{30},
     ammoamount{a},
+    max_ammo{ammoamount},
+    current_ammo{ammoamount},
     projectileDmg{projDmg},
     firerate{0.125f},
     fireTimer{0.f},
@@ -68,6 +70,14 @@ bool Weapon::reload() {
     activeSounds.back().play();
 
     return true;
+}
+
+void Weapon::resetAmmo() {
+    reloada = magCapacity;
+    ammoamount = max_ammo;
+    current_ammo = max_ammo;
+
+    fireTimer = 0.0f;
 }
 
 void Weapon::clearProjectiles() {

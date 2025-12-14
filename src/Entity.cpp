@@ -4,9 +4,10 @@
 
 Entity::Entity(std::string n, const float x, const float y, const float spd, const float grav, sf::Texture& tex, const int w, const int h)
     :
-    alive{true},
     name{std::move(n)},
-    health{100},
+    alive{true},
+    max_health{100},
+    health{max_health},
     hitboxWidth{w},
     hitboxHeight{h},
     posX{x},
@@ -22,8 +23,9 @@ Entity::~Entity() {
 }
 
 Entity::Entity (const Entity& other):
-alive{other.alive},
 name{other.name},
+alive{other.alive},
+max_health{other.max_health},
 health{other.health},
 hitboxWidth{other.hitboxWidth},
 hitboxHeight{other.hitboxHeight},
@@ -65,7 +67,7 @@ void Entity::draw(sf::RenderWindow& window) const {
     window.draw(sprite);
 }
 
-void Entity::behavior(float deltaTime, const Map &map) {
+void Entity::behavior(const float deltaTime, const Map &map) {
     if (!alive) return;
 
     doBehavior(deltaTime, map);
@@ -73,7 +75,7 @@ void Entity::behavior(float deltaTime, const Map &map) {
     checkDeath();
 }
 
-void Entity::tryHit(int damageAmount) {
+void Entity::tryHit(const int damageAmount) {
     if (!alive) return;
 
     takeDamage(damageAmount);

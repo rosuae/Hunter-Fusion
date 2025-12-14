@@ -118,6 +118,7 @@ public:
     ~Player() override;
 
     void spawn(float x, float y);
+    void resurrect();
     void draw(sf::RenderWindow& window) const override;
     void fire(const sf::Vector2f& direction);
     void reload() const;

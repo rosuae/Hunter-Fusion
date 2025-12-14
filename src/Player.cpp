@@ -160,6 +160,30 @@ void Player::spawn(const float x, const float y) {
     updateHitbox();
 }
 
+void Player::resurrect() {
+    health = max_health;
+    alive = true;
+    isHit = false;
+
+    velocity = 0.0f;
+    isJumping = false;
+    isRunning = false;
+
+    damageEffectTimer = 0.0f;
+    damageOverlay.setFillColor(sf::Color::Transparent);
+
+    if (weapon) {
+        weapon->clearProjectiles();
+        weapon->resetAmmo();
+    }
+
+    currentFrame = 0;
+    animationTimer = 0.0f;
+    facingRight = true;
+    updateSpriteDirection();
+    updateHitbox();
+}
+
 void Player::updateAnimation(float deltaTime) {
     if (shootingTimer > 0.0f) {
         shootingTimer -= deltaTime;
@@ -296,9 +320,9 @@ void Player::draw(sf::RenderWindow &window) const {
 }
 
 sf::Vector2f Player::getWeaponTipPos() const {
-    const float offsetX = facingRight ? (facingUp ? 10.f : frameSize.x * 0.25f)
-                              : (facingUp ? -10.f : -frameSize.x * 0.3f);
-    const float offsetY = facingUp ? -(frameSize.y * 0.9f) : -(frameSize.y * 0.5f);
+    const float offsetX = facingRight ? (facingUp ? 10.f : static_cast<float>(frameSize.x) * 0.25f)
+                              : (facingUp ? -10.f : -static_cast<float>(frameSize.x) * 0.3f);
+    const float offsetY = facingUp ? -(static_cast<float>(frameSize.y) * 0.9f) : -(static_cast<float>(frameSize.y) * 0.5f);
     return {posX + offsetX, posY + offsetY};
 }
 

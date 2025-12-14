@@ -66,6 +66,8 @@ void Game::instanceObjects() {
 
     m_camera = std::make_unique<Camera>(m_width, m_height, *m_player, m_resManager);
     m_camera->snapToPlayer();
+    m_lastMapPath = initialMapPath;
+    m_lastSpawnPos = spawnPos;
 }
 
 void Game::loadLevel(const std::string& mapFile, const sf::Vector2f spawnPos) {
@@ -141,9 +143,10 @@ void Game::loadLevel(const std::pair<std::string, sf::Vector2f>& nextDestination
 }
 
 Game::Game() :
+    m_resManager{ResourceManager::Instance()},
+    m_uiText{m_resManager.getFont("Metroid-Fusion.ttf")},
     m_width{},
-    m_height{},
-    m_resManager{ResourceManager::Instance()} {
+    m_height{} {
     settings.SetSettingsLauncher();
     m_width = settings.GetResolution().x;
     m_height = settings.GetResolution().y;
@@ -160,12 +163,20 @@ Game::~Game() {
 
 void Game::run() {
     instanceObjects();
+    m_state = GameState::MainMenu;
+
     m_clock.restart();
     while (m_window.isOpen()) {
         float deltaTime = m_clock.restart().asSeconds();
         if (deltaTime > 0.1f) deltaTime = 0.1f;
         handleEvents();
-        update(deltaTime);
+        if (m_state == GameState::Playing) {
+            update(deltaTime);
+
+            if (m_player && !m_player->isAlive()) {
+                m_state = GameState::GameOver;
+            }
+        }
         render();
     }
 }
@@ -175,39 +186,82 @@ void Game::handleEvents() {
         if (event->is<sf::Event::Closed>()) {
             m_window.close();
         }
+        switch (m_state) {
+            case GameState::MainMenu:handleInputMenu(*event); break;
+            case GameState::Playing:handleInputPlaying(*event); break;
+            case GameState::Paused:handleInputPaused(*event); break;
+            case GameState::GameOver:handleInputGameOver(*event); break;
+        }
+    }
+}
 
-        if (const auto* keyPress = event->getIf<sf::Event::KeyPressed>()) {
-            if (keyPress->scancode == sf::Keyboard::Scancode::Escape) {
-                m_window.close();
-            }
-            else if (keyPress->scancode == sf::Keyboard::Scancode::R) {
-                try {
-                    m_player->reload();
-                }
-                catch (const InvalidActionException& e) {
-                    std::cout << e.what() << std::endl;
-                }
-            }
+void Game::handleInputMenu(const sf::Event& event) {
+    if (const auto* keyPress = event.getIf<sf::Event::KeyPressed>()) {
+        if (keyPress->scancode == sf::Keyboard::Scancode::Enter) {
+            m_state = GameState::Playing;
+            m_clock.restart();
+        }
+        else if (keyPress->scancode == sf::Keyboard::Scancode::Escape) {
+            m_window.close();
+        }
+    }
+}
 
-            sf::Vector2f shootDirection;
-            bool isShooting = false;
+void Game::handleInputPlaying(const sf::Event &event) {
+    if (const auto* keyPress = event.getIf<sf::Event::KeyPressed>()) {
+        if (keyPress->scancode == sf::Keyboard::Scancode::Escape) {
+            m_state = GameState::Paused;
+        }
+        else if (keyPress->scancode == sf::Keyboard::Scancode::R) {
+            try {
+                m_player->reload();
+            }
+            catch (const InvalidActionException& e) {
+                std::cout << e.what() << std::endl;
+            }
+        }
 
-            if (keyPress->scancode == sf::Keyboard::Scancode::Left) {
-                shootDirection = sf::Vector2f(-1.f, 0.f);
-                isShooting = true;
-            }
-            else if (keyPress->scancode == sf::Keyboard::Scancode::Right) {
-                shootDirection = sf::Vector2f(1.f, 0.f);
-                isShooting = true;
-            }
-            else if (keyPress->scancode == sf::Keyboard::Scancode::Up) {
-                shootDirection = sf::Vector2f(0.f, -1.f);
-                isShooting = true;
-            }
+        sf::Vector2f shootDirection;
+        bool isShooting = false;
 
-            if (isShooting) {
-                m_player->fire(shootDirection);
-            }
+        if (keyPress->scancode == sf::Keyboard::Scancode::Left) {
+            shootDirection = sf::Vector2f(-1.f, 0.f);
+            isShooting = true;
+        }
+        else if (keyPress->scancode == sf::Keyboard::Scancode::Right) {
+            shootDirection = sf::Vector2f(1.f, 0.f);
+            isShooting = true;
+        }
+        else if (keyPress->scancode == sf::Keyboard::Scancode::Up) {
+            shootDirection = sf::Vector2f(0.f, -1.f);
+            isShooting = true;
+        }
+
+        if (isShooting) {
+            m_player->fire(shootDirection);
+        }
+    }
+}
+
+void Game::handleInputPaused(const sf::Event& event) {
+    if (const auto* keyPress = event.getIf<sf::Event::KeyPressed>()) {
+        if (keyPress->scancode == sf::Keyboard::Scancode::Escape) {
+            m_state = GameState::Playing;
+            m_clock.restart();
+        }
+        else if (keyPress->scancode == sf::Keyboard::Scancode::M) {
+            m_state = GameState::MainMenu;
+        }
+    }
+}
+
+void Game::handleInputGameOver(const sf::Event& event) {
+    if (const auto* keyPress = event.getIf<sf::Event::KeyPressed>()) {
+        if (keyPress->scancode == sf::Keyboard::Scancode::R) {
+            respawnPlayer();
+        }
+        else if (keyPress->scancode == sf::Keyboard::Scancode::Escape) {
+            m_state = GameState::MainMenu;
         }
     }
 }
@@ -249,20 +303,75 @@ void Game::updateSounds() {
     });
 }
 
-void Game::render() {
-    m_window.clear(sf::Color::Transparent);
+void Game::respawnPlayer() {
+    loadLevel({m_lastMapPath, m_lastSpawnPos});
 
-    if (!m_map || !m_player) {
-        m_window.display();
-        return;
+    if (m_player) {
+        m_player->resurrect();
     }
 
-    m_camera->prepareScene(m_window);
-    m_map->drawMap(m_window);
-    m_player->draw(m_window);
-    m_map->drawEntities(m_window);
-    m_camera->drawHud(m_window);
+    m_state = GameState::Playing;
+    m_clock.restart();
+}
+
+void Game::render() {
+    m_window.clear(sf::Color::Black);
+
+    if (m_state != GameState::MainMenu) {
+        if (m_map && m_player) {
+            m_camera->prepareScene(m_window);
+            m_map->drawMap(m_window);
+            m_player->draw(m_window);
+            m_map->drawEntities(m_window);
+            m_camera->drawHud(m_window);
+        }
+    }
+    m_window.setView(m_window.getDefaultView());
+    renderUI(m_window);
+
     m_window.display();
+}
+
+void Game::renderUI(sf::RenderWindow& window) {
+    if (m_state == GameState::Playing)
+        return;
+
+    m_uiText.setString("");
+
+    sf::RectangleShape overlay(sf::Vector2f(static_cast<float>(m_width), static_cast<float>(m_height)));
+
+
+    if (m_state == GameState::MainMenu) {
+        m_uiText.setString("HUNTER FUSION\n\nStart - ENTER\nQuit - ESCAPE");
+        m_uiText.setCharacterSize(40);
+        m_uiText.setFillColor(sf::Color::White);
+    }
+    else if (m_state == GameState::Paused) {
+        overlay.setFillColor(sf::Color(0, 0, 0, 150));
+        window.draw(overlay);
+
+        m_uiText.setString("PAUSED\n\nResume - ESCAPE\nMain Menu - M");
+    }
+    else if (m_state == GameState::GameOver) {
+        overlay.setFillColor(sf::Color(150, 0, 0, 100));
+        window.draw(overlay);
+
+        m_uiText.setString("YOU DIED\n\nRetry - R\nMain Menu - Escape");
+    }
+
+    if (m_uiText.getString().getSize() > 0) {
+        const sf::FloatRect textRect = m_uiText.getLocalBounds();
+        m_uiText.setOrigin({
+            textRect.position.x + textRect.size.x / 2.0f,
+            textRect.position.y + textRect.size.y / 2.0f
+        });
+        m_uiText.setPosition(sf::Vector2f(
+            static_cast<float>(m_width) / 2.0f,
+            static_cast<float>(m_height) / 2.0f
+        ));
+
+        window.draw(m_uiText);
+    }
 }
 
 int Game::generateRandomInt(const int min, const int max) {

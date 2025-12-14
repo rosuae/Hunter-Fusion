@@ -17,8 +17,11 @@ class Entity;
 class Weapon {
     std::string nume;
     std::string projectileName;
+    const int magCapacity = 30;
     int reloada;
     int ammoamount;
+    int max_ammo;
+    int current_ammo;
     int projectileDmg;
     float firerate;
     float fireTimer;
@@ -35,34 +38,39 @@ class Weapon {
 public:
     Weapon(std::string n, std::string projName, int projDmg, sf::Texture& tex, int a, std::list<sf::Sound>& activeSounds_, const sf::SoundBuffer& shootSound_, const sf::SoundBuffer& reloadSound_);
 
-    Weapon(const Weapon &other)
-        : nume(other.nume),
-          projectileName(other.projectileName),
-          reloada(other.reloada),
-          ammoamount(other.ammoamount),
-          projectileDmg(other.projectileDmg),
-          firerate(other.firerate),
-          fireTimer(other.fireTimer),
-          projectiles(other.projectiles),
-          projectileTex(other.projectileTex),
-          activeSounds(other.activeSounds),
-          shootSound(other.shootSound),
-          reloadSound(other.reloadSound) {
+    Weapon(const Weapon &other) :
+    nume(other.nume),
+    projectileName(other.projectileName),
+    reloada(other.reloada),
+    ammoamount(other.ammoamount),
+    max_ammo(other.max_ammo),
+    current_ammo(other.current_ammo),
+    projectileDmg(other.projectileDmg),
+    firerate(other.firerate),
+    fireTimer(other.fireTimer),
+    projectiles(other.projectiles),
+    projectileTex(other.projectileTex),
+    activeSounds(other.activeSounds),
+    shootSound(other.shootSound),
+    reloadSound(other.reloadSound) {
+        std::cout << "Weapon CC";
     }
 
-    Weapon(Weapon &&other) noexcept
-        : nume(std::move(other.nume)),
-          projectileName(std::move(other.projectileName)),
-          reloada(other.reloada),
-          ammoamount(other.ammoamount),
-          projectileDmg(other.projectileDmg),
-          firerate(other.firerate),
-          fireTimer(other.fireTimer),
-          projectiles(std::move(other.projectiles)),
-          projectileTex(other.projectileTex),
-          activeSounds(other.activeSounds),
-          shootSound(std::move(other.shootSound)),
-          reloadSound(std::move(other.reloadSound)) {
+    Weapon(Weapon &&other) noexcept :
+    nume(std::move(other.nume)),
+    projectileName(std::move(other.projectileName)),
+    reloada(other.reloada),
+    ammoamount(other.ammoamount),
+    max_ammo(other.max_ammo),
+    current_ammo(other.current_ammo),
+    projectileDmg(other.projectileDmg),
+    firerate(other.firerate),
+    fireTimer(other.fireTimer),
+    projectiles(std::move(other.projectiles)),
+    projectileTex(other.projectileTex),
+    activeSounds(other.activeSounds),
+    shootSound(other.shootSound),
+    reloadSound(other.reloadSound) {
     }
 
     Weapon& operator=(const Weapon& other) {
@@ -85,6 +93,7 @@ public:
     bool fire(const Player& player, sf::Vector2f direction);
     bool reload();
 
+    void resetAmmo();
     void clearProjectiles();
     void update(float deltaTime, const Map& map);
     void draw(sf::RenderWindow& window) const;

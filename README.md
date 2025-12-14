@@ -31,9 +31,7 @@ Gameplay-ul se bazează pe controlul unui personaj care poate merge, sări, trag
 - More enemies + Bosses
 - PowerUps + Ammo and Health Drops
 - More types of ammo
-- Main menu screen + pause screen
 - Option to change the game volume
-- Ability to restart on the last room the player died in
 - Mini map
 - Change camera movement behavior
 - Ability to change player look
