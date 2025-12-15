@@ -122,7 +122,6 @@ public:
 
     ~Weapon();
 
-    [[nodiscard]]bool isReloading() const { return state == WeaponState::Reloading; }
     [[nodiscard]]int getAmmoInClip() const { return reloada; }
     [[nodiscard]]int getTotalAmmo() const { return ammoAmount; }
 };
