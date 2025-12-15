@@ -76,8 +76,8 @@ add_executable(${MAIN_EXECUTABLE_NAME}
         src/Entity.h
         src/GameExceptions.cpp
         src/GameExceptions.h
-        src/gameState.cpp
-        src/gameState.h
+        src/State.cpp
+        src/State.h
         src/settingsMenuState.cpp
         src/settingsMenuState.h
         src/Hud.cpp

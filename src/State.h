@@ -1,24 +1,43 @@
 #pragma once
 
-#include <SFML/Graphics.hpp>
-#include <SFML/Audio.hpp>
-
-class gameState {
-public:
-
-    gameState() :
-    soundbuffer{"assets/sound/reload.wav"},
-    sound{soundbuffer}
-    {}
-
-    virtual ~gameState() = default;
-
-    virtual void handleEvents() = 0;
-    virtual void update() = 0;
-    virtual void draw() = 0;
-
-protected:
-
-    sf::SoundBuffer soundbuffer;
-    sf::Sound sound;
-};
+//
+// #include <SFML/Graphics.hpp>
+// class Game;
+//
+// class State {
+// protected:
+//     Game* m_game;
+//
+// public:
+//     explicit State(Game* game) : m_game(game) {}
+//     virtual ~State() = default;
+//
+//     void init() {
+//         initImpl();
+//     }
+//
+//     void handleInput(const sf::Event& event) {
+//         inputImpl(event);
+//     }
+//
+//     void update(const float deltaTime) {
+//         updateImpl(deltaTime);
+//     }
+//
+//     void draw(const float deltaTime) {
+//         drawImpl(deltaTime);
+//     }
+//
+//     void pause() { pauseImpl(); }
+//     void resume() { resumeImpl(); }
+//
+// private:
+//
+//     virtual void initImpl() = 0;
+//     virtual void inputImpl(const sf::Event& event) = 0;
+//     virtual void updateImpl(float deltaTime) = 0;
+//     virtual void drawImpl(float deltaTime) = 0;
+//
+//     virtual void pauseImpl() {}
+//     virtual void resumeImpl() {}
+// };
