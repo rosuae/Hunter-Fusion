@@ -32,8 +32,6 @@ Gameplay-ul se bazează pe controlul unui personaj care poate merge, sări, trag
 - PowerUps + Ammo and Health Drops
 - More types of ammo
 - Option to change the game volume
-- Mini map
-- Change camera movement behavior
 - Ability to change player look
 
 ## Known Bugs:

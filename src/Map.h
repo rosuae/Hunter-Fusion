@@ -58,6 +58,7 @@ public:
     void spawnAdditionalEnemies(int count);
     void spawnEntityAt(std::unique_ptr<Entity> entity);
 
+    const std::vector<std::string>& getLayout() const { return mapLayout; }
     std::optional<std::pair<std::string, sf::Vector2f>> tryTeleport(const sf::FloatRect& playerBounds) const;
 
     [[nodiscard]] sf::Vector2f getPlayerWorldSpawn() const;

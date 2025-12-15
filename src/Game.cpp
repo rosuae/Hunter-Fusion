@@ -66,6 +66,11 @@ void Game::instanceObjects() {
 
     m_camera = std::make_unique<Camera>(m_width, m_height, *m_player, m_resManager);
     m_camera->snapToPlayer();
+
+    if (m_map) {
+        m_camera->updateMinimap(m_map->getLayout());
+    }
+
     m_lastMapPath = initialMapPath;
     m_lastSpawnPos = spawnPos;
 }
@@ -126,6 +131,10 @@ void Game::loadLevel(const std::pair<std::string, sf::Vector2f>& nextDestination
     }
 
     m_currentMapPath = nextMapPath;
+
+    if (m_camera && m_map) {
+        m_camera->updateMinimap(m_map->getLayout());
+    }
 
     if (m_player) {
         if (spawnPos.x < 0 && spawnPos.y < 0) {
