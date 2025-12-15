@@ -87,13 +87,13 @@ void Hud::setMapData(const std::vector<std::string> &mapLayout) {
                 const float posY = static_cast<float>(y) * m_minimapTileSize;
 
                 constexpr auto color = sf::Color(200, 200, 200, 200);
-                m_minimapGrid.append(sf::Vertex(sf::Vector2f(posX, posY), color));
-                m_minimapGrid.append(sf::Vertex(sf::Vector2f(posX + m_minimapTileSize, posY), color));
-                m_minimapGrid.append(sf::Vertex(sf::Vector2f(posX, posY + m_minimapTileSize), color));
+                m_minimapGrid.append(sf::Vertex{sf::Vector2f(posX, posY), color});
+                m_minimapGrid.append(sf::Vertex{sf::Vector2f(posX + m_minimapTileSize, posY), color});
+                m_minimapGrid.append(sf::Vertex{sf::Vector2f(posX, posY + m_minimapTileSize), color});
 
-                m_minimapGrid.append(sf::Vertex(sf::Vector2f(posX + m_minimapTileSize, posY), color));
-                m_minimapGrid.append(sf::Vertex(sf::Vector2f(posX + m_minimapTileSize, posY + m_minimapTileSize), color));
-                m_minimapGrid.append(sf::Vertex(sf::Vector2f(posX, posY + m_minimapTileSize), color));
+                m_minimapGrid.append(sf::Vertex{sf::Vector2f(posX + m_minimapTileSize, posY), color});
+                m_minimapGrid.append(sf::Vertex{sf::Vector2f(posX + m_minimapTileSize, posY + m_minimapTileSize), color});
+                m_minimapGrid.append(sf::Vertex{sf::Vector2f(posX, posY + m_minimapTileSize), color});
             }
         }
     }
