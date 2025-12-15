@@ -124,7 +124,6 @@ public:
     void resurrect();
     void draw(sf::RenderWindow& window) const override;
     void fire(const sf::Vector2f& direction);
-    void reload() const;
     void checkProjectileCollisions(const std::vector<std::unique_ptr<Entity>>& targets) const;
     void resetWeaponProjectiles() const;
 

@@ -299,10 +299,6 @@ void Player::fire(const sf::Vector2f& direction) {
     }
 }
 
-void Player::reload() const {
-    weapon->tryReload();
-}
-
 void Player::checkProjectileCollisions(const std::vector<std::unique_ptr<Entity>>& targets) const {
     weapon->handleCollisions(targets);
 }
