@@ -66,10 +66,7 @@ void Game::instanceObjects() {
 
     m_camera = std::make_unique<Camera>(m_width, m_height, *m_player, m_resManager);
     m_camera->snapToPlayer();
-
-    if (m_map) {
-        m_camera->updateMinimap(m_map->getLayout());
-    }
+    m_camera->updateMinimap(m_map->getLayout());
 
     m_lastMapPath = initialMapPath;
     m_lastSpawnPos = spawnPos;
