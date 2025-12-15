@@ -12,13 +12,13 @@ void Player::updateSpriteDirection() {
         sprite.setScale(sf::Vector2f(-1.f, 1.f));
 }
 
-void Player::applyGravity(float deltaTime) {
+void Player::applyGravity(const float deltaTime) {
     velocity += gravity * deltaTime;
     posY += velocity * deltaTime;
 }
 
 Player::Player(const std::string& n, sf::Texture& tex,
-    float posx_, float posy_,
+    const float posx_, const float posy_,
     std::list<sf::Sound>& activeSounds_,
     const sf::SoundBuffer& jumpSound_,
     std::unique_ptr<Weapon> startingWeapon)
@@ -35,6 +35,7 @@ Player::Player(const std::string& n, sf::Texture& tex,
     facingRight{true},
     facingUp{false},
     isHit{false},
+    wasRPressedLastFrame{false},
     frameSize{sf::Vector2i(224, 222)},
     currentFrame{0},
     animationRow{0},
@@ -64,7 +65,7 @@ Player::~Player() {
     std::cout << "S a apelat destructor Player \n";
 }
 
-void Player::doBehavior(float deltaTime, const Map& map) {
+void Player::doBehavior(const float deltaTime, const Map& map) {
     handleInput(deltaTime, map);
 
     const float lastPosY = posY;
@@ -93,14 +94,14 @@ void Player::doBehavior(float deltaTime, const Map& map) {
     updateDamageEffect(deltaTime);
 }
 
-void Player::handleInput(float deltaTime, const Map& map) {
+void Player::handleInput(const float deltaTime, const Map& map) {
     if ((sf::Keyboard::isKeyPressed(sf::Keyboard::Key::W) ||
          sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Space)) && !isJumping) {
         try {
-            float testFeetX = posX - static_cast<float>(hitboxWidth) / 2.0f + 10.f;
-            float testFeetY = posY;
+            const float testFeetX = posX - static_cast<float>(hitboxWidth) / 2.0f + 10.f;
+            const float testFeetY = posY;
 
-            sf::FloatRect groundCheck(
+            const sf::FloatRect groundCheck(
                 sf::Vector2f(testFeetX, testFeetY),
                 sf::Vector2f(static_cast<float>(hitboxWidth) - 20.f, 10.f)
             );
@@ -120,9 +121,9 @@ void Player::handleInput(float deltaTime, const Map& map) {
         }
     }
 
-    float lastPosX = posX;
-    bool movedLeft = sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A);
-    bool movedRight = sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D);
+    const float lastPosX = posX;
+    const bool movedLeft = sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A);
+    const bool movedRight = sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D);
 
     isRunning = false;
 
@@ -148,6 +149,32 @@ void Player::handleInput(float deltaTime, const Map& map) {
             updateHitbox();
         }
     }
+
+    sf::Vector2f shootDirection;
+    bool wantsToShoot = false;
+
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Left)) {
+        shootDirection = sf::Vector2f(-1.f, 0.f);
+        wantsToShoot = true;
+    }
+    else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Right)) {
+        shootDirection = sf::Vector2f(1.f, 0.f);
+        wantsToShoot = true;
+    }
+    else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Up)) {
+        shootDirection = sf::Vector2f(0.f, -1.f);
+        wantsToShoot = true;
+    }
+
+    if (wantsToShoot) {
+        fire(shootDirection);
+    }
+
+    const bool isRPressed = sf::Keyboard::isKeyPressed(sf::Keyboard::Key::R);
+    if (isRPressed && !wasRPressedLastFrame) {
+        weapon->tryReload();
+    }
+    wasRPressedLastFrame = isRPressed;
 }
 
 void Player::spawn(const float x, const float y) {
@@ -184,17 +211,17 @@ void Player::resurrect() {
     updateHitbox();
 }
 
-void Player::updateAnimation(float deltaTime) {
+void Player::updateAnimation(const float deltaTime) {
     if (shootingTimer > 0.0f) {
         shootingTimer -= deltaTime;
     }
     if (isJumping) {
         animationFrameCount = 3;
         if (shootingTimer > 0.0f) {
-            int col = 2;
-            int row = facingUp ? 2 : 1;
-            int rectLeft = col * frameSize.x;
-            int rectTop = row * frameSize.y;
+            constexpr int col = 2;
+            const int row = facingUp ? 2 : 1;
+            const int rectLeft = col * frameSize.x;
+            const int rectTop = row * frameSize.y;
             sprite.setTextureRect(sf::IntRect(sf::Vector2i(rectLeft, rectTop), frameSize));
             return;
         }
@@ -209,11 +236,11 @@ void Player::updateAnimation(float deltaTime) {
             currentFrame = 0;
         }
 
-        int col = 5;
-        int row = currentFrame;
+        constexpr int col = 5;
+        const int row = currentFrame;
 
-        int rectLeft = col * frameSize.x;
-        int rectTop = row * frameSize.y;
+        const int rectLeft = col * frameSize.x;
+        const int rectTop = row * frameSize.y;
         sprite.setTextureRect(sf::IntRect(sf::Vector2i(rectLeft, rectTop), frameSize));
         return;
     }
@@ -240,36 +267,40 @@ void Player::updateAnimation(float deltaTime) {
         animationTimer = frameDuration;
     }
 
-    int col = animationStartIndex + currentFrame;
-    int row = animationRow;
+    const int col = animationStartIndex + currentFrame;
+    const int row = animationRow;
 
-    int rectLeft = col * frameSize.x;
-    int rectTop = row * frameSize.y;
+    const int rectLeft = col * frameSize.x;
+    const int rectTop = row * frameSize.y;
 
     sprite.setTextureRect(sf::IntRect(sf::Vector2i(rectLeft, rectTop), frameSize));
 
-    float originBaseY = static_cast<float>(frameSize.y) - 7.f;
-    float originBaseX = static_cast<float>(frameSize.x) / 2.f;
+    const float originBaseY = static_cast<float>(frameSize.y) - 7.f;
+    const float originBaseX = static_cast<float>(frameSize.x) / 2.f;
 
-    float yOffset = animationRow == 1 ? 2.5f : animationRow == 2 ? 4.5f : 0.f;
+    const float yOffset = animationRow == 1 ? 2.5f : animationRow == 2 ? 4.5f : 0.f;
     sprite.setOrigin(sf::Vector2f(originBaseX, originBaseY + yOffset));
 }
 
 void Player::fire(const sf::Vector2f& direction) {
-    if (weapon->fire(*this, direction)) {
-        shootingTimer = shootingDuration;
-
-        if (direction.y < 0) facingUp = true;
-        else {
-            facingUp = false;
+    if (direction.y < 0) {
+        facingUp = true;
+    }
+    else {
+        facingUp = false;
+        if (direction.x != 0) {
             facingRight = (direction.x > 0);
-            updateSpriteDirection();
         }
+    }
+    updateSpriteDirection();
+
+    if (weapon->tryFire(*this, direction)) {
+        shootingTimer = shootingDuration;
     }
 }
 
 void Player::reload() const {
-    weapon->reload();
+    weapon->tryReload();
 }
 
 void Player::checkProjectileCollisions(const std::vector<std::unique_ptr<Entity>>& targets) const {
@@ -282,14 +313,14 @@ void Player::resetWeaponProjectiles() const {
     }
 }
 
-void Player::takeDamage(int damageAmount) {
+void Player::takeDamage(const int damageAmount) {
     health -= damageAmount;
     isHit = true;
     damageEffectTimer = 0.3f;
     damageOverlay.setFillColor(sf::Color(255, 0, 0, 150));
 }
 
-void Player::updateDamageEffect(float deltaTime) {
+void Player::updateDamageEffect(const float deltaTime) {
     if (damageEffectTimer > 0.0f) {
         damageEffectTimer -= deltaTime;
 
@@ -311,7 +342,7 @@ void Player::draw(sf::RenderWindow &window) const {
         weapon->draw(window);
         window.draw(sprite);
         if (damageOverlay.getFillColor().a > 0) {
-            sf::View currentView = window.getView();
+            const sf::View currentView = window.getView();
             window.setView(window.getDefaultView());
             window.draw(damageOverlay);
             window.setView(currentView);
@@ -332,8 +363,4 @@ sf::FloatRect Player::doGetBounds() const {
 
 bool Player::hitAffected() const {
     return isHit;
-}
-
-bool Player::canAttack() const {
-    return !isJumping || velocity > 0;
 }

@@ -212,34 +212,6 @@ void Game::handleInputPlaying(const sf::Event &event) {
         if (keyPress->scancode == sf::Keyboard::Scancode::Escape) {
             m_state = GameState::Paused;
         }
-        else if (keyPress->scancode == sf::Keyboard::Scancode::R) {
-            try {
-                m_player->reload();
-            }
-            catch (const InvalidActionException& e) {
-                std::cout << e.what() << std::endl;
-            }
-        }
-
-        sf::Vector2f shootDirection;
-        bool isShooting = false;
-
-        if (keyPress->scancode == sf::Keyboard::Scancode::Left) {
-            shootDirection = sf::Vector2f(-1.f, 0.f);
-            isShooting = true;
-        }
-        else if (keyPress->scancode == sf::Keyboard::Scancode::Right) {
-            shootDirection = sf::Vector2f(1.f, 0.f);
-            isShooting = true;
-        }
-        else if (keyPress->scancode == sf::Keyboard::Scancode::Up) {
-            shootDirection = sf::Vector2f(0.f, -1.f);
-            isShooting = true;
-        }
-
-        if (isShooting) {
-            m_player->fire(shootDirection);
-        }
     }
 }
 
@@ -266,7 +238,7 @@ void Game::handleInputGameOver(const sf::Event& event) {
     }
 }
 
-void Game::update(float deltaTime) {
+void Game::update(const float deltaTime) {
     m_player->behavior(deltaTime, *m_map);
     m_map->updateEntities(deltaTime);
 
@@ -292,7 +264,7 @@ void Game::handleCollisions() {
     m_map->cleanupAndRespawn();
 }
 
-void Game::updateCamera(float deltaTime) const {
+void Game::updateCamera(const float deltaTime) const {
     if (!m_player) return;
     m_camera->followPlayer(deltaTime);
 }

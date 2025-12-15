@@ -53,7 +53,7 @@ public:
 
     Enemy& operator=(const Enemy& other) {
         if (this != &other){
-            auto copie = other.clone();
+            const auto copie = other.clone();
             using std::swap;
             swap(*this, *copie);
             std::cout << "Copy and swap\n";

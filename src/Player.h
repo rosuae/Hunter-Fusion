@@ -28,6 +28,7 @@ class Player : public Entity {
     bool facingRight;
     bool facingUp;
     bool isHit;
+    bool wasRPressedLastFrame;
 
     sf::Vector2i frameSize;
     int currentFrame;
@@ -57,7 +58,7 @@ public:
 
     Player& operator=(const Player& other) {
         if (this != &other){
-            auto copie = other.clone();
+            const auto copie = other.clone();
             using std::swap;
             swap(*this, *copie);
             std::cout << "Copy and swap\n";
@@ -65,28 +66,29 @@ public:
         return *this;
     }
 
-    Player(const Player &other)
-        : Entity(other),
-          velocity(other.velocity),
-          maxJump(other.maxJump),
-          weapon(other.weapon ? other.weapon->clone() : nullptr),
-          animationTimer(other.animationTimer),
-          frameDuration(other.frameDuration),
-          shootingTimer(other.shootingTimer),
-          damageEffectTimer(other.damageEffectTimer),
-          isRunning(other.isRunning),
-          isJumping(other.isJumping),
-          facingRight(other.facingRight),
-          facingUp(other.facingUp),
-          isHit(other.isHit),
-          frameSize(other.frameSize),
-          currentFrame(other.currentFrame),
-          animationRow(other.animationRow),
-          animationStartIndex(other.animationStartIndex),
-          animationFrameCount(other.animationFrameCount),
-          damageOverlay(other.damageOverlay),
-          activeSounds(other.activeSounds),
-          jumpSound(other.jumpSound) {
+    Player(const Player &other) :
+    Entity(other),
+    velocity(other.velocity),
+    maxJump(other.maxJump),
+    weapon(other.weapon ? other.weapon->clone() : nullptr),
+    animationTimer(other.animationTimer),
+    frameDuration(other.frameDuration),
+    shootingTimer(other.shootingTimer),
+    damageEffectTimer(other.damageEffectTimer),
+    isRunning(other.isRunning),
+    isJumping(other.isJumping),
+    facingRight(other.facingRight),
+    facingUp(other.facingUp),
+    isHit(other.isHit),
+    wasRPressedLastFrame(other.wasRPressedLastFrame),
+    frameSize(other.frameSize),
+    currentFrame(other.currentFrame),
+    animationRow(other.animationRow),
+    animationStartIndex(other.animationStartIndex),
+    animationFrameCount(other.animationFrameCount),
+    damageOverlay(other.damageOverlay),
+    activeSounds(other.activeSounds),
+    jumpSound(other.jumpSound) {
     }
 
     friend void swap(Player &lhs, Player &rhs) noexcept {
@@ -104,6 +106,7 @@ public:
         swap(lhs.facingRight, rhs.facingRight);
         swap(lhs.facingUp, rhs.facingUp);
         swap(lhs.isHit, rhs.isHit);
+        swap(lhs.wasRPressedLastFrame, rhs.wasRPressedLastFrame);
         swap(lhs.frameSize, rhs.frameSize);
         swap(lhs.currentFrame, rhs.currentFrame);
         swap(lhs.animationRow, rhs.animationRow);
@@ -129,7 +132,6 @@ public:
     bool hitAffected() const;
     [[nodiscard]]int getHealth() const { return health; }
     [[nodiscard]]const Weapon* getWeapon() const { return weapon.get(); }
-    [[nodiscard]]bool canAttack() const;
 };
 
 #endif

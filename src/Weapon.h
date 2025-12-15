@@ -14,17 +14,31 @@ class Map;
 class Player;
 class Entity;
 
+enum class WeaponState {
+    Ready,
+    Cooldown,
+    Reloading,
+    Empty
+};
+
 class Weapon {
+    WeaponState state;
+
     std::string nume;
     std::string projectileName;
+
     const int magCapacity = 30;
     int reloada;
-    int ammoamount;
+    int ammoAmount;
     int max_ammo;
     int current_ammo;
+
     int projectileDmg;
-    float firerate;
+    float fireRate;
     float fireTimer;
+
+    float reloadDuration;
+    float reloadTimer;
 
     std::vector<Projectile> projectiles;
     sf::Texture* projectileTex;
@@ -32,6 +46,7 @@ class Weapon {
     std::list<sf::Sound>& activeSounds;
     sf::Sound shootSound, reloadSound;
 
+    void finishReload();
     [[nodiscard]]int calculateReloadAmount() const;
     void transferAmmo(int amount);
 
@@ -39,15 +54,18 @@ public:
     Weapon(std::string n, std::string projName, int projDmg, sf::Texture& tex, int a, std::list<sf::Sound>& activeSounds_, const sf::SoundBuffer& shootSound_, const sf::SoundBuffer& reloadSound_);
 
     Weapon(const Weapon &other) :
+    state(other.state),
     nume(other.nume),
     projectileName(other.projectileName),
     reloada(other.reloada),
-    ammoamount(other.ammoamount),
+    ammoAmount(other.ammoAmount),
     max_ammo(other.max_ammo),
     current_ammo(other.current_ammo),
     projectileDmg(other.projectileDmg),
-    firerate(other.firerate),
+    fireRate(other.fireRate),
     fireTimer(other.fireTimer),
+    reloadDuration(other.reloadDuration),
+    reloadTimer(other.reloadTimer),
     projectiles(other.projectiles),
     projectileTex(other.projectileTex),
     activeSounds(other.activeSounds),
@@ -57,15 +75,18 @@ public:
     }
 
     Weapon(Weapon &&other) noexcept :
+    state(other.state),
     nume(std::move(other.nume)),
     projectileName(std::move(other.projectileName)),
     reloada(other.reloada),
-    ammoamount(other.ammoamount),
+    ammoAmount(other.ammoAmount),
     max_ammo(other.max_ammo),
     current_ammo(other.current_ammo),
     projectileDmg(other.projectileDmg),
-    firerate(other.firerate),
+    fireRate(other.fireRate),
     fireTimer(other.fireTimer),
+    reloadDuration(other.reloadDuration),
+    reloadTimer(other.reloadTimer),
     projectiles(std::move(other.projectiles)),
     projectileTex(other.projectileTex),
     activeSounds(other.activeSounds),
@@ -75,7 +96,7 @@ public:
 
     Weapon& operator=(const Weapon& other) {
         if (this != &other){
-            auto copie = other.clone();
+            const auto copie = other.clone();
             using std::swap;
             swap(*this, *copie);
             std::cout << "Copy and swap\n";
@@ -86,12 +107,12 @@ public:
     [[nodiscard]]std::unique_ptr<Weapon> clone() const;
 
     friend std::ostream& operator<< (std::ostream& out, const Weapon& w) {
-        out << " Numar total munitie: " << w.ammoamount << " Firerate: " << w.firerate << " Nume arma: " << w.nume << " Munitie per reload: " << w.reloada;
+        out << " Numar total munitie: " << w.ammoAmount << " Firerate: " << w.fireRate << " Nume arma: " << w.nume << " Munitie per reload: " << w.reloada;
         return out;
     }
 
-    bool fire(const Player& player, sf::Vector2f direction);
-    bool reload();
+    bool tryFire(const Player& player, sf::Vector2f direction);
+    bool tryReload();
 
     void resetAmmo();
     void clearProjectiles();
@@ -101,9 +122,9 @@ public:
 
     ~Weapon();
 
-    [[nodiscard]]bool canFire(const Player& player) const;
+    [[nodiscard]]bool isReloading() const { return state == WeaponState::Reloading; }
     [[nodiscard]]int getAmmoInClip() const { return reloada; }
-    [[nodiscard]]int getTotalAmmo() const { return ammoamount; }
+    [[nodiscard]]int getTotalAmmo() const { return ammoAmount; }
 };
 
 #endif

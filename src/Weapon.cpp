@@ -1,28 +1,30 @@
 #include "Weapon.h"
 #include "Map.h"
 #include "Player.h"
-#include "GameExceptions.h"
 
 [[nodiscard]]int Weapon::calculateReloadAmount() const {
-    const int needed = 30 - reloada;
-    return std::min(needed, ammoamount);
+    const int needed = magCapacity - reloada;
+    return std::min(needed, ammoAmount);
 }
 
 void Weapon::transferAmmo(const int amount) {
     reloada += amount;
-    ammoamount -= amount;
+    ammoAmount -= amount;
 }
 
 Weapon::Weapon(std::string n, std::string projName, const int projDmg, sf::Texture& tex, const int a, std::list<sf::Sound>& activeSounds_, const sf::SoundBuffer& shootSound_, const sf::SoundBuffer& reloadSound_):
+    state{WeaponState::Ready},
     nume{std::move (n)},
     projectileName{std::move(projName)},
     reloada{30},
-    ammoamount{a},
-    max_ammo{ammoamount},
-    current_ammo{ammoamount},
+    ammoAmount{a},
+    max_ammo{ammoAmount},
+    current_ammo{ammoAmount},
     projectileDmg{projDmg},
-    firerate{0.125f},
+    fireRate{0.2f},
     fireTimer{0.f},
+    reloadDuration{1.5f},
+    reloadTimer{0.f},
     projectileTex{&tex},
     activeSounds{activeSounds_},
     shootSound{shootSound_},
@@ -36,57 +38,77 @@ std::unique_ptr<Weapon> Weapon::clone() const {
     return std::make_unique<Weapon>(*this);
 }
 
-bool Weapon::fire(const Player& player, const sf::Vector2f direction) {
-    if (canFire(player)) {
-        sf::Vector2f spawnPoint = player.getWeaponTipPos();
-        sf::Vector2f calculatedTarget = spawnPoint + direction * 1000.f;
+bool Weapon::tryFire(const Player& player, const sf::Vector2f direction) {
+    if (state == WeaponState::Reloading) return false;
+    if (state == WeaponState::Cooldown) return false;
 
-        projectiles.emplace_back(projectileName, projectileDmg, *projectileTex, spawnPoint, calculatedTarget);
-
-        reloada -= 1;
-        fireTimer = firerate;
-
-        activeSounds.emplace_back(shootSound);
-        activeSounds.back().play();
-
-        return true;
+    if (!player.isAlive()) return false;
+    if (reloada <= 0) {
+        tryReload();
+        return false;
     }
-    return false;
-}
+    sf::Vector2f spawnPoint = player.getWeaponTipPos();
+    sf::Vector2f calculatedTarget = spawnPoint + direction * 1000.f;
 
-bool Weapon::reload() {
-    if (reloada >= 30) {
-        throw InvalidActionException("Reload" , "Magazine Full");
-    }
+    projectiles.emplace_back(projectileName, projectileDmg, *projectileTex, spawnPoint, calculatedTarget);
 
-    if (ammoamount <= 0) {
-        throw InvalidActionException("Reload", "Out of ammo");
-    }
+    reloada -= 1;
 
-    int toReload = calculateReloadAmount();
-    transferAmmo(toReload);
-
-    activeSounds.emplace_back(reloadSound);
+    activeSounds.emplace_back(shootSound);
     activeSounds.back().play();
+
+    state = WeaponState::Cooldown;
+    fireTimer = fireRate;
 
     return true;
 }
 
+bool Weapon::tryReload() {
+    if (state == WeaponState::Reloading) return false;
+    if (reloada >= magCapacity) return false;
+    if (ammoAmount <= 0) return false;
+
+    state = WeaponState::Reloading;
+    reloadTimer = reloadDuration;
+
+    activeSounds.emplace_back(reloadSound);
+    activeSounds.back().play();
+    return true;
+}
+
+void Weapon::finishReload() {
+    const int toReload = calculateReloadAmount();
+    transferAmmo(toReload);
+}
+
 void Weapon::resetAmmo() {
     reloada = magCapacity;
-    ammoamount = max_ammo;
+    ammoAmount = max_ammo;
     current_ammo = max_ammo;
 
+    state = WeaponState::Ready;
     fireTimer = 0.0f;
+    reloadTimer = 0.0f;
 }
 
 void Weapon::clearProjectiles() {
     projectiles.clear();
 }
 
-void Weapon::update(float deltaTime, const Map& map) {
-    if (fireTimer > 0.0f) {
+void Weapon::update(const float deltaTime, const Map& map) {
+    if (state == WeaponState::Cooldown) {
         fireTimer -= deltaTime;
+        if (fireTimer <= 0.0f) {
+            state = WeaponState::Ready;
+        }
+    }
+
+    else if (state == WeaponState::Reloading) {
+        reloadTimer -= deltaTime;
+        if (reloadTimer <= 0.0f) {
+            finishReload();
+            state = WeaponState::Ready;
+        }
     }
 
     for (auto& proj : projectiles) {
@@ -118,9 +140,3 @@ void Weapon::handleCollisions(const std::vector<std::unique_ptr<Entity> > &targe
 
 
 Weapon::~Weapon() { std::cout << "S a apelat destructor Weapon \n";}
-
-[[nodiscard]]bool Weapon::canFire(const Player& player) const {
-    const bool weaponReady = reloada > 0 && fireTimer <= 0.0f;
-    const bool playerReady = player.canAttack() && player.isAlive();
-    return weaponReady && playerReady;
-}

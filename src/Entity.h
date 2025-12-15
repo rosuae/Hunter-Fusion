@@ -50,7 +50,7 @@ public:
 
     Entity& operator= (const Entity& other) {
         if (this != &other) {
-            auto copie = other.clone();
+            const auto copie = other.clone();
             using std::swap;
             swap(*this, *copie);
         }
