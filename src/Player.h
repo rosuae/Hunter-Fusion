@@ -14,7 +14,6 @@ class Weapon;
 class Player : public Entity {
     float velocity;
     float maxJump;
-    bool onGround;
     float jumpCooldown;
 
     std::unique_ptr<Weapon> weapon;
