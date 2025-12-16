@@ -7,10 +7,33 @@
 
 class Map;
 
+enum class EnemyState {
+    Patrolling,
+    Chasing,
+    Attacking
+};
+
 class Enemy : public Entity{
     int damage;
     static int activeEnemyCount;
     Entity* target;
+
+    EnemyState state;
+    float detectionRange;
+    float attackRange;
+    float attackCooldown;
+    float currentAttackTimer;
+    float aggroTimer;
+
+    float patrolTimer;
+    float patrolDuration;
+    float patrolDirection;
+
+    sf::Vector2i frameSize;
+    int currentFrame;
+    float animationTimer;
+    float frameDuration;
+    int animationFrameCount;
 
     std::list<sf::Sound>* activeSounds;
     const sf::SoundBuffer* hitSound;
@@ -22,7 +45,11 @@ class Enemy : public Entity{
     void takeDamage(int damageAmount) override;
     void doBehavior(float deltaTime, const Map& map) override;
     void updateAI(float deltaTime);
+    void updatePatrol(float deltaTime);
+    void updateChase(float deltaTime);
+    void updateAttack(float deltaTime);
     void updatePhysics(float deltaTime, const Map& map);
+    void updateAnimation(float deltaTime);
 
     friend class EnemyFactory;
 
@@ -66,7 +93,7 @@ public:
     ~Enemy() override;
 
     static int getActiveEnemyCount();
-    [[nodiscard]] int attackPlayer() const;
+    int attackPlayer();
 };
 
 #endif

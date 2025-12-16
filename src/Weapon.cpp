@@ -23,7 +23,7 @@ Weapon::Weapon(std::string n, std::string projName, const int projDmg, sf::Textu
     projectileDmg{projDmg},
     fireRate{0.2f},
     fireTimer{0.f},
-    reloadDuration{1.5f},
+    reloadDuration{1.f},
     reloadTimer{0.f},
     projectileTex{&tex},
     activeSounds{activeSounds_},

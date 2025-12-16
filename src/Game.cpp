@@ -111,9 +111,8 @@ void Game::loadLevel(const std::pair<std::string, sf::Vector2f>& nextDestination
     if (m_player) {
         m_player->resetWeaponProjectiles();
     }
-    auto it = m_savedMaps.find(nextMapPath);
 
-    if (it != m_savedMaps.end()) {
+    if (const auto it = m_savedMaps.find(nextMapPath); it != m_savedMaps.end()) {
         m_map = std::move(it->second);
         m_savedMaps.erase(it);
     }
@@ -228,6 +227,7 @@ void Game::handleInputPaused(const sf::Event& event) {
             m_clock.restart();
         }
         else if (keyPress->scancode == sf::Keyboard::Scancode::M) {
+            resetGame();
             m_state = GameState::MainMenu;
         }
     }
@@ -239,6 +239,7 @@ void Game::handleInputGameOver(const sf::Event& event) {
             respawnPlayer();
         }
         else if (keyPress->scancode == sf::Keyboard::Scancode::Escape) {
+            resetGame();
             m_state = GameState::MainMenu;
         }
     }
@@ -279,6 +280,71 @@ void Game::updateSounds() {
     m_playingSounds.remove_if([](const sf::Sound& Sound_) {
         return Sound_.getStatus() == sf::Sound::Status::Stopped;
     });
+}
+
+void Game::resetGame() {
+    for (auto& sound : m_playingSounds) {
+        sound.stop();
+    }
+    m_playingSounds.clear();
+
+    m_savedMaps.clear();
+
+    std::ifstream fin("date.txt");
+    if (!fin.is_open()) {
+        throw ResourceException("Couldn't load file: date.txt");
+    }
+
+    std::string playerName, playerWeapon, projectileName;
+    if (!(fin >> playerName >> playerWeapon >> projectileName)) {
+        return;
+    }
+    fin.close();
+
+    auto tempWeapon = std::make_unique<Weapon>(
+        playerWeapon,
+        projectileName,
+        25,
+        m_resManager.getTexture("projectile.png"),
+        120,
+        m_playingSounds,
+        m_resManager.getSound("shoot.wav"),
+        m_resManager.getSound("reload.wav")
+    );
+
+    std::string initialMapPath = "assets/textures/map/harta.txt";
+    m_currentMapPath = initialMapPath;
+    m_lastMapPath = initialMapPath;
+
+    auto tempMap = std::make_unique<Map>(
+            "CurrentRoom",
+            initialMapPath,
+            m_resManager,
+            m_playingSounds
+        );
+    m_map = std::move(tempMap);
+
+    sf::Vector2f spawnPos = m_map->getPlayerWorldSpawn();
+    m_lastSpawnPos = spawnPos;
+
+    m_player = std::make_unique<Player>(
+            playerName,
+            m_resManager.getTexture("samussheet.png"),
+            spawnPos.x,
+            spawnPos.y,
+            m_playingSounds,
+            m_resManager.getSound("jump.wav"),
+            std::move(tempWeapon)
+        );
+
+    m_camera = std::make_unique<Camera>(m_width, m_height, *m_player, m_resManager);
+
+    m_map->initializeWithExistingPlayer(*m_player);
+    m_camera->snapToPlayer();
+    m_camera->updateMinimap(m_map->getLayout());
+
+    m_clock.restart();
+    m_playerDamageCooldown.restart();
 }
 
 void Game::respawnPlayer() {

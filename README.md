@@ -29,6 +29,7 @@ Gameplay-ul se bazează pe controlul unui personaj care poate merge, sări, trag
 ## To do:
  
 - More enemies + Bosses
+- Animation class to implement animations based on actions
 - PowerUps + Ammo and Health Drops
 - More types of ammo
 - Option to change the game volume

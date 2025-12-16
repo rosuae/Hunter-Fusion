@@ -71,7 +71,7 @@ void Hud::setMapData(const std::vector<std::string> &mapLayout) {
     m_minimapGrid.clear();
     if (mapLayout.empty()) return;
 
-    const int rows = mapLayout.size();
+    const auto rows = mapLayout.size();
     int cols = 0;
     for(const auto& line : mapLayout) {
         if(static_cast<int>(line.size()) > cols) cols = static_cast<int>(line.size());
@@ -80,8 +80,8 @@ void Hud::setMapData(const std::vector<std::string> &mapLayout) {
     m_mapPixelSize.x = static_cast<float>(cols) * m_minimapTileSize;
     m_mapPixelSize.y = static_cast<float>(rows) * m_minimapTileSize;
 
-    for (int y = 0; y < rows; ++y) {
-        for (auto x = 0u; x < mapLayout[y].size(); ++x) {
+    for (size_t y = 0; y < rows; ++y) {
+        for (size_t x = 0; x < mapLayout[y].size(); ++x) {
             if (mapLayout[y][x] == '#') {
                 const float posX = static_cast<float>(x) * m_minimapTileSize;
                 const float posY = static_cast<float>(y) * m_minimapTileSize;

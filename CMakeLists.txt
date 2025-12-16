@@ -88,6 +88,8 @@ add_executable(${MAIN_EXECUTABLE_NAME}
         src/Portal.h
         src/EnemyFactory.cpp
         src/EnemyFactory.h
+        src/Pet.cpp
+        src/Pet.h
 )
 
 # NOTE: Add all defined targets (e.g. executables, libraries, etc. )

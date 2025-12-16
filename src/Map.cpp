@@ -205,7 +205,7 @@ int Map::processEnemyAttacks() const {
     int totalDamage = 0;
 
     for (const auto& entity : entities) {
-        if (const auto enemyPtr = dynamic_cast<const Enemy*>(entity.get())) {
+        if (const auto enemyPtr = dynamic_cast<Enemy*>(entity.get())) {
             if (enemyPtr->isAlive()) {
                 totalDamage += enemyPtr->attackPlayer();
             }
@@ -215,7 +215,7 @@ int Map::processEnemyAttacks() const {
     return totalDamage;
 }
 
-void Map::updateEntities(float deltaTime) const {
+void Map::updateEntities(const float deltaTime) const {
     for (const auto& ent : entities) {
         ent->behavior(deltaTime, *this);
     }
@@ -334,7 +334,7 @@ sf::Vector2f Map::getPlayerWorldSpawn() const {
     return {x * TILE_SIZE, y * TILE_SIZE};
 }
 
-bool Map::isWall(const sf::FloatRect& bounds, bool checkEntities) const {
+bool Map::isWall(const sf::FloatRect& bounds, const bool checkEntities) const {
     const int startX = static_cast<int> (bounds.position.x / TILE_SIZE);
     const int startY = static_cast<int> (bounds.position.y / TILE_SIZE);
     const int endX = static_cast<int> ((bounds.position.x + bounds.size.x) / TILE_SIZE);
