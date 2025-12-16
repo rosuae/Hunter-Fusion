@@ -33,7 +33,7 @@ class Map {
     std::vector<std::pair<std::string, int>> enemies;
     std::vector<Entity*> solidEntitiesCache;
 
-    int maxEnemiesAllowed = 12; // for the moment
+    int maxEnemiesAllowed = 100; // for the moment
     bool hasSpawnedEnemies = false;
 
     void spawnEnemies();

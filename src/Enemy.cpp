@@ -12,6 +12,7 @@ Enemy::Enemy(const std::string& n, const int damage_, const float posx_, const f
     : Entity(n, posx_, posy_, 200.f, 1000.f, tex, 120, 180),
     damage{damage_},
     target{target_},
+    isMoving{false},
     state{EnemyState::Patrolling},
     detectionRange{600.f},
     attackRange{60.f},
@@ -19,7 +20,7 @@ Enemy::Enemy(const std::string& n, const int damage_, const float posx_, const f
     currentAttackTimer{0.f},
     aggroTimer{0.f},
     patrolTimer{0.f},
-    patrolDuration{4.f},
+    patrolDuration{3.f},
     patrolDirection{1.f},
     currentFrame{0},
     animationTimer{0.f},
@@ -50,6 +51,7 @@ Enemy::Enemy (const Enemy& other)
 : Entity(other),
 damage{other.damage},
 target{other.target},
+isMoving{other.isMoving},
 state{EnemyState::Patrolling},
 detectionRange{other.detectionRange},
 attackRange{other.attackRange},
@@ -123,6 +125,7 @@ void Enemy::updateAI(const float deltaTime) {
 
 void Enemy::updatePatrol(const float deltaTime) {
     patrolTimer += deltaTime;
+    isMoving = true;
 
     if (patrolTimer >= patrolDuration) {
         patrolTimer = 0.0f;
@@ -136,12 +139,16 @@ void Enemy::updatePatrol(const float deltaTime) {
 }
 
 void Enemy::updateChase(const float deltaTime) {
-    if (posX > target->getPos().x) {
-        posX -= speed * deltaTime;
-        sprite.setScale({-1.f, 1.f});
-    } else {
-        posX += speed * deltaTime;
-        sprite.setScale({1.f, 1.f});
+    if (const float diffX = target->getPos().x - posX; std::abs(diffX) > 5.0f) {
+        isMoving = true;
+
+        if (diffX < 0) {
+            posX -= speed * deltaTime;
+            sprite.setScale({-1.f, 1.f});
+        } else {
+            posX += speed * deltaTime;
+            sprite.setScale({1.f, 1.f});
+        }
     }
 }
 
@@ -192,8 +199,14 @@ void Enemy::takeDamage(const int damageAmount) {
 }
 
 void Enemy::doBehavior(const float deltaTime, const Map& map) {
+    const float startX = posX;
+
+    isMoving = false;
     updateAI(deltaTime);
     updatePhysics(deltaTime, map);
+    if (std::abs(posX - startX) < 0.05f) {
+        isMoving = false;
+    }
     updateAnimation(deltaTime);
     sprite.setPosition(sf::Vector2f(posX, posY));
 }
@@ -224,18 +237,27 @@ void Enemy::updatePhysics(const float deltaTime, const Map &map) {
 void Enemy::updateAnimation(const float deltaTime) {
     if (state == EnemyState::Attacking) {
         currentFrame = animationFrameCount - 1;
+        animationTimer = 0.0f;
+        const int rectLeft = currentFrame * frameSize.x;
+        sprite.setTextureRect(sf::IntRect({rectLeft, 0}, {frameSize.x - 2, frameSize.y}));
+    }
+    else if (!isMoving) {
+        const int rectLeft = currentFrame * frameSize.x;
+        sprite.setTextureRect(sf::IntRect({rectLeft, 0}, {frameSize.x - 2, frameSize.y}));
     }
     else {
         animationTimer += deltaTime;
         if (animationTimer >= frameDuration) {
             animationTimer -= frameDuration;
-            currentFrame = (currentFrame + 1) % animationFrameCount;
+            currentFrame++;
+            if (currentFrame >= animationFrameCount) {
+                currentFrame = 0;
+            }
         }
-    }
 
-    const int rectLeft = currentFrame * frameSize.x;
-    constexpr int safetyGap = 2;
-    sprite.setTextureRect(sf::IntRect({rectLeft, 0}, {frameSize.x - safetyGap, frameSize.y}));
+        const int rectLeft = currentFrame * frameSize.x;
+        sprite.setTextureRect(sf::IntRect({rectLeft, 0}, {frameSize.x - 2, frameSize.y}));
+    }
 }
 
 void Enemy::applyGravity(const float deltaTime) {

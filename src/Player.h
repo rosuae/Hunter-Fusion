@@ -14,6 +14,8 @@ class Weapon;
 class Player : public Entity {
     float velocity;
     float maxJump;
+    bool onGround;
+    float jumpCooldown;
 
     std::unique_ptr<Weapon> weapon;
 
@@ -29,6 +31,7 @@ class Player : public Entity {
     bool facingUp;
     bool isHit;
     bool wasRPressedLastFrame;
+    bool isCrouching;
 
     sf::Vector2i frameSize;
     int currentFrame;
@@ -70,6 +73,8 @@ public:
     Entity(other),
     velocity(other.velocity),
     maxJump(other.maxJump),
+    onGround(other.onGround),
+    jumpCooldown(other.jumpCooldown),
     weapon(other.weapon ? other.weapon->clone() : nullptr),
     animationTimer(other.animationTimer),
     frameDuration(other.frameDuration),
@@ -81,6 +86,7 @@ public:
     facingUp(other.facingUp),
     isHit(other.isHit),
     wasRPressedLastFrame(other.wasRPressedLastFrame),
+    isCrouching{other.isCrouching},
     frameSize(other.frameSize),
     currentFrame(other.currentFrame),
     animationRow(other.animationRow),
@@ -107,6 +113,7 @@ public:
         swap(lhs.facingUp, rhs.facingUp);
         swap(lhs.isHit, rhs.isHit);
         swap(lhs.wasRPressedLastFrame, rhs.wasRPressedLastFrame);
+        swap(lhs.isCrouching, rhs.isCrouching);
         swap(lhs.frameSize, rhs.frameSize);
         swap(lhs.currentFrame, rhs.currentFrame);
         swap(lhs.animationRow, rhs.animationRow);

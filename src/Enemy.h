@@ -17,7 +17,7 @@ class Enemy : public Entity{
     int damage;
     static int activeEnemyCount;
     Entity* target;
-
+    bool isMoving;
     EnemyState state;
     float detectionRange;
     float attackRange;
@@ -73,6 +73,21 @@ public:
         swap(static_cast<Entity &>(lhs), static_cast<Entity &>(rhs));
         swap(lhs.damage, rhs.damage);
         swap(lhs.target, rhs.target);
+        swap(lhs.isMoving, rhs.isMoving);
+        swap(lhs.state, rhs.state);
+        swap(lhs.detectionRange, rhs.detectionRange);
+        swap(lhs.attackRange, rhs.attackRange);
+        swap(lhs.attackCooldown, rhs.attackCooldown);
+        swap(lhs.currentAttackTimer, rhs.currentAttackTimer);
+        swap(lhs.aggroTimer, rhs.aggroTimer);
+        swap(lhs.patrolTimer, rhs.patrolTimer);
+        swap(lhs.patrolDuration, rhs.patrolDuration);
+        swap(lhs.patrolDirection, rhs.patrolDirection);
+        swap(lhs.frameSize, rhs.frameSize);
+        swap(lhs.currentFrame, rhs.currentFrame);
+        swap(lhs.animationTimer, rhs.animationTimer);
+        swap(lhs.frameDuration, rhs.frameDuration);
+        swap(lhs.animationFrameCount, rhs.animationFrameCount);
         swap(lhs.activeSounds, rhs.activeSounds);
         swap(lhs.hitSound, rhs.hitSound);
         swap(lhs.deathSound, rhs.deathSound);

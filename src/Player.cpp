@@ -22,20 +22,22 @@ Player::Player(const std::string& n, sf::Texture& tex,
     std::list<sf::Sound>& activeSounds_,
     const sf::SoundBuffer& jumpSound_,
     std::unique_ptr<Weapon> startingWeapon)
-    : Entity(n, posx_, posy_, 800.0f, 2500.f, tex, 120, 120),
-    velocity{0.0f},
+    : Entity(n, posx_, posy_, 800.0f, 2500.f, tex, 90, 170),
+    velocity{0.f},
     maxJump{-1450.f},
+    jumpCooldown{0.f},
     weapon{std::move(startingWeapon)},
-    animationTimer{0.0f},
+    animationTimer{0.f},
     frameDuration{0.12f},
-    shootingTimer{0.0f},
-    damageEffectTimer{0.0f},
+    shootingTimer{0.f},
+    damageEffectTimer{0.f},
     isRunning{false},
     isJumping{false},
     facingRight{true},
     facingUp{false},
     isHit{false},
     wasRPressedLastFrame{false},
+    isCrouching{false},
     frameSize{sf::Vector2i(224, 222)},
     currentFrame{0},
     animationRow{0},
@@ -49,7 +51,7 @@ Player::Player(const std::string& n, sf::Texture& tex,
 
     sprite.setPosition(sf::Vector2f(posX, posY));
     sprite.setOrigin(sf::Vector2f(static_cast<float>(frameSize.x) / 2.f,
-                                  (static_cast<float>(frameSize.y)) - 7.f)
+                                  static_cast<float>(frameSize.y) - 7.f)
                                    );
     sprite.scale(sf::Vector2f(1.f, 1.f));
     sprite.setTextureRect(sf::IntRect(sf::Vector2i(0, 0), frameSize));
@@ -78,13 +80,34 @@ void Player::doBehavior(const float deltaTime, const Map& map) {
             if (velocity > 0) {
                 posY = lastPosY;
                 velocity = 0;
-                isJumping = false;
+                float checkWidth = static_cast<float>(hitboxWidth) - 20.f;
+                const sf::FloatRect ceilingCheck({
+                    posX - checkWidth / 2.f, posY - 160.f},
+                    {checkWidth, 80.f}
+                );
+                if (map.isWall(ceilingCheck, true)) {
+                    isJumping = true;
+                    hitboxHeight = 80.f;
+                } else {
+                    isJumping = false;
+                }
             }
             else if (velocity < 0) {
                 posY = lastPosY;
                 velocity = 0;
             }
             updateHitbox();
+        }
+    }
+
+    if (isJumping && velocity == 0.f) {
+        float checkWidth = static_cast<float>(hitboxWidth) - 20.f;
+        const sf::FloatRect ceilingCheck({
+            posX - checkWidth / 2.f, posY - 160.f},
+            {checkWidth, 80.f}
+        );
+        if (!map.isWall(ceilingCheck, true)) {
+            isJumping = false;
         }
     }
 
@@ -95,8 +118,23 @@ void Player::doBehavior(const float deltaTime, const Map& map) {
 }
 
 void Player::handleInput(const float deltaTime, const Map& map) {
+    if (jumpCooldown > 0.0f) {
+        jumpCooldown -= deltaTime;
+    }
+    if (isJumping) {
+        if (shootingTimer > 0.0f) {
+            hitboxHeight = 160.f;
+        } else {
+            hitboxHeight = 80.f;
+        }
+    } else {
+        isCrouching = sf::Keyboard::isKeyPressed(sf::Keyboard::Key::S);
+        hitboxHeight = isCrouching ? 80.f : 160.f;
+    }
+    updateHitbox();
+
     if ((sf::Keyboard::isKeyPressed(sf::Keyboard::Key::W) ||
-         sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Space)) && !isJumping) {
+         sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Space)) && !isJumping && jumpCooldown <= 0.f) {
         try {
             const float testFeetX = posX - static_cast<float>(hitboxWidth) / 2.0f + 10.f;
             const float testFeetY = posY;
@@ -112,7 +150,7 @@ void Player::handleInput(const float deltaTime, const Map& map) {
 
             velocity = maxJump;
             isJumping = true;
-
+            jumpCooldown = 0.50f;
             activeSounds.emplace_back(jumpSound);
             activeSounds.back().play();
         }
@@ -127,14 +165,14 @@ void Player::handleInput(const float deltaTime, const Map& map) {
 
     isRunning = false;
 
-    if (movedLeft && !movedRight) {
+    if (movedLeft && !movedRight && !isCrouching) {
         posX -= speed * deltaTime;
         if (shootingTimer <= 0.0f) {
             facingRight = false;
         }
         isRunning = true;
     }
-    else if (movedRight && !movedLeft) {
+    else if (movedRight && !movedLeft && !isCrouching) {
         posX += speed * deltaTime;
         if (shootingTimer <= 0.0f) {
             facingRight = true;
@@ -167,7 +205,19 @@ void Player::handleInput(const float deltaTime, const Map& map) {
     }
 
     if (wantsToShoot) {
-        fire(shootDirection);
+        bool canShoot = true;
+        if (isJumping) {
+            float checkWidth = static_cast<float>(hitboxWidth) - 20.f;
+            const sf::FloatRect ceilingCheck(
+                {posX - checkWidth / 2.f, posY - 160.f},
+                {checkWidth, 80.f});
+            if (map.isWall(ceilingCheck, true)) {
+                canShoot = false;
+            }
+        }
+        if (canShoot) {
+            fire(shootDirection);
+        }
     }
 
     const bool isRPressed = sf::Keyboard::isKeyPressed(sf::Keyboard::Key::R);
@@ -217,6 +267,9 @@ void Player::updateAnimation(const float deltaTime) {
     }
     if (isJumping) {
         animationFrameCount = 3;
+        if (currentFrame >= animationFrameCount) {
+            currentFrame = 0;
+        }
         if (shootingTimer > 0.0f) {
             constexpr int col = 2;
             const int row = facingUp ? 2 : 1;
@@ -227,58 +280,75 @@ void Player::updateAnimation(const float deltaTime) {
         }
 
         animationTimer += deltaTime;
-
         if (animationTimer >= frameDuration) {
             animationTimer -= frameDuration;
             currentFrame = (currentFrame + 1) % animationFrameCount;
         }
-        if (currentFrame >= animationFrameCount) {
-            currentFrame = 0;
-        }
 
         constexpr int col = 5;
         const int row = currentFrame;
-
         const int rectLeft = col * frameSize.x;
         const int rectTop = row * frameSize.y;
         sprite.setTextureRect(sf::IntRect(sf::Vector2i(rectLeft, rectTop), frameSize));
         return;
     }
 
-    if (shootingTimer > 0.0f) {
-        animationRow = facingUp ? 2 : 1;
-    } else {
-        animationRow = 0;
-    }
-    animationStartIndex = 0;
-    animationFrameCount = 4;
+    int finalCol = 0;
+    int finalRow = 0;
 
-    if (isRunning) {
-        if (currentFrame == 0 && animationTimer == 0.0f) {
-            currentFrame = 1;
+    if (isCrouching) {
+        finalCol = 4;
+        if (facingUp) {
+            finalRow = 2;
+        } else if (shootingTimer > 0.0f) {
+            finalRow = 1;
+        } else {
+            finalRow = 0;
         }
-        animationTimer += deltaTime;
-        if (animationTimer >= frameDuration) {
-            animationTimer -= frameDuration;
-            currentFrame = (currentFrame + 1) % animationFrameCount;
-        }
-    } else {
         currentFrame = 0;
-        animationTimer = frameDuration;
+    }
+    else {
+        if (shootingTimer > 0.0f) {
+            finalRow = facingUp ? 2 : 1;
+        } else {
+            finalRow = 0;
+        }
+        animationFrameCount = 4;
+        animationStartIndex = 0;
+
+        if (isRunning) {
+            if (currentFrame == 0 && animationTimer == 0.0f) {
+                currentFrame = 1;
+            }
+            animationTimer += deltaTime;
+            if (animationTimer >= frameDuration) {
+                animationTimer -= frameDuration;
+                currentFrame = (currentFrame + 1) % animationFrameCount;
+            }
+        } else {
+            currentFrame = 0;
+            animationTimer = frameDuration;
+        }
+
+        finalCol = animationStartIndex + currentFrame;
     }
 
-    const int col = animationStartIndex + currentFrame;
-    const int row = animationRow;
-
-    const int rectLeft = col * frameSize.x;
-    const int rectTop = row * frameSize.y;
-
+    animationRow = finalRow;
+    const int rectLeft = finalCol * frameSize.x;
+    const int rectTop = finalRow * frameSize.y;
     sprite.setTextureRect(sf::IntRect(sf::Vector2i(rectLeft, rectTop), frameSize));
 
     const float originBaseY = static_cast<float>(frameSize.y) - 7.f;
     const float originBaseX = static_cast<float>(frameSize.x) / 2.f;
 
-    const float yOffset = animationRow == 1 ? 2.5f : animationRow == 2 ? 4.5f : 0.f;
+    float yOffset = 0.f;
+
+    if (animationRow == 1) {
+        yOffset = 2.5f;
+    }
+    else if (animationRow == 2) {
+        yOffset = 4.5f;
+    }
     sprite.setOrigin(sf::Vector2f(originBaseX, originBaseY + yOffset));
 }
 
@@ -349,7 +419,14 @@ void Player::draw(sf::RenderWindow &window) const {
 sf::Vector2f Player::getWeaponTipPos() const {
     const float offsetX = facingRight ? (facingUp ? 10.f : static_cast<float>(frameSize.x) * 0.25f)
                               : (facingUp ? -10.f : -static_cast<float>(frameSize.x) * 0.3f);
-    const float offsetY = facingUp ? -(static_cast<float>(frameSize.y) * 0.9f) : -(static_cast<float>(frameSize.y) * 0.5f);
+    float offsetY = facingUp ? -(static_cast<float>(frameSize.y) * 0.9f) : -(static_cast<float>(frameSize.y) * 0.5f);
+    if (isCrouching) {
+        if (facingUp) {
+            offsetY += 40.f;
+        } else {
+            offsetY += 50.f;
+        }
+    }
     return {posX + offsetX, posY + offsetY};
 }
 

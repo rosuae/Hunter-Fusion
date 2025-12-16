@@ -38,6 +38,7 @@ Gameplay-ul se bazează pe controlul unui personaj care poate merge, sări, trag
 ## Known Bugs:
 
 - Player can run out of ammo. Drops system will be implemented
+- Player can get stuck in tiles while performing actions like shooting while jumping
 
 ### Tema 0
 

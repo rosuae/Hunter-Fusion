@@ -100,8 +100,7 @@ Map::Map(std::string n, const std::string& filePath, ResourceManager& resManager
     bool playerFound = false;
     for (size_t y = 0; y < mapLayout.size(); ++y)
         for (size_t x = 0; x <  mapLayout[y].size(); ++x) {
-            char tileType = mapLayout[y][x];
-            if (tileType == 'E') {
+            if (char tileType = mapLayout[y][x]; tileType == 'E') {
                 enemySpawns.emplace_back(std::pair(x, y));
             } else if (tileType == 'P') {
                 playerSpawn = std::pair(x, y);
@@ -116,12 +115,18 @@ Map::Map(std::string n, const std::string& filePath, ResourceManager& resManager
 
 void Map::spawnEnemies() {
     if (enemySpawns.empty() || enemies.empty() || !playerTarget) return;
-
-    for (const auto& enemy_ : enemies) {
+    for (const auto& spawnCoord : enemySpawns) {
         try {
-            auto [x, y] = generateRandomEnemySpawn();
+            const float x = spawnCoord.first * TILE_SIZE;
+            const float y = spawnCoord.second * TILE_SIZE;
+
+            int enemyIndex = 0;
+            if (enemies.size() > 1) {
+                enemyIndex = Game::generateRandomInt(0, static_cast<int>(enemies.size()) - 1);
+            }
+            const auto&[fst, snd] = enemies[enemyIndex];
             std::unique_ptr newEnemy = EnemyFactory::createEnemy(
-                enemy_.first,
+                fst,
                 x,
                 y,
                 resManager,
@@ -133,7 +138,8 @@ void Map::spawnEnemies() {
             }
         }
         catch (const MapEntityException& e) {
-            std::cout << e.what() << "Info: No enemy spawn in this room." << std::endl;
+            std::cout << e.what() << " Info: Failed to spawn enemy at tile ("
+                      << spawnCoord.first << ", " << spawnCoord.second << ")." << std::endl;
         }
     }
 }
@@ -166,9 +172,14 @@ void Map::spawnAdditionalEnemies(const int count) {
 
     for (int i = 0; i < count; ++i) {
         try {
+            int enemyIndex = 0;
+            if (enemies.size() > 1) {
+                enemyIndex = Game::generateRandomInt(0, static_cast<int>(enemies.size()) - 1);
+            }
+            std::string enemyName = enemies[enemyIndex].first;
             auto [x, y] = generateRandomEnemySpawn();
             std::unique_ptr newEnemy = EnemyFactory::createEnemy(
-                "Metroid",
+                enemyName,
                 x, y,
                 resManager,
                 playingSounds,
@@ -271,7 +282,7 @@ std::pair<float, float> Map::generateRandomEnemySpawn() const{
 }
 
 void Map::handleEnemyRespawn(const int enemiesDied) {
-    const int enemiesRequested = enemiesDied * 2;
+    const int enemiesRequested = enemiesDied;
     if (enemiesRequested <= 0) return;
 
     const int currentEnemies = Enemy::getActiveEnemyCount();
