@@ -72,7 +72,6 @@ public:
     Entity(other),
     velocity(other.velocity),
     maxJump(other.maxJump),
-    onGround(other.onGround),
     jumpCooldown(other.jumpCooldown),
     weapon(other.weapon ? other.weapon->clone() : nullptr),
     animationTimer(other.animationTimer),
