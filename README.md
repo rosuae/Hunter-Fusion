@@ -204,3 +204,6 @@ Comanda este aceeași ca la pasul 1 sau 2. Nu merge combinat cu Valgrind.
 <!-- renovate: datasource=github-tags depName=SFML/SFML versioning=loose -->
 - [SFML](https://github.com/SFML/SFML/tree/3.0.2) (Zlib)
 - adăugați trimiteri **detaliate** către resursele externe care v-au ajutat sau pe care le-ați folosit
+
+
+![metroid-samus-aran-vs-alien-4k-wallpaper-uhdpaper com-572@2@a](https://github.com/user-attachments/assets/b9edee4b-5e42-41d3-9d38-f47047061e10)
