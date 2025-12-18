@@ -8,7 +8,6 @@
 #include "Entity.h"
 #include <list>
 #include <SFML/Audio.hpp>
-#include <iostream>
 
 class Portal : public Entity {
 
@@ -60,11 +59,12 @@ public:
         swap(lhs.isActive, rhs.isActive);
     }
 
-    Portal& operator= (const Portal& other) {
+    Portal& operator=(const Portal& other) {
         if (this != &other) {
-            auto copie = other.clone();
+            const std::unique_ptr<Entity> clonedEntity = other.clone();
+            auto* clonedPortal = dynamic_cast<Portal*>(clonedEntity.get());
             using std::swap;
-            swap(*this, *copie);
+            swap(*this, *clonedPortal);
         }
         return *this;
     }

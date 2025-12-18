@@ -23,6 +23,7 @@ class Player : public Entity {
     float shootingTimer;
     static constexpr float shootingDuration = 0.3f;
     float damageEffectTimer;
+    static constexpr float damageEffectDuration = 0.3f;
 
     bool isRunning;
     bool isJumping;
@@ -42,13 +43,46 @@ class Player : public Entity {
     std::list<sf::Sound>& activeSounds;
     sf::Sound jumpSound;
 
+    static constexpr float DEF_SPEED = 800.f;
+    static constexpr float DEF_GRAVITY = 2500.f;
+    static constexpr float DEF_JUMP_FORCE = -1450.f;
+    static constexpr float JUMP_COOLDOWN_TIME = 0.5f;
+
+    static constexpr float HITBOX_WIDTH = 80.f;
+    static constexpr float HITBOX_HEIGHT_STANDING = 160.f;
+    static constexpr float HITBOX_HEIGHT_CROUCHING = 80.f;
+    static constexpr float CEILING_CHECK_OFFSET = 20.f;
+    static constexpr float JUMP_BUFFER_X = 10.f;
+    static constexpr float GROUND_CHECK_HEIGHT = 10.f;
+
+    static constexpr sf::Vector2i FRAME_SIZE = {224, 222};
+    static constexpr float SPRITE_OFFSET_Y = -7.f;
+
+    static constexpr int ANIM_ROW_IDLE = 0;
+    static constexpr int ANIM_ROW_SHOOT = 1;
+    static constexpr int ANIM_ROW_UP = 2;
+    static constexpr int ANIM_COLS_CROUCH = 4;
+
     sf::FloatRect doGetBounds() const override;
     void takeDamage(int damageAmount) override;
     void doBehavior(float deltaTime, const Map&) override;
     void applyGravity(float deltaTime) override;
+
+    void handleInput(float deltaTime, const Map& map);
+    void handleMovementInput(float deltaTime);
+    void handleJumpInput(const Map& map);
+    void handleCrouchInput(const Map& map);
+    void handleShootingInput(const Map& map);
+
+    void updatePhysics(float oldX ,float oldY, const Map& map);
+    void resolveCollisionX(const Map& map, float lastPosX);
+    void resolveCollisionY(const Map& map, float lastPosY);
+    bool checkCeilingCollision(const Map& map) const;
+
     void updateSpriteDirection();
     void updateAnimation(float deltaTime);
-    void handleInput (float deltaTime, const Map& map);
+    sf::IntRect calculateAnimationRect();
+    void applySpriteOriginCorrection();
     void updateDamageEffect(float deltaTime);
 
 public:
@@ -59,11 +93,11 @@ public:
         std::unique_ptr<Weapon> startingWeapon);
 
     Player& operator=(const Player& other) {
-        if (this != &other){
-            const auto copie = other.clone();
+        if (this != &other) {
+            const std::unique_ptr<Entity> clonedEntity = other.clone();
+            auto* clonedPlayer = dynamic_cast<Player*>(clonedEntity.get());
             using std::swap;
-            swap(*this, *copie);
-            std::cout << "Copy and swap\n";
+            swap(*this, *clonedPlayer);
         }
         return *this;
     }

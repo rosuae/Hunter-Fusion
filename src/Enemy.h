@@ -94,11 +94,11 @@ public:
     }
 
     Enemy& operator=(const Enemy& other) {
-        if (this != &other){
-            const auto copie = other.clone();
+        if (this != &other) {
+            const std::unique_ptr<Entity> clonedEntity = other.clone();
+            auto* clonedEnemy = dynamic_cast<Enemy*>(clonedEntity.get());
             using std::swap;
-            swap(*this, *copie);
-            std::cout << "Copy and swap\n";
+            swap(*this, *clonedEnemy);
         }
         return *this;
     }
