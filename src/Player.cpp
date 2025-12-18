@@ -120,7 +120,8 @@ void Player::handleMovementInput(const float deltaTime) {
         posX -= speed * deltaTime;
         if (shootingTimer <= 0.0f) facingRight = false;
         isRunning = true;
-    } else if (movedRight) {
+    }
+    else {
         posX += speed * deltaTime;
         if (shootingTimer <= 0.0f) facingRight = true;
         isRunning = true;
@@ -168,18 +169,6 @@ void Player::handleShootingInput(const Map& map) {
     if (wantsToShoot) {
         if (isJumping && checkCeilingCollision(map)) return;
         fire(shootDirection);
-    }
-}
-
-void Player::updatePhysics(const float oldX, const float oldY, const Map& map) {
-    if (posX != oldX) {
-        updateHitbox();
-        resolveCollisionX(map, oldX);
-    }
-
-    if (posY != oldY) {
-        updateHitbox();
-        resolveCollisionY(map, oldY);
     }
 }
 
@@ -246,7 +235,7 @@ void Player::updateAnimation(const float deltaTime) {
 
 sf::IntRect Player::calculateAnimationRect() {
     int col = 0;
-    int row = ANIM_ROW_IDLE;
+    int row;
 
     if (isJumping) {
         if (shootingTimer > 0.0f) {
@@ -336,10 +325,6 @@ sf::Vector2f Player::getWeaponTipPos() const {
 
 sf::FloatRect Player::doGetBounds() const {
     return hitbox;
-}
-
-bool Player::hitAffected() const {
-    return isHit;
 }
 
 void Player::checkProjectileCollisions(const std::vector<std::unique_ptr<Entity>>& targets) const {

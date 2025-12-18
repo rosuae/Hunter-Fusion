@@ -74,7 +74,6 @@ class Player : public Entity {
     void handleCrouchInput(const Map& map);
     void handleShootingInput(const Map& map);
 
-    void updatePhysics(float oldX ,float oldY, const Map& map);
     void resolveCollisionX(const Map& map, float lastPosX);
     void resolveCollisionY(const Map& map, float lastPosY);
     bool checkCeilingCollision(const Map& map) const;
@@ -167,7 +166,6 @@ public:
     void resetWeaponProjectiles() const;
 
     sf::Vector2f getWeaponTipPos() const;
-    bool hitAffected() const;
     [[nodiscard]]int getHealth() const { return health; }
     [[nodiscard]]const Weapon* getWeapon() const { return weapon.get(); }
 };
