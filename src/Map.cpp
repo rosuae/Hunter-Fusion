@@ -148,9 +148,7 @@ void Map::drawMap(sf::RenderWindow& window) {
 
     for (size_t y = 0; y < mapLayout.size(); ++y)
         for (size_t x = 0; x <  mapLayout[y].size(); ++x) {
-            char tileType = mapLayout[y][x];
-
-            if (tileType == '#') {
+            if (const char tileType = mapLayout[y][x]; tileType == '#') {
                 tileSprite.setPosition(gridToWorld(static_cast<int>(x), static_cast<int>(y)));
                 window.draw(tileSprite);
             }else

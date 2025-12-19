@@ -8,10 +8,11 @@ Gameplay-ul se bazează pe controlul unui personaj care poate merge, sări, trag
 
 ## Controls:
 - `A, D` Move Left / Right.
-- `W / Space` Jump.
+- `S` Crouch.
+- `W / Space (Hold)` Jump.
 - `Left / Right / Up Arrow` Shoot.
 - `R` Reload.
-- `Escape` Exit Game.
+- `Escape` Menu.
 
 ## Assets:
 ### Sprites:

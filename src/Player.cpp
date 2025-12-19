@@ -11,7 +11,7 @@ Player::Player(const std::string& n, sf::Texture& tex,
     const sf::SoundBuffer& jumpSound_,
     std::unique_ptr<Weapon> startingWeapon)
     : Entity(n, posx_, posy_, DEF_SPEED, DEF_GRAVITY, tex, HITBOX_WIDTH, HITBOX_HEIGHT_STANDING),
-    velocity{0.f},
+    velocity{0.f, 0.f},
     maxJump{DEF_JUMP_FORCE},
     jumpCooldown{0.f},
     weapon{std::move(startingWeapon)},
@@ -54,13 +54,17 @@ void Player::doBehavior(const float deltaTime, const Map& map) {
     const float oldY = posY;
 
     handleInput(deltaTime, map);
-    if (posX != oldX) {
+    posX += velocity.x * deltaTime;
+    if (std::abs(posX - oldX) > 0.001f) {
         updateHitbox();
         resolveCollisionX(map, oldX);
     }
 
     applyGravity(deltaTime);
-    if (posY != oldY) {
+    handleVariableJumpHeight(deltaTime);
+    posY += velocity.y * deltaTime;
+
+    if (std::abs(posY - oldY) > 0.001f) {
         updateHitbox();
         resolveCollisionY(map, oldY);
     }
@@ -84,6 +88,15 @@ void Player::handleInput(const float deltaTime, const Map& map) {
         weapon->tryReload();
     }
     wasRPressedLastFrame = isRPressed;
+}
+
+void Player::handleVariableJumpHeight(const float deltaTime) {
+    const bool jumpHeld = sf::Keyboard::isKeyPressed(sf::Keyboard::Key::W) ||
+                           sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Space);
+
+    if (!jumpHeld && velocity.y < 0) {
+        velocity.y += gravity * 2.0f * deltaTime;
+    }
 }
 
 void Player::handleCrouchInput(const Map& map) {
@@ -112,27 +125,36 @@ void Player::handleMovementInput(const float deltaTime) {
     const bool movedRight = sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D);
 
     isRunning = false;
-
-    if (movedLeft == movedRight) return;
-    if (isCrouching && !isJumping) return;
-
-    if (movedLeft) {
-        posX -= speed * deltaTime;
+    if (movedLeft && !movedRight && (!isCrouching || isJumping)) {
+        velocity.x -= ACCELERATION * deltaTime;
         if (shootingTimer <= 0.0f) facingRight = false;
-        isRunning = true;
+    }
+    else if (movedRight && !movedLeft && (!isCrouching || isJumping)) {
+        velocity.x += ACCELERATION * deltaTime;
+        if (shootingTimer <= 0.0f) facingRight = true;
     }
     else {
-        posX += speed * deltaTime;
-        if (shootingTimer <= 0.0f) facingRight = true;
-        isRunning = true;
+        if (velocity.x > 0) {
+            velocity.x -= DECELERATION * deltaTime;
+            if (velocity.x < 0) velocity.x = 0;
+        }
+        else if (velocity.x < 0) {
+            velocity.x += DECELERATION * deltaTime;
+            if (velocity.x > 0) velocity.x = 0;
+        }
     }
+
+    if (velocity.x > speed) velocity.x = speed;
+    if (velocity.x < -speed) velocity.x = -speed;
+
+    if (std::abs(velocity.x) > 10.f) isRunning = true;
 }
 
 void Player::handleJumpInput(const Map& map) {
     if (isJumping || jumpCooldown > 0.f) return;
 
-    const bool jumpKey = (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::W) ||
-                          sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Space));
+    const bool jumpKey = sf::Keyboard::isKeyPressed(sf::Keyboard::Key::W) ||
+                          sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Space);
 
     if (jumpKey) {
         const float testFeetX = posX - static_cast<float>(hitboxWidth) / 2.0f + JUMP_BUFFER_X;
@@ -142,7 +164,7 @@ void Player::handleJumpInput(const Map& map) {
         );
 
         if (map.isWall(groundCheck, true)) {
-            velocity = maxJump;
+            velocity.y = maxJump;
             isJumping = true;
             jumpCooldown = JUMP_COOLDOWN_TIME;
             activeSounds.emplace_back(jumpSound);
@@ -175,15 +197,16 @@ void Player::handleShootingInput(const Map& map) {
 void Player::resolveCollisionX(const Map& map, const float lastPosX) {
     if (map.isWall(hitbox, true)) {
         posX = lastPosX;
+        velocity.x = 0;
         updateHitbox();
     }
 }
 
 void Player::resolveCollisionY(const Map& map, const float lastPosY) {
     if (map.isWall(hitbox, true)) {
-        if (velocity > 0) {
+        if (velocity.y > 0) {
             posY = lastPosY;
-            velocity = 0;
+            velocity.y = 0;
 
             if (checkCeilingCollision(map)) {
                 isJumping = true;
@@ -193,17 +216,16 @@ void Player::resolveCollisionY(const Map& map, const float lastPosY) {
                 isJumping = false;
             }
         }
-        else if (velocity < 0) {
+        else if (velocity.y < 0) {
             posY = lastPosY;
-            velocity = 0;
+            velocity.y = 0;
         }
         updateHitbox();
     }
 }
 
 void Player::applyGravity(const float deltaTime) {
-    velocity += gravity * deltaTime;
-    posY += velocity * deltaTime;
+    velocity.y += gravity * deltaTime;
 }
 
 void Player::updateAnimation(const float deltaTime) {
@@ -345,7 +367,7 @@ Player::~Player() {
 
 void Player::spawn(const float x, const float y) {
     setPosition(x, y);
-    velocity = 0.f;
+    velocity = {0.f, 0.f};
     isRunning = false;
     isJumping = false;
     isHit = false;
@@ -357,7 +379,7 @@ void Player::resurrect() {
     health = max_health;
     alive = true;
     isHit = false;
-    velocity = 0.0f;
+    velocity = {0.f, 0.f};
     isJumping = false;
     isRunning = false;
     damageEffectTimer = 0.0f;

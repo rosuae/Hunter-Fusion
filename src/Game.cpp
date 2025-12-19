@@ -7,7 +7,6 @@
 #include "Camera.h"
 #include "ResourceManager.h"
 #include "GameExceptions.h"
-#include <iostream>
 #include <fstream>
 #include <random>
 
@@ -366,6 +365,16 @@ void Game::render() {
             m_camera->prepareScene(m_window);
             m_map->drawMap(m_window);
             m_player->draw(m_window);
+
+            const sf::FloatRect bounds = m_player->getBounds();
+            sf::RectangleShape debugRect;
+            debugRect.setPosition(bounds.position);
+            debugRect.setSize(bounds.size);
+            debugRect.setFillColor(sf::Color::Transparent);
+            debugRect.setOutlineColor(sf::Color::Red);
+            debugRect.setOutlineThickness(2.0f);
+            m_window.draw(debugRect);
+
             m_map->drawEntities(m_window);
             m_camera->drawHud(m_window);
         }

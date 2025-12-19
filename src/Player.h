@@ -12,7 +12,7 @@ class Map;
 class Weapon;
 
 class Player : public Entity {
-    float velocity;
+    sf::Vector2f velocity;
     float maxJump;
     float jumpCooldown;
 
@@ -46,11 +46,15 @@ class Player : public Entity {
     static constexpr float DEF_SPEED = 800.f;
     static constexpr float DEF_GRAVITY = 2500.f;
     static constexpr float DEF_JUMP_FORCE = -1450.f;
-    static constexpr float JUMP_COOLDOWN_TIME = 0.5f;
+
+    static constexpr float ACCELERATION = 8000.f;
+    static constexpr float DECELERATION = 4000.f;
+    static constexpr float JUMP_CUT_MULTIPLIER = 0.4f;
+    static constexpr float JUMP_COOLDOWN_TIME = 0.2f;
 
     static constexpr float HITBOX_WIDTH = 80.f;
     static constexpr float HITBOX_HEIGHT_STANDING = 160.f;
-    static constexpr float HITBOX_HEIGHT_CROUCHING = 80.f;
+    static constexpr float HITBOX_HEIGHT_CROUCHING = 130.f;
     static constexpr float CEILING_CHECK_OFFSET = 20.f;
     static constexpr float JUMP_BUFFER_X = 10.f;
     static constexpr float GROUND_CHECK_HEIGHT = 10.f;
@@ -71,6 +75,7 @@ class Player : public Entity {
     void handleInput(float deltaTime, const Map& map);
     void handleMovementInput(float deltaTime);
     void handleJumpInput(const Map& map);
+    void handleVariableJumpHeight(float deltaTime);
     void handleCrouchInput(const Map& map);
     void handleShootingInput(const Map& map);
 
