@@ -162,10 +162,10 @@ void Map::generateMapGeometry() {
             const float posX = fX * fSize;
             const float posY = fY * fSize;
 
-            sf::Vertex tl(sf::Vector2f(posX, posY), sf::Color::White);
-            sf::Vertex tr(sf::Vector2f(posX + fSize, posY), sf::Color::White);
-            sf::Vertex br(sf::Vector2f(posX + fSize, posY + fSize), sf::Color::White);
-            sf::Vertex bl(sf::Vector2f(posX, posY + fSize), sf::Color::White);
+            sf::Vertex tl{ sf::Vector2f(posX, posY), sf::Color::White };
+            sf::Vertex tr{ sf::Vector2f(posX + fSize, posY), sf::Color::White };
+            sf::Vertex br{ sf::Vector2f(posX + fSize, posY + fSize), sf::Color::White };
+            sf::Vertex bl{ sf::Vector2f(posX, posY + fSize), sf::Color::White };
 
             if (mapLayout[y][x] == '#') {
                 const sf::IntRect uv = getWallTextureRect(static_cast<int>(x), static_cast<int>(y));
