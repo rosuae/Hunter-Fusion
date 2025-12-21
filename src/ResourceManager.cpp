@@ -12,6 +12,8 @@ ResourceManager::ResourceManager() {
     loadTextures("assets/textures","hud.png");
     loadTextures("assets/textures","portal.png");
     loadTextures("assets/textures","enemyAgro.png");
+    loadTextures("assets/textures","helperanimal.png");
+
 
     loadSounds("assets/sound","jump.wav");
     loadSounds("assets/sound","reload.wav");

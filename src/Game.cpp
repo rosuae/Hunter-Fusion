@@ -2,6 +2,7 @@
 #include "Portal.h"
 #include "Enemy.h"
 #include "Player.h"
+#include "Pet.h"
 #include "Map.h"
 #include "settingsMenuState.h"
 #include "Camera.h"
@@ -56,6 +57,19 @@ void Game::instanceObjects() {
 
     m_map->placeEntity(*m_player, 'P');
 
+    try {
+        m_pet = std::make_unique<Pet>(
+            "Companion",
+            0.0f, 0.0f,
+            m_resManager.getTexture("helperanimal.png"),
+            m_player.get()
+        );
+        m_map->placeEntity(*m_pet, 'C');
+
+    } catch (const ResourceException& e) {
+        std::cout << e.what();
+    }
+
     m_map->initializeWithExistingPlayer(*m_player);
 
     m_window.create(sf::VideoMode({m_width, m_height}), "Hunter Fusion", settings.GetWindowStyle());
@@ -91,6 +105,10 @@ void Game::loadLevel(const std::string& mapFile, const sf::Vector2f spawnPos) {
         if (m_camera) {
             m_camera->snapToPlayer();
         }
+    }
+
+    if (m_pet) {
+        m_map->placeEntity(*m_pet, 'C');
     }
 
     m_clock.restart();
@@ -245,8 +263,11 @@ void Game::handleInputGameOver(const sf::Event& event) {
 
 void Game::update(const float deltaTime) {
     m_player->behavior(deltaTime, *m_map);
-    m_map->updateEntities(deltaTime);
+    if (m_pet) {
+        m_pet->behavior(deltaTime, *m_map);
+    }
 
+    m_map->updateEntities(deltaTime);
     handleCollisions();
     updateSounds();
     updateCamera(deltaTime);
@@ -334,6 +355,18 @@ void Game::resetGame() {
     m_map->placeEntity(*m_player, 'P');
     m_lastSpawnPos = m_player->getPos();
 
+    try {
+        m_pet = std::make_unique<Pet>(
+            "Companion",
+            0.0f, 0.0f,
+            m_resManager.getTexture("helperanimal.png"),
+            m_player.get()
+        );
+        m_map->placeEntity(*m_pet, 'C');
+    } catch (const ResourceException& e) {
+        std::cout << e.what();
+    }
+
     m_camera = std::make_unique<Camera>(m_width, m_height, *m_player, m_resManager);
 
     m_map->initializeWithExistingPlayer(*m_player);
@@ -363,6 +396,9 @@ void Game::render() {
             m_camera->prepareScene(m_window);
             m_map->drawMap(m_window);
             m_player->draw(m_window);
+            if (m_pet) {
+                m_pet->draw(m_window);
+            }
 
             const sf::FloatRect bounds = m_player->getBounds();
             sf::RectangleShape debugRect;
@@ -372,6 +408,15 @@ void Game::render() {
             debugRect.setOutlineColor(sf::Color::Red);
             debugRect.setOutlineThickness(2.0f);
             m_window.draw(debugRect);
+
+            const sf::FloatRect boundsP = m_pet->getBounds();
+            sf::RectangleShape debugRectP;
+            debugRectP.setPosition(boundsP.position);
+            debugRectP.setSize(boundsP.size);
+            debugRectP.setFillColor(sf::Color::Transparent);
+            debugRectP.setOutlineColor(sf::Color::Red);
+            debugRectP.setOutlineThickness(2.0f);
+            m_window.draw(debugRectP);
 
             m_map->drawEntities(m_window);
             m_camera->drawHud(m_window);
@@ -393,7 +438,7 @@ void Game::renderUI(sf::RenderWindow& window) {
 
 
     if (m_state == GameState::MainMenu) {
-        m_uiText.setString("HUNTER FUSION\n\nStart - ENTER\nQuit - ESCAPE");
+        m_uiText.setString("HUNTER FUSION\nFIND THE HELPER ANIMAL\n\nStart - ENTER\nQuit - ESCAPE");
         m_uiText.setCharacterSize(40);
         m_uiText.setFillColor(sf::Color::White);
     }

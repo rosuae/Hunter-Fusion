@@ -11,6 +11,7 @@
 
 class Entity;
 class Player;
+class Pet;
 class Portal;
 class Enemy;
 class Projectile;
@@ -27,8 +28,8 @@ class Map {
 
     std::vector<std::pair<float, float>> enemySpawns;
     std::pair<float, float> playerSpawn;
-    // std::pair<float, float> petSpawn;
-    // bool hasPetSpawn = false;
+    std::pair<float, float> petSpawn;
+    bool hasPetSpawn = false;
     static const float TILE_SIZE;
     sf::Sprite tileSprite;
     sf::Sprite tileBackgroundSprite;
@@ -54,6 +55,7 @@ public:
     Map(std::string n, const std::string& filePath, ResourceManager& resManager,
         std::list<sf::Sound>& playingSounds_);
 
+    static float getTileSize() { return TILE_SIZE; }
     void initializeWithPlayer(Player& player);
     void initializeWithExistingPlayer(Player& player);
     void drawMap(sf::RenderWindow& window) const;

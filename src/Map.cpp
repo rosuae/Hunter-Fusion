@@ -1,6 +1,7 @@
 #include "Map.h"
 #include "Game.h"
 #include "Player.h"
+#include "Pet.h"
 #include "Enemy.h"
 #include "Portal.h"
 #include "Entity.h"
@@ -105,6 +106,9 @@ Map::Map(std::string n, const std::string& filePath, ResourceManager& resM, std:
             } else if (tileType == 'P') {
                 playerSpawn = std::pair(x, y);
                 playerFound = true;
+            } else if (tileType == 'C') {
+                petSpawn = std::pair(x, y);
+                hasPetSpawn = true;
             }
         }
 
@@ -430,7 +434,20 @@ std::pair<float, float> Map::findSpawnLocation(const char symbol) const {
 void Map::placeEntity(Entity& entity, const char mapSymbol) const {
     auto [x, y] = findSpawnLocation(mapSymbol);
 
-    if (auto* player = dynamic_cast<Player*>(&entity)) {
+    if (x < 0 || y < 0) {
+        if (mapSymbol == 'C' && playerTarget) {
+            const sf::Vector2f pPos = playerTarget->getPos();
+            if (auto* pet = dynamic_cast<Pet*>(&entity)) {
+                pet->teleport(pPos.x, pPos.y);
+            }
+        }
+        return;
+    }
+
+    if (auto* pet = dynamic_cast<Pet*>(&entity)) {
+        pet->teleport(x, y);
+    }
+    else if (auto* player = dynamic_cast<Player*>(&entity)) {
         player->spawn(x, y);
     }
 }

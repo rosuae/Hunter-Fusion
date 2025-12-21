@@ -78,6 +78,8 @@ add_executable(${MAIN_EXECUTABLE_NAME}
         src/GameExceptions.h
         src/State.cpp
         src/State.h
+        src/Pet.cpp
+        src/Pet.h
         src/settingsMenuState.cpp
         src/settingsMenuState.h
         src/Hud.cpp
