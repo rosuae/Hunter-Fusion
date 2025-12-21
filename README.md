@@ -30,15 +30,12 @@ Gameplay-ul se bazează pe controlul unui personaj care poate merge, sări, trag
 ## To do:
  
 - More enemies + Bosses
-- Animation class to implement animations based on actions
-- PowerUps + Ammo and Health Drops
-- More types of ammo
-- Option to change the game volume
 - Ability to change player look
+- Option to change the game volume
+- PowerUps + Ammo and Health Drops
 
 ## Known Bugs:
 
-- Player can run out of ammo. Drops system will be implemented
 - Player can get stuck in tiles while performing actions like shooting while jumping
 
 ## Tema 2
