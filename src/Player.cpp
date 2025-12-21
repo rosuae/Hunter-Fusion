@@ -19,6 +19,10 @@ Player::Player(const std::string& n, sf::Texture& tex,
     frameDuration{0.12f},
     shootingTimer{0.f},
     damageEffectTimer{0.f},
+    isDodging{false},
+    dodgeTimer{0.f},
+    dodgeCooldownTimer{0.f},
+    storedDodgeDir{0.f},
     isRunning{false},
     isJumping{false},
     facingRight{true},
@@ -49,11 +53,27 @@ Player::Player(const std::string& n, sf::Texture& tex,
 void Player::doBehavior(const float deltaTime, const Map& map) {
     if (jumpCooldown > 0.0f) jumpCooldown -= deltaTime;
     if (shootingTimer > 0.0f) shootingTimer -= deltaTime;
+    if (dodgeCooldownTimer > 0.0f) dodgeCooldownTimer -= deltaTime;
 
     const float oldX = posX;
     const float oldY = posY;
 
     handleInput(deltaTime, map);
+
+    if (isDodging) {
+        dodgeTimer -= deltaTime;
+        velocity.x = storedDodgeDir * DODGE_SPEED;
+
+        if (dodgeTimer <= 0.0f) {
+            isDodging = false;
+            velocity.x = 0.f;
+
+            if (checkCeilingCollision(map)) {
+                isCrouching = true;
+            }
+        }
+    }
+
     posX += velocity.x * deltaTime;
     if (std::abs(posX - oldX) > 0.001f) {
         updateHitbox();
@@ -100,12 +120,25 @@ void Player::handleVariableJumpHeight(const float deltaTime) {
 }
 
 void Player::handleCrouchInput(const Map& map) {
-    bool wantsToCrouch = sf::Keyboard::isKeyPressed(sf::Keyboard::Key::S);
+    const bool isPressingS = sf::Keyboard::isKeyPressed(sf::Keyboard::Key::S);
+
+    if (isPressingS && !isDodging && dodgeCooldownTimer <= 0.0f && !isJumping) {
+        if (std::abs(velocity.x) > 50.f) {
+            startDodge();
+            return;
+        }
+    }
+
+    bool wantsToCrouch = isPressingS;
     if (isJumping) wantsToCrouch = (shootingTimer <= 0.0f);
 
     float targetHeight = wantsToCrouch ? HITBOX_HEIGHT_CROUCHING : HITBOX_HEIGHT_STANDING;
 
-    if (!wantsToCrouch && isCrouching) {
+    if (isDodging) {
+        wantsToCrouch = true;
+        targetHeight = HITBOX_HEIGHT_CROUCHING;
+    }
+    else if (!wantsToCrouch && isCrouching) {
         if (checkCeilingCollision(map)) {
             targetHeight = HITBOX_HEIGHT_CROUCHING;
             wantsToCrouch = true;
@@ -120,7 +153,19 @@ void Player::handleCrouchInput(const Map& map) {
     }
 }
 
+void Player::startDodge() {
+    isDodging = true;
+    dodgeTimer = DODGE_DURATION;
+    dodgeCooldownTimer = DODGE_COOLDOWN_TIME;
+
+    storedDodgeDir = facingRight ? 1.f : -1.f;
+
+    velocity.y = 0.f;
+}
+
 void Player::handleMovementInput(const float deltaTime) {
+    if (isDodging) return;
+
     const bool movedLeft = sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A);
     const bool movedRight = sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D);
 
@@ -230,7 +275,7 @@ void Player::applyGravity(const float deltaTime) {
 
 void Player::updateAnimation(const float deltaTime) {
     int nextFrameCount;
-    if (isJumping) nextFrameCount = 3;
+    if (isJumping || isDodging) nextFrameCount = 3;
     else if (isRunning && !isCrouching) nextFrameCount = 4;
     else nextFrameCount = 1;
 
@@ -259,7 +304,11 @@ sf::IntRect Player::calculateAnimationRect() {
     int col = 0;
     int row;
 
-    if (isJumping) {
+    if (isDodging) {
+        col = 5;
+        row = currentFrame;
+    }
+    else if (isJumping) {
         if (shootingTimer > 0.0f) {
             col = 2;
             row = facingUp ? ANIM_ROW_UP : ANIM_ROW_SHOOT;
@@ -307,6 +356,8 @@ void Player::fire(const sf::Vector2f& direction) {
 }
 
 void Player::takeDamage(const int damageAmount) {
+    if (isDodging) return;
+
     health -= damageAmount;
     isHit = true;
     damageEffectTimer = damageEffectDuration;

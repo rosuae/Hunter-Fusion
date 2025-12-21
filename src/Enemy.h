@@ -18,6 +18,7 @@ class Enemy : public Entity{
     static int activeEnemyCount;
     Entity* target;
     bool isMoving;
+    bool canDealDamage;
     EnemyState state;
     float detectionRange;
     float attackRange;
@@ -35,6 +36,13 @@ class Enemy : public Entity{
     float frameDuration;
     int animationFrameCount;
 
+    const sf::Texture* alertTexture;
+    sf::Sprite exclamationSprite;
+    sf::Vector2i alertFrameSize;
+
+    float alertAnimTimer;
+    bool alertActive;
+
     std::list<sf::Sound>* activeSounds;
     const sf::SoundBuffer* hitSound;
     const sf::SoundBuffer* deathSound;
@@ -50,13 +58,14 @@ class Enemy : public Entity{
     void updateAttack(float deltaTime);
     void updatePhysics(float deltaTime, const Map& map);
     void updateAnimation(float deltaTime);
+    void draw(sf::RenderWindow& window) const override;
 
     friend class EnemyFactory;
 
     Enemy(const std::string& n,
         int damage_,
         float posx_, float posy_,
-        sf::Texture& tex,
+        sf::Texture& tex, sf::Texture& alertTex,
         std::list<sf::Sound>& activeSounds_,
         const sf::SoundBuffer& hitSound_,
         const sf::SoundBuffer& deathSound_,
@@ -74,6 +83,7 @@ public:
         swap(lhs.damage, rhs.damage);
         swap(lhs.target, rhs.target);
         swap(lhs.isMoving, rhs.isMoving);
+        swap(lhs.canDealDamage, rhs.canDealDamage);
         swap(lhs.state, rhs.state);
         swap(lhs.detectionRange, rhs.detectionRange);
         swap(lhs.attackRange, rhs.attackRange);
@@ -88,6 +98,11 @@ public:
         swap(lhs.animationTimer, rhs.animationTimer);
         swap(lhs.frameDuration, rhs.frameDuration);
         swap(lhs.animationFrameCount, rhs.animationFrameCount);
+        swap(lhs.alertTexture, rhs.alertTexture);
+        swap(lhs.exclamationSprite, rhs.exclamationSprite);
+        swap(lhs.alertFrameSize, rhs.alertFrameSize);
+        swap(lhs.alertAnimTimer, rhs.alertAnimTimer);
+        swap(lhs.alertActive, rhs.alertActive);
         swap(lhs.activeSounds, rhs.activeSounds);
         swap(lhs.hitSound, rhs.hitSound);
         swap(lhs.deathSound, rhs.deathSound);

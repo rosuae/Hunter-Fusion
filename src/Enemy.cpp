@@ -4,7 +4,7 @@
 #include "Player.h"
 #include <cmath>
 
-Enemy::Enemy(const std::string& n, const int damage_, const float posx_, const float posy_, sf::Texture& tex,
+Enemy::Enemy(const std::string& n, const int damage_, const float posx_, const float posy_, sf::Texture& tex, sf::Texture& alertTex,
              std::list<sf::Sound>& activeSounds_,
              const sf::SoundBuffer& hitSound_,
              const sf::SoundBuffer& deathSound_,
@@ -13,10 +13,11 @@ Enemy::Enemy(const std::string& n, const int damage_, const float posx_, const f
     damage{damage_},
     target{target_},
     isMoving{false},
+    canDealDamage{false},
     state{EnemyState::Patrolling},
-    detectionRange{600.f},
+    detectionRange{400.f},
     attackRange{60.f},
-    attackCooldown{0.5f},
+    attackCooldown{0.2f},
     currentAttackTimer{0.f},
     aggroTimer{0.f},
     patrolTimer{0.f},
@@ -26,6 +27,10 @@ Enemy::Enemy(const std::string& n, const int damage_, const float posx_, const f
     animationTimer{0.f},
     frameDuration{0.1f},
     animationFrameCount{8},
+    alertTexture{&alertTex},
+    exclamationSprite{*alertTexture},
+    alertAnimTimer{0.f},
+    alertActive{false},
     activeSounds{&activeSounds_},
     hitSound{&hitSound_},
     deathSound{&deathSound_}
@@ -45,29 +50,46 @@ Enemy::Enemy(const std::string& n, const int damage_, const float posx_, const f
 
     updateHitbox();
     activeEnemyCount++;
+
+    alertFrameSize.x = static_cast<int>(alertTexture->getSize().x);
+    alertFrameSize.y = static_cast<int>(alertTexture->getSize().y) / 2;
+
+    exclamationSprite.setOrigin({
+        static_cast<float>(alertFrameSize.x) / 2.f,
+        static_cast<float>(alertFrameSize.y) / 2.f}
+    );
+
+    exclamationSprite.setTextureRect(sf::IntRect({0, 0}, {alertFrameSize.x, alertFrameSize.y}));
+    exclamationSprite.setScale({0.f, 0.f});
 }
 
 Enemy::Enemy (const Enemy& other)
 : Entity(other),
-damage{other.damage},
-target{other.target},
-isMoving{other.isMoving},
-state{EnemyState::Patrolling},
-detectionRange{other.detectionRange},
-attackRange{other.attackRange},
-attackCooldown{other.attackCooldown},
-currentAttackTimer{other.currentAttackTimer},
-aggroTimer{other.aggroTimer},
-patrolTimer{other.patrolTimer},
-patrolDuration{other.patrolDuration},
-patrolDirection{other.patrolDirection},
-currentFrame{other.currentFrame},
-animationTimer{other.animationTimer},
-frameDuration{other.frameDuration},
-animationFrameCount{other.animationFrameCount},
-activeSounds{other.activeSounds},
-hitSound{other.hitSound},
-deathSound{other.deathSound}
+    damage{other.damage},
+    target{other.target},
+    isMoving{other.isMoving},
+    canDealDamage{other.canDealDamage},
+    state{EnemyState::Patrolling},
+    detectionRange{other.detectionRange},
+    attackRange{other.attackRange},
+    attackCooldown{other.attackCooldown},
+    currentAttackTimer{other.currentAttackTimer},
+    aggroTimer{other.aggroTimer},
+    patrolTimer{other.patrolTimer},
+    patrolDuration{other.patrolDuration},
+    patrolDirection{other.patrolDirection},
+    currentFrame{other.currentFrame},
+    animationTimer{other.animationTimer},
+    frameDuration{other.frameDuration},
+    animationFrameCount{other.animationFrameCount},
+    alertTexture{other.alertTexture},
+    exclamationSprite{other.exclamationSprite},
+    alertFrameSize{other.alertFrameSize},
+    alertAnimTimer{other.alertAnimTimer},
+    alertActive{other.alertActive},
+    activeSounds{other.activeSounds},
+    hitSound{other.hitSound},
+    deathSound{other.deathSound}
 {
     activeEnemyCount++;
 }
@@ -108,6 +130,8 @@ void Enemy::updateAI(const float deltaTime) {
             }
             else if (distToPlayer < attackRange) {
                 state = EnemyState::Attacking;
+                currentAttackTimer = attackCooldown;
+                canDealDamage = false;
             }
             else {
                 updateChase(deltaTime);
@@ -117,6 +141,7 @@ void Enemy::updateAI(const float deltaTime) {
         case EnemyState::Attacking:
             if (distToPlayer > attackRange) {
                 state = EnemyState::Chasing;
+                canDealDamage = false;
             }
             updateAttack(deltaTime);
             break;
@@ -156,22 +181,26 @@ void Enemy::updateAttack(const float deltaTime) {
     if (currentAttackTimer > 0.0f) {
         currentAttackTimer -= deltaTime;
     }
+    else {
+        canDealDamage = true;
+    }
 }
 
 int Enemy::attackPlayer() {
     if (!isAlive()) return 0;
     if (!target || !target->isAlive()) return 0;
 
-    if (currentAttackTimer > 0.0f) return 0;
+    if (canDealDamage) {
 
-    const float dx = target->getPos().x - posX;
-    const float dy = target->getPos().y - posY;
+        const float dx = target->getPos().x - posX;
+        const float dy = target->getPos().y - posY;
+        const float distSq = dx*dx + dy*dy;
 
-    const float distSq = dx*dx + dy*dy;
-
-    if (const float attackRangeSq = attackRange * attackRange; distSq <= attackRangeSq) {
-        currentAttackTimer = attackCooldown;
-        return damage;
+        if (const float attackRangeSq = attackRange * attackRange; distSq <= attackRangeSq) {
+            canDealDamage = false;
+            currentAttackTimer = attackCooldown;
+            return damage;
+        }
     }
 
     return 0;
@@ -257,6 +286,58 @@ void Enemy::updateAnimation(const float deltaTime) {
 
         const int rectLeft = currentFrame * frameSize.x;
         sprite.setTextureRect(sf::IntRect({rectLeft, 0}, {frameSize.x - 2, frameSize.y}));
+    }
+
+    const float headTopY = posY - sprite.getOrigin().y;
+    const float halfAlertHeight = static_cast<float>(alertFrameSize.y) / 2.f;
+    constexpr float padding = 5.f;
+
+    float yCorrection = 0.f;
+    if (state == EnemyState::Attacking) {
+        yCorrection = -5.f;
+    }
+
+    exclamationSprite.setPosition({posX, headTopY - padding - halfAlertHeight + yCorrection});
+
+    bool shouldShowAlert = (state == EnemyState::Chasing || state == EnemyState::Attacking);
+
+    if (shouldShowAlert) {
+        if (!alertActive) {
+            alertActive = true;
+            alertAnimTimer = 0.0f;
+        }
+
+        alertAnimTimer += deltaTime;
+
+        constexpr float duration = 0.2f;
+        float scale = alertAnimTimer / duration;
+
+        if (scale > 1.0f) scale = 1.0f;
+
+        exclamationSprite.setScale({scale, scale});
+
+        if (state == EnemyState::Chasing) {
+            exclamationSprite.setTextureRect(sf::IntRect({0, 0},
+                                            {alertFrameSize.x, alertFrameSize.y}));
+        }
+        else if (state == EnemyState::Attacking) {
+            exclamationSprite.setTextureRect(sf::IntRect({0, alertFrameSize.y},
+                                            {alertFrameSize.x, alertFrameSize.y}));
+        }
+    }
+    else {
+        alertActive = false;
+        alertAnimTimer = 0.0f;
+        exclamationSprite.setScale({0.f, 0.f});
+    }
+}
+
+void Enemy::draw(sf::RenderWindow& window) const {
+    if (!alive) return;
+    window.draw(sprite);
+
+    if (state == EnemyState::Chasing || state == EnemyState::Attacking) {
+        window.draw(exclamationSprite);
     }
 }
 

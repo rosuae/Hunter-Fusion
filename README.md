@@ -9,6 +9,7 @@ Gameplay-ul se bazează pe controlul unui personaj care poate merge, sări, trag
 ## Controls:
 - `A, D` Move Left / Right.
 - `S` Crouch.
+- `S + A / D` Dodge.
 - `W / Space (Hold)` Jump.
 - `Left / Right / Up Arrow` Shoot.
 - `R` Reload.

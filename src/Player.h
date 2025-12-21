@@ -25,6 +25,11 @@ class Player : public Entity {
     float damageEffectTimer;
     static constexpr float damageEffectDuration = 0.3f;
 
+    bool isDodging;
+    float dodgeTimer;
+    float dodgeCooldownTimer;
+    float storedDodgeDir;
+
     bool isRunning;
     bool isJumping;
     bool facingRight;
@@ -59,6 +64,10 @@ class Player : public Entity {
     static constexpr float JUMP_BUFFER_X = 10.f;
     static constexpr float GROUND_CHECK_HEIGHT = 10.f;
 
+    static constexpr float DODGE_DURATION = 0.4f;
+    static constexpr float DODGE_COOLDOWN_TIME = 0.8f;
+    static constexpr float DODGE_SPEED = 600.f;
+
     static constexpr sf::Vector2i FRAME_SIZE = {224, 222};
     static constexpr float SPRITE_OFFSET_Y = -7.f;
 
@@ -77,6 +86,7 @@ class Player : public Entity {
     void handleJumpInput(const Map& map);
     void handleVariableJumpHeight(float deltaTime);
     void handleCrouchInput(const Map& map);
+    void startDodge();
     void handleShootingInput(const Map& map);
 
     void resolveCollisionX(const Map& map, float lastPosX);
@@ -116,6 +126,10 @@ public:
     frameDuration(other.frameDuration),
     shootingTimer(other.shootingTimer),
     damageEffectTimer(other.damageEffectTimer),
+    isDodging(other.isDodging),
+    dodgeTimer(other.dodgeTimer),
+    dodgeCooldownTimer(other.dodgeCooldownTimer),
+    storedDodgeDir(other.storedDodgeDir),
     isRunning(other.isRunning),
     isJumping(other.isJumping),
     facingRight(other.facingRight),
@@ -138,11 +152,16 @@ public:
         swap(static_cast<Entity &>(lhs), static_cast<Entity &>(rhs));
         swap(lhs.velocity, rhs.velocity);
         swap(lhs.maxJump, rhs.maxJump);
+        swap(lhs.jumpCooldown, rhs.jumpCooldown);
         swap(lhs.weapon, rhs.weapon);
         swap(lhs.animationTimer, rhs.animationTimer);
         swap(lhs.frameDuration, rhs.frameDuration);
         swap(lhs.shootingTimer, rhs.shootingTimer);
         swap(lhs.damageEffectTimer, rhs.damageEffectTimer);
+        swap(lhs.isDodging, rhs.isDodging);
+        swap(lhs.dodgeTimer, rhs.dodgeTimer);
+        swap(lhs.dodgeCooldownTimer, rhs.dodgeCooldownTimer);
+        swap(lhs.storedDodgeDir, rhs.storedDodgeDir);
         swap(lhs.isRunning, rhs.isRunning);
         swap(lhs.isJumping, rhs.isJumping);
         swap(lhs.facingRight, rhs.facingRight);
