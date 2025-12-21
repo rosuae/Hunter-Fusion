@@ -7,11 +7,11 @@
 #include <utility>
 
 Portal::Portal(const std::string& n,
-        float posx_, float posy_,
+        const float posx_, const float posy_,
         sf::Texture& tex,
         std::string  nextMapFile_,
         const bool facingRight_,
-        sf::Vector2f playerSpawnPosition_,
+        const sf::Vector2f playerSpawnPosition_,
         std::list<sf::Sound>& activeSounds_,
         const sf::SoundBuffer& activationSound_)
     : Entity(n, posx_, posy_, 0, 0, tex, 100, 288),
@@ -71,7 +71,7 @@ sf::FloatRect Portal::doGetBounds() const {
     return sprite.getTransform().transformRect(hitbox);
 }
 
-void Portal::takeDamage(int damageAmount) {
+void Portal::takeDamage(const int damageAmount) {
     health += damageAmount;
 
     if (!isActive && !isAnimating) {
@@ -85,7 +85,7 @@ void Portal::takeDamage(int damageAmount) {
     }
 }
 
-void Portal::doBehavior(float deltaTime, const Map&) {
+void Portal::doBehavior(const float deltaTime, const Map&) {
     if (!isAnimating || isActive) {
         return;
     }
@@ -107,7 +107,7 @@ void Portal::doBehavior(float deltaTime, const Map&) {
     }
 }
 
-void Portal::applyGravity(float deltaTime) {
+void Portal::applyGravity(const float deltaTime) {
     posY += gravity * deltaTime;
 }
 

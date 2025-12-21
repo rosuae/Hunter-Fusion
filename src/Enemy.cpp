@@ -4,7 +4,7 @@
 #include "Player.h"
 #include <cmath>
 
-Enemy::Enemy(const std::string& n, const int damage_, const float posx_, const float posy_, sf::Texture& tex, sf::Texture& alertTex,
+Enemy::Enemy(const std::string& n, const int damage_, const float posx_, const float posy_, sf::Texture& tex, const sf::Texture& alertTex,
              std::list<sf::Sound>& activeSounds_,
              const sf::SoundBuffer& hitSound_,
              const sf::SoundBuffer& deathSound_,

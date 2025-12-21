@@ -65,7 +65,7 @@ class Enemy : public Entity{
     Enemy(const std::string& n,
         int damage_,
         float posx_, float posy_,
-        sf::Texture& tex, sf::Texture& alertTex,
+        sf::Texture& tex, const sf::Texture& alertTex,
         std::list<sf::Sound>& activeSounds_,
         const sf::SoundBuffer& hitSound_,
         const sf::SoundBuffer& deathSound_,

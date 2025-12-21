@@ -35,21 +35,20 @@ void Camera::followPlayer(const float deltaTime) {
     const sf::Vector2f playerPos = m_focusedPlayer.getPos();
 
     const float limitRight = m_targetPos.x + m_threshold.x;
-    const float limitLeft  = m_targetPos.x - m_threshold.x;
-    const float limitDown  = m_targetPos.y + m_threshold.y;
-    const float limitUp    = m_targetPos.y - m_threshold.y;
+    const float limitLeft = m_targetPos.x - m_threshold.x;
+    const float limitDown = m_targetPos.y + m_threshold.y;
+    const float limitUp = m_targetPos.y - m_threshold.y;
 
     if (playerPos.x > limitRight) {
-        m_targetPos.x += (playerPos.x - limitRight);
+        m_targetPos.x += playerPos.x - limitRight;
     } else if (playerPos.x < limitLeft) {
-        m_targetPos.x += (playerPos.x - limitLeft);
+        m_targetPos.x += playerPos.x - limitLeft;
     }
 
-    float playerYWithOffset = playerPos.y - m_verticalOffset;
-    if (playerYWithOffset > limitDown) {
-        m_targetPos.y += (playerYWithOffset - limitDown);
+    if (const float playerYWithOffset = playerPos.y - m_verticalOffset; playerYWithOffset > limitDown) {
+        m_targetPos.y += playerYWithOffset - limitDown;
     } else if (playerYWithOffset < limitUp) {
-        m_targetPos.y += (playerYWithOffset - limitUp);
+        m_targetPos.y += playerYWithOffset - limitUp;
     }
 
     float moveFactor = m_smoothSpeed * deltaTime;

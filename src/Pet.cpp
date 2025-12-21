@@ -108,9 +108,9 @@ void Pet::doBehavior(const float deltaTime, const Map& map) {
 void Pet::updateAnimation(const float deltaTime) {
     animationTimer += deltaTime;
 
-    float currentSpeedLimit = isMoving ? animationSpeed : animationSpeed * 4.0f;
+    if (const float currentSpeedLimit = isMoving ? animationSpeed : animationSpeed * 4.0f;
+        animationTimer >= currentSpeedLimit) {
 
-    if (animationTimer >= currentSpeedLimit) {
         animationTimer = 0.0f;
         currentFrame++;
 

@@ -55,8 +55,7 @@ Map::Map(std::string n, const std::string& filePath, ResourceManager& resM, std:
                 if (static_cast<size_t>(currentDoorIndex) >= doorLocations.size()) {
                     throw ResourceException("Warning: Defined more PORTALS in text than 'D' blocks on map.");
                 }
-                std::string fileName;
-                int spawnX, spawnY;
+                std::string fileName; int spawnX, spawnY;
                 if (iss >> fileName >> spawnX >> spawnY) {
                     int autoX = doorLocations[currentDoorIndex].x;
                     int autoY = doorLocations[currentDoorIndex].y;
@@ -87,8 +86,7 @@ Map::Map(std::string n, const std::string& filePath, ResourceManager& resM, std:
                 }
             }
             else if (firstWord == "ENEMIES") {
-                std::string eName;
-                int eDmg;
+                std::string eName; int eDmg;
                 if (iss >> eName >> eDmg) {
                     enemies.emplace_back(eName, eDmg);
                 }

@@ -9,16 +9,6 @@
 #include <string>
 #include <algorithm>
 
-#define BAR_OFFSET_X 133.f
-#define BAR_OFFSET_Y 44.f
-#define AMMO_OFFSET_X 647.f
-#define AMMO_OFFSET_Y 35.f
-
-#define MINIMAP_WIDTH 250u
-#define MINIMAP_HEIGHT 150u
-#define MINIMAP_SCREEN_X 50.f
-#define MINIMAP_SCREEN_Y 50.f
-
 Hud::Hud(const Player& player, ResourceManager& resManager) :
     m_player{player},
     m_backgroundSprite{resManager.getTexture("hud.png")},

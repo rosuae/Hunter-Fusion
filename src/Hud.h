@@ -13,6 +13,17 @@ class Player;
 class Weapon;
 
 class Hud {
+
+    static constexpr float BAR_OFFSET_X = 133.f;
+    static constexpr float BAR_OFFSET_Y = 44.f;
+    static constexpr float AMMO_OFFSET_X = 647.f;
+    static constexpr float AMMO_OFFSET_Y = 35.f;
+
+    static constexpr unsigned MINIMAP_WIDTH = 250u;
+    static constexpr unsigned MINIMAP_HEIGHT = 150u;
+    static constexpr float MINIMAP_SCREEN_X = 50.f;
+    static constexpr float MINIMAP_SCREEN_Y = 50.f;
+
     const Player& m_player;
 
     sf::Sprite m_backgroundSprite;

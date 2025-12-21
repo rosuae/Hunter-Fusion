@@ -67,7 +67,7 @@ void Game::instanceObjects() {
         m_map->placeEntity(*m_pet, 'C');
 
     } catch (const ResourceException& e) {
-        std::cout << e.what();
+        std::cout << "Couldn't load pet: " << e.what();
     }
 
     m_map->initializeWithExistingPlayer(*m_player);
@@ -281,8 +281,9 @@ void Game::handleCollisions() {
 
     m_map->processProjectileCollisions();
 
-    const int totalDamage = m_map->processEnemyAttacks();
-    if (totalDamage > 0 && m_playerDamageCooldown.getElapsedTime().asSeconds() > 1.f) {
+    if (const int totalDamage = m_map->processEnemyAttacks();
+        totalDamage > 0 && m_playerDamageCooldown.getElapsedTime().asSeconds() > 1.f) {
+
         m_player->tryHit(totalDamage);
         m_playerDamageCooldown.restart();
     }
@@ -364,7 +365,7 @@ void Game::resetGame() {
         );
         m_map->placeEntity(*m_pet, 'C');
     } catch (const ResourceException& e) {
-        std::cout << e.what();
+        std::cout << "Couldn't load pet: " << e.what();
     }
 
     m_camera = std::make_unique<Camera>(m_width, m_height, *m_player, m_resManager);

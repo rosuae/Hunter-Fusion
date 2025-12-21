@@ -38,8 +38,8 @@ void settingsMenuState::SetSettingsLauncher() {
 
             if (const auto* mousePress = event->getIf<sf::Event::MouseButtonPressed>()) {
                 if (mousePress->button == sf::Mouse::Button::Left) {
-                    sf::Vector2i mousePixel = sf::Mouse::getPosition(launcher);
-                    sf::Vector2f mousePos = launcher.mapPixelToCoords(mousePixel);
+                    const sf::Vector2i mousePixel = sf::Mouse::getPosition(launcher);
+                    const sf::Vector2f mousePos = launcher.mapPixelToCoords(mousePixel);
 
                     if (textFull.getGlobalBounds().contains(mousePos)) {
                         isFullscreen = true;
