@@ -54,7 +54,7 @@ class Player : public Entity {
 
     static constexpr float HITBOX_WIDTH = 80.f;
     static constexpr float HITBOX_HEIGHT_STANDING = 160.f;
-    static constexpr float HITBOX_HEIGHT_CROUCHING = 130.f;
+    static constexpr float HITBOX_HEIGHT_CROUCHING = 110.f;
     static constexpr float CEILING_CHECK_OFFSET = 20.f;
     static constexpr float JUMP_BUFFER_X = 10.f;
     static constexpr float GROUND_CHECK_HEIGHT = 10.f;

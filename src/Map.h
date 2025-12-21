@@ -5,7 +5,6 @@
 #include <utility>
 #include <fstream>
 #include <vector>
-#include <map>
 #include <list>
 #include <SFML/Graphics.hpp>
 #include <SFML/Audio.hpp>
@@ -21,7 +20,11 @@ class Map {
     std::string MapNume;
     ResourceManager& resManager;
     std::vector<std::unique_ptr<Entity>> entities;
+
     std::vector<std::string> mapLayout;
+    sf::VertexArray m_wallVertices;
+    sf::VertexArray m_bgVertices;
+
     std::vector<std::pair<float, float>> enemySpawns;
     std::pair<float, float> playerSpawn;
     static const float TILE_SIZE;
@@ -36,6 +39,9 @@ class Map {
     int maxEnemiesAllowed = 100; // for the moment
     bool hasSpawnedEnemies = false;
 
+    bool isWallAt(int x, int y) const;
+    sf::IntRect getWallTextureRect(int x, int y) const;
+    void generateMapGeometry();
     void spawnEnemies();
     [[nodiscard]] std::pair<float, float> generateRandomEnemySpawn() const;
     [[nodiscard]] static sf::Vector2f gridToWorld(int x, int y);
@@ -47,7 +53,7 @@ public:
 
     void initializeWithPlayer(Player& player);
     void initializeWithExistingPlayer(Player& player);
-    void drawMap(sf::RenderWindow& window);
+    void drawMap(sf::RenderWindow& window) const;
     void drawEntities(sf::RenderWindow& window) const;
     void updateEntities(float deltaTime) const;
     void cleanupAndRespawn();

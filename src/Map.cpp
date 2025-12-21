@@ -9,9 +9,9 @@
 #include "EnemyFactory.h"
 #include <random>
 
-Map::Map(std::string n, const std::string& filePath, ResourceManager& resManager_, std::list<sf::Sound>& playingSounds_):
+Map::Map(std::string n, const std::string& filePath, ResourceManager& resM, std::list<sf::Sound>& playingSounds_):
     MapNume{std::move(n)},
-    resManager{resManager_},
+    resManager{resM},
     tileSprite{resManager.getTexture("tile.png")},
     tileBackgroundSprite{resManager.getTexture("backgroudtile.png")},
     playingSounds{playingSounds_} {
@@ -111,14 +111,99 @@ Map::Map(std::string n, const std::string& filePath, ResourceManager& resManager
     if (!playerFound) {
         playerSpawn = {1, 1};
     }
+
+    generateMapGeometry();
+}
+
+bool Map::isWallAt(const int x, const int y) const {
+    if (y < 0 || y >= static_cast<int>(mapLayout.size())) return false;
+    if (x < 0 || x >= static_cast<int>(mapLayout[y].size())) return false;
+    return mapLayout[y][x] == '#';
+}
+
+sf::IntRect Map::getWallTextureRect(const int x, const int y) const {
+    int mask = 0;
+    if (isWallAt(x, y - 1)) mask += 1;
+    if (isWallAt(x - 1, y)) mask += 2;
+    if (isWallAt(x + 1, y)) mask += 4;
+    if (isWallAt(x, y + 1)) mask += 8;
+
+    static const sf::Vector2i textureCoords[16] = { // for now 3x3 tileset, see 'Map creation logic' from README.md (Resources)
+        {3, 3},
+        {1, 2},{2, 1},{2, 2},
+        {0, 1},{0, 2},{1, 1},
+        {1, 2},{1, 0},{1, 0},
+        {2, 0},{2, 1},{0, 0},
+        {0, 1},{1, 0},{1, 1}
+    };
+
+    const int col = textureCoords[mask].x;
+    const int row = textureCoords[mask].y;
+
+    const int size = static_cast<int>(TILE_SIZE);
+
+    return {{col * size, row * size}, {size, size}};
+}
+
+void Map::generateMapGeometry() {
+    m_wallVertices.setPrimitiveType(sf::PrimitiveType::Triangles);
+    m_bgVertices.setPrimitiveType(sf::PrimitiveType::Triangles);
+
+    m_wallVertices.clear();
+    m_bgVertices.clear();
+
+    for (size_t y = 0; y < mapLayout.size(); ++y) {
+        for (size_t x = 0; x < mapLayout[y].size(); ++x) {
+
+            const auto fX = static_cast<float>(x);
+            const auto fY = static_cast<float>(y);
+            auto fSize = static_cast<float>(TILE_SIZE);
+
+            const float posX = fX * fSize;
+            const float posY = fY * fSize;
+
+            sf::Vertex tl(sf::Vector2f(posX, posY), sf::Color::White);
+            sf::Vertex tr(sf::Vector2f(posX + fSize, posY), sf::Color::White);
+            sf::Vertex br(sf::Vector2f(posX + fSize, posY + fSize), sf::Color::White);
+            sf::Vertex bl(sf::Vector2f(posX, posY + fSize), sf::Color::White);
+
+            if (mapLayout[y][x] == '#') {
+                const sf::IntRect uv = getWallTextureRect(static_cast<int>(x), static_cast<int>(y));
+
+                auto u = static_cast<float>(uv.position.x);
+                auto v = static_cast<float>(uv.position.y);
+
+                tl.texCoords = {u, v};
+                tr.texCoords = {u + fSize, v};
+                br.texCoords = {u + fSize, v + fSize};
+                bl.texCoords = {u, v + fSize};
+
+                m_wallVertices.append(tl);
+                m_wallVertices.append(tr);
+                m_wallVertices.append(bl);
+                m_wallVertices.append(tr);
+                m_wallVertices.append(br);
+                m_wallVertices.append(bl);
+            }
+            else {
+                tl.texCoords = {0.f, 0.f};
+                tr.texCoords = {fSize, 0.f};
+                br.texCoords = {fSize, fSize};
+                bl.texCoords = {0.f, fSize};
+
+                m_bgVertices.append(tl); m_bgVertices.append(tr); m_bgVertices.append(bl);
+                m_bgVertices.append(tr); m_bgVertices.append(br); m_bgVertices.append(bl);
+            }
+        }
+    }
 }
 
 void Map::spawnEnemies() {
     if (enemySpawns.empty() || enemies.empty() || !playerTarget) return;
-    for (const auto& spawnCoord : enemySpawns) {
+    for (const auto&[enemyX, enemyY] : enemySpawns) {
         try {
-            const float x = spawnCoord.first * TILE_SIZE;
-            const float y = spawnCoord.second * TILE_SIZE;
+            const float x = enemyX * TILE_SIZE;
+            const float y = enemyY * TILE_SIZE;
 
             int enemyIndex = 0;
             if (enemies.size() > 1) {
@@ -139,24 +224,14 @@ void Map::spawnEnemies() {
         }
         catch (const MapEntityException& e) {
             std::cout << e.what() << " Info: Failed to spawn enemy at tile ("
-                      << spawnCoord.first << ", " << spawnCoord.second << ")." << std::endl;
+                      << enemyX << ", " << enemyY << ")." << std::endl;
         }
     }
 }
 
-void Map::drawMap(sf::RenderWindow& window) {
-
-    for (size_t y = 0; y < mapLayout.size(); ++y)
-        for (size_t x = 0; x <  mapLayout[y].size(); ++x) {
-            if (const char tileType = mapLayout[y][x]; tileType == '#') {
-                tileSprite.setPosition(gridToWorld(static_cast<int>(x), static_cast<int>(y)));
-                window.draw(tileSprite);
-            }else
-                {
-                tileBackgroundSprite.setPosition(gridToWorld(static_cast<int>(x), static_cast<int>(y)));
-                window.draw(tileBackgroundSprite);
-            }
-        }
+void Map::drawMap(sf::RenderWindow& window) const {
+    window.draw(m_bgVertices, &tileBackgroundSprite.getTexture());
+    window.draw(m_wallVertices, &tileSprite.getTexture());
 }
 
 void Map::processProjectileCollisions() const {
