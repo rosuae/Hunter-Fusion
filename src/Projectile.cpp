@@ -9,12 +9,11 @@ void Projectile::setupSprite(const sf::Texture& tex) {
     sprite.scale(sf::Vector2f(1.f, 1.f));
 }
 
-void Projectile::calculateDirection(sf::Vector2f playerPos, sf::Vector2f targetPos) {
-    float dirX = targetPos.x - playerPos.x;
-    float dirY = targetPos.y - playerPos.y;
-    float length = std::sqrt(dirX * dirX + dirY * dirY);
+void Projectile::calculateDirection(const sf::Vector2f playerPos, const sf::Vector2f targetPos) {
+    const float dirX = targetPos.x - playerPos.x;
+    const float dirY = targetPos.y - playerPos.y;
 
-    if (length != 0) {
+    if (const float length = std::sqrt(dirX * dirX + dirY * dirY); length != 0) {
         direction.x = dirX / length;
         direction.y = dirY / length;
     } else {
@@ -33,8 +32,16 @@ bool Projectile::tryHit(Entity &target) {
     return false;
 }
 
-void Projectile::update(float deltaTime, const Map& map) {
+void Projectile::update(const float deltaTime, const Map& map) {
     if (!active) return;
+
+    const float moveAmount = speed * deltaTime;
+    distanceTraveled += moveAmount;
+
+    if (distanceTraveled > maxDistance) {
+        active = false;
+        return;
+    }
 
     position += direction * speed * deltaTime;
 
@@ -54,10 +61,12 @@ void Projectile::update(float deltaTime, const Map& map) {
     sprite.setPosition(position);
 }
 
-Projectile::Projectile(std::string n, int d, const sf::Texture& tex, sf::Vector2f playerPos, sf::Vector2f targetPos):
+Projectile::Projectile(std::string n, const int d, const sf::Texture& tex, const sf::Vector2f playerPos, const sf::Vector2f targetPos):
     nume{std::move(n)},
     dmg{d},
     speed{2000.f},
+    distanceTraveled{0.f},
+    maxDistance{1200.f},
     active{true},
     position{playerPos},
     sprite{tex}

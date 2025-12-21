@@ -139,4 +139,4 @@ void Weapon::handleCollisions(const std::vector<std::unique_ptr<Entity> > &targe
 }
 
 
-Weapon::~Weapon() { std::cout << "S a apelat destructor Weapon \n";}
+Weapon::~Weapon() { std::cout << "Weapon destructor \n";}

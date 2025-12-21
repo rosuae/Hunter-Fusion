@@ -27,6 +27,8 @@ class Map {
 
     std::vector<std::pair<float, float>> enemySpawns;
     std::pair<float, float> playerSpawn;
+    // std::pair<float, float> petSpawn;
+    // bool hasPetSpawn = false;
     static const float TILE_SIZE;
     sf::Sprite tileSprite;
     sf::Sprite tileBackgroundSprite;
@@ -43,6 +45,7 @@ class Map {
     sf::IntRect getWallTextureRect(int x, int y) const;
     void generateMapGeometry();
     void spawnEnemies();
+    std::pair<float, float> findSpawnLocation(char symbol) const;
     [[nodiscard]] std::pair<float, float> generateRandomEnemySpawn() const;
     [[nodiscard]] static sf::Vector2f gridToWorld(int x, int y);
     void handleEnemyRespawn(int enemiesDied);
@@ -67,7 +70,7 @@ public:
     const std::vector<std::string>& getLayout() const { return mapLayout; }
     std::optional<std::pair<std::string, sf::Vector2f>> tryTeleport(const sf::FloatRect& playerBounds) const;
 
-    [[nodiscard]] sf::Vector2f getPlayerWorldSpawn() const;
+    void placeEntity(Entity& entity, char mapSymbol) const;
     [[nodiscard]]bool isWall (const sf::FloatRect& bounds, bool checkEntities = false) const;
 
     ~Map();

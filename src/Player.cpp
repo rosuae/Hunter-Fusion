@@ -158,7 +158,20 @@ void Player::startDodge() {
     dodgeTimer = DODGE_DURATION;
     dodgeCooldownTimer = DODGE_COOLDOWN_TIME;
 
-    storedDodgeDir = facingRight ? 1.f : -1.f;
+    const bool holdingLeft = sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A);
+    const bool holdingRight = sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D);
+
+    if (holdingLeft && !holdingRight) {
+        storedDodgeDir = -1.f;
+        facingRight = false;
+    }
+    else if (holdingRight && !holdingLeft) {
+        storedDodgeDir = 1.f;
+        facingRight = true;
+    }
+    else {
+        storedDodgeDir = facingRight ? 1.f : -1.f;
+    }
 
     velocity.y = 0.f;
 }
@@ -219,6 +232,7 @@ void Player::handleJumpInput(const Map& map) {
 }
 
 void Player::handleShootingInput(const Map& map) {
+    if (isDodging) return;
     sf::Vector2f shootDirection;
     bool wantsToShoot = false;
 

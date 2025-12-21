@@ -51,6 +51,7 @@ class Game {
     unsigned int m_height;
 
     std::unique_ptr<Player> m_player;
+    // std::unique_ptr<Pet> m_pet;
     std::unique_ptr<Map> m_map;
     std::string m_lastMapPath;
     sf::Vector2f m_lastSpawnPos;

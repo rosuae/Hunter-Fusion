@@ -12,6 +12,8 @@ class Projectile {
     std::string nume;
     int dmg;
     float speed;
+    float distanceTraveled;
+    float maxDistance;
     bool active;
     sf::Vector2f position;
     sf::Vector2f direction;
@@ -27,6 +29,8 @@ public:
         out << " Nume munitie: " << p.nume << " " << "DMG: "<< p.dmg << "\n";
         return out;
     }
+
+    Projectile(const Projectile &other) = default;
 
     bool tryHit(Entity& target);
     void drawProjectile(sf::RenderWindow& window) const;

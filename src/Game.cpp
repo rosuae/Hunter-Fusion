@@ -45,17 +45,16 @@ void Game::instanceObjects() {
         );
     m_map = std::move(tempMap);
 
-    sf::Vector2f spawnPos = m_map->getPlayerWorldSpawn();
-
     m_player = std::make_unique<Player>(
             playerName,
             m_resManager.getTexture("samussheet.png"),
-            spawnPos.x,
-            spawnPos.y,
+            0.f, 0.f,
             m_playingSounds,
             m_resManager.getSound("jump.wav"),
             std::move(tempWeapon)
         );
+
+    m_map->placeEntity(*m_player, 'P');
 
     m_map->initializeWithExistingPlayer(*m_player);
 
@@ -68,7 +67,7 @@ void Game::instanceObjects() {
     m_camera->updateMinimap(m_map->getLayout());
 
     m_lastMapPath = initialMapPath;
-    m_lastSpawnPos = spawnPos;
+    m_lastSpawnPos = m_player->getPos();
 }
 
 void Game::loadLevel(const std::string& mapFile, const sf::Vector2f spawnPos) {
@@ -82,7 +81,7 @@ void Game::loadLevel(const std::string& mapFile, const sf::Vector2f spawnPos) {
     m_map = std::move(tempMap);
 
     if (m_player) {
-        if (spawnPos.x < 0 && spawnPos.y < 0) {
+        if (spawnPos.x < 0) {
             m_map->initializeWithPlayer(*m_player);
         } else {
             m_player->spawn(spawnPos.x, spawnPos.y);
@@ -323,18 +322,17 @@ void Game::resetGame() {
         );
     m_map = std::move(tempMap);
 
-    sf::Vector2f spawnPos = m_map->getPlayerWorldSpawn();
-    m_lastSpawnPos = spawnPos;
-
     m_player = std::make_unique<Player>(
             playerName,
             m_resManager.getTexture("samussheet.png"),
-            spawnPos.x,
-            spawnPos.y,
+            0.f, 0.f,
             m_playingSounds,
             m_resManager.getSound("jump.wav"),
             std::move(tempWeapon)
         );
+
+    m_map->placeEntity(*m_player, 'P');
+    m_lastSpawnPos = m_player->getPos();
 
     m_camera = std::make_unique<Camera>(m_width, m_height, *m_player, m_resManager);
 

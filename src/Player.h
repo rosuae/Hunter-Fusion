@@ -66,7 +66,7 @@ class Player : public Entity {
 
     static constexpr float DODGE_DURATION = 0.4f;
     static constexpr float DODGE_COOLDOWN_TIME = 0.8f;
-    static constexpr float DODGE_SPEED = 600.f;
+    static constexpr float DODGE_SPEED = 1000.f;
 
     static constexpr sf::Vector2i FRAME_SIZE = {224, 222};
     static constexpr float SPRITE_OFFSET_Y = -7.f;

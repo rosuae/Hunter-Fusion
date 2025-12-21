@@ -413,9 +413,26 @@ void Map::cleanupAndRespawn() {
 
 Map::~Map() { std::cout << "S a apelat destructor Map \n";}
 
-sf::Vector2f Map::getPlayerWorldSpawn() const {
-    auto [x, y] = playerSpawn;
-    return {x * TILE_SIZE, y * TILE_SIZE};
+std::pair<float, float> Map::findSpawnLocation(const char symbol) const {
+    for (size_t y = 0; y < mapLayout.size(); ++y) {
+        for (size_t x = 0; x < mapLayout[y].size(); ++x) {
+            if (mapLayout[y][x] == symbol) {
+                return {
+                    static_cast<float>(x) * TILE_SIZE,
+                    static_cast<float>(y) * TILE_SIZE
+                };
+            }
+        }
+    }
+    return { -1.0f, -1.0f };
+}
+
+void Map::placeEntity(Entity& entity, const char mapSymbol) const {
+    auto [x, y] = findSpawnLocation(mapSymbol);
+
+    if (auto* player = dynamic_cast<Player*>(&entity)) {
+        player->spawn(x, y);
+    }
 }
 
 bool Map::isWall(const sf::FloatRect& bounds, const bool checkEntities) const {
