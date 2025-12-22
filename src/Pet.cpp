@@ -28,7 +28,7 @@ Pet::Pet(std::string n, const float x, const float y, sf::Texture& tex, const En
 
     sprite.setOrigin({
         static_cast<float>(frameWidth) / 2.0f,
-        static_cast<float>(frameHeight) - 15.f
+        static_cast<float>(frameHeight) - 17.f
     });
 }
 

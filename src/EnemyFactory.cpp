@@ -21,6 +21,7 @@ std::unique_ptr<Enemy> EnemyFactory::createEnemy(const std::string &type,
         enemy.reset(new Enemy(
             type,
             20,
+            150,
             x, y,
             resManager.getTexture("enemy.png"),
             resManager.getTexture("enemyAgro.png"),

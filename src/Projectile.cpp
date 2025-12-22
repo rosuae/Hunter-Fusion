@@ -4,7 +4,7 @@
 #include <cmath>
 
 void Projectile::setupSprite(const sf::Texture& tex) {
-    sprite.setOrigin(sf::Vector2f(static_cast<float>(tex.getSize().x),
+    sprite.setOrigin(sf::Vector2f(static_cast<float>(tex.getSize().x) / 2.f,
                                   static_cast<float>(tex.getSize().y) / 2.f));
     sprite.scale(sf::Vector2f(1.f, 1.f));
 }
@@ -19,6 +19,9 @@ void Projectile::calculateDirection(const sf::Vector2f playerPos, const sf::Vect
     } else {
         direction = sf::Vector2f(1.f, 0.f);
     }
+
+    const sf::Angle angle = sf::radians(std::atan2(direction.y, direction.x));
+    sprite.setRotation(angle);
 }
 
 bool Projectile::tryHit(Entity &target) {
@@ -52,7 +55,7 @@ void Projectile::update(const float deltaTime, const Map& map) {
 
     const sf::FloatRect testBoundsX (
         sf::Vector2f(centerX, centerY),
-        sf::Vector2f(localBounds.size.x * 0.1f, localBounds.size.y * 0.1f)
+        sf::Vector2f(localBounds.size.x * 0.5f, localBounds.size.y * 0.5f)
         );
 
     if (map.isWall(testBoundsX, false))

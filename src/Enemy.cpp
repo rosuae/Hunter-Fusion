@@ -1,16 +1,17 @@
 #include "Enemy.h"
+#include "Player.h"
 #include "Map.h"
 #include <SFML/Audio.hpp>
-#include "Player.h"
 #include <cmath>
 
-Enemy::Enemy(const std::string& n, const int damage_, const float posx_, const float posy_, sf::Texture& tex, const sf::Texture& alertTex,
+Enemy::Enemy(const std::string& n, const int damage_, const int bountyScore_, const float posx_, const float posy_, sf::Texture& tex, const sf::Texture& alertTex,
              std::list<sf::Sound>& activeSounds_,
              const sf::SoundBuffer& hitSound_,
              const sf::SoundBuffer& deathSound_,
              Entity* target_)
     : Entity(n, posx_, posy_, 200.f, 1000.f, tex, 120, 180),
     damage{damage_},
+    bountyScore{bountyScore_},
     target{target_},
     isMoving{false},
     canDealDamage{false},
@@ -66,6 +67,7 @@ Enemy::Enemy(const std::string& n, const int damage_, const float posx_, const f
 Enemy::Enemy (const Enemy& other)
 : Entity(other),
     damage{other.damage},
+    bountyScore{other.bountyScore},
     target{other.target},
     isMoving{other.isMoving},
     canDealDamage{other.canDealDamage},
@@ -184,6 +186,10 @@ void Enemy::updateAttack(const float deltaTime) {
     else {
         canDealDamage = true;
     }
+}
+
+void Enemy::grantReward(Player& player) const {
+    player.processKill(this->bountyScore);
 }
 
 int Enemy::attackPlayer() {

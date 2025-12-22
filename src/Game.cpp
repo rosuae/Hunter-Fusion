@@ -401,26 +401,6 @@ void Game::render() {
                 m_pet->draw(m_window);
             }
 
-            const sf::FloatRect bounds = m_player->getBounds();
-            sf::RectangleShape debugRect;
-            debugRect.setPosition(bounds.position);
-            debugRect.setSize(bounds.size);
-            debugRect.setFillColor(sf::Color::Transparent);
-            debugRect.setOutlineColor(sf::Color::Red);
-            debugRect.setOutlineThickness(2.0f);
-            m_window.draw(debugRect);
-
-            if (m_pet) {
-                const sf::FloatRect boundsP = m_pet->getBounds();
-                sf::RectangleShape debugRectP;
-                debugRectP.setPosition(boundsP.position);
-                debugRectP.setSize(boundsP.size);
-                debugRectP.setFillColor(sf::Color::Transparent);
-                debugRectP.setOutlineColor(sf::Color::Red);
-                debugRectP.setOutlineThickness(2.0f);
-                m_window.draw(debugRectP);
-            }
-
             m_map->drawEntities(m_window);
             m_camera->drawHud(m_window);
         }

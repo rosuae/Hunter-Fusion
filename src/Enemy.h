@@ -6,6 +6,7 @@
 #include "EnemyFactory.h"
 
 class Map;
+class Player;
 
 enum class EnemyState {
     Patrolling,
@@ -15,6 +16,7 @@ enum class EnemyState {
 
 class Enemy : public Entity{
     int damage;
+    int bountyScore;
     static int activeEnemyCount;
     Entity* target;
     bool isMoving;
@@ -63,7 +65,7 @@ class Enemy : public Entity{
     friend class EnemyFactory;
 
     Enemy(const std::string& n,
-        int damage_,
+        int damage_, int bountyScore_,
         float posx_, float posy_,
         sf::Texture& tex, const sf::Texture& alertTex,
         std::list<sf::Sound>& activeSounds_,
@@ -81,6 +83,7 @@ public:
         using std::swap;
         swap(static_cast<Entity &>(lhs), static_cast<Entity &>(rhs));
         swap(lhs.damage, rhs.damage);
+        swap(lhs.bountyScore, rhs.bountyScore);
         swap(lhs.target, rhs.target);
         swap(lhs.isMoving, rhs.isMoving);
         swap(lhs.canDealDamage, rhs.canDealDamage);
@@ -123,6 +126,7 @@ public:
     ~Enemy() override;
 
     static int getActiveEnemyCount();
+    void grantReward(Player& player) const;
     int attackPlayer();
 };
 

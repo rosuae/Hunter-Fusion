@@ -14,9 +14,9 @@ Hud::Hud(const Player& player, ResourceManager& resManager) :
     m_backgroundSprite{resManager.getTexture("hud.png")},
     m_healthText{resManager.getFont("Metroid-Fusion.ttf")},
     m_ammoText{resManager.getFont("Metroid-Fusion.ttf")},
+    m_scoreText{resManager.getFont("Metroid-Fusion.ttf")},
     m_barMaxWidth{483.f},
     m_barHeight{13.f},
-    m_minimapTexture{},
     m_minimapSprite{m_minimapTexture.getTexture()},
     m_minimapGrid{sf::PrimitiveType::Triangles},
     m_minimapTileSize{6.0f}
@@ -37,6 +37,13 @@ Hud::Hud(const Player& player, ResourceManager& resManager) :
     m_ammoText.setFillColor(sf::Color::Magenta);
     m_ammoText.setPosition({m_backgroundSprite.getPosition().x + AMMO_OFFSET_X,
                            m_backgroundSprite.getPosition().y + AMMO_OFFSET_Y});
+
+    m_scoreText.setCharacterSize(20);
+    m_scoreText.setFillColor(sf::Color::Yellow);
+    m_scoreText.setPosition({
+        m_backgroundSprite.getPosition().x + SCORE_OFFSET_X,
+        m_backgroundSprite.getPosition().y + SCORE_OFFSET_Y
+    });
 
     if (!m_minimapTexture.resize({MINIMAP_WIDTH, MINIMAP_HEIGHT})) {
         throw ResourceException("couldn't load minimap texture");
@@ -109,6 +116,11 @@ void Hud::update() {
         m_ammoText.setString("NO WEAPON");
     }
 
+    const auto [kills, score] = m_player.combatStats();
+
+    const std::string scoreString = "SCORE " + std::to_string(score);
+    m_scoreText.setString(scoreString);
+
     const sf::Vector2f playerWorldPos = m_player.getPos();
     constexpr float worldTileSize = 96.0f;
 
@@ -156,6 +168,7 @@ void Hud::render(sf::RenderWindow& window){
     window.draw(m_healthBar);
     window.draw(m_healthText);
     window.draw(m_ammoText);
+    window.draw(m_scoreText);
 
     window.draw(m_minimapSprite);
     window.draw(m_minimapBorder);

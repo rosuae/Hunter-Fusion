@@ -18,7 +18,11 @@ class Player : public Entity {
 
     std::unique_ptr<Weapon> weapon;
 
+    int totalScore = 0;
+    int enemiesDefeated = 0;
+
     float animationTimer;
+    float idleTimer;
     float frameDuration;
     float shootingTimer;
     static constexpr float shootingDuration = 0.3f;
@@ -38,7 +42,7 @@ class Player : public Entity {
     bool wasRPressedLastFrame;
     bool isCrouching;
 
-    sf::Vector2i frameSize;
+    sf::Vector2i m_frameSize;
     int currentFrame;
     int animationRow;
     int animationStartIndex;
@@ -67,9 +71,6 @@ class Player : public Entity {
     static constexpr float DODGE_DURATION = 0.4f;
     static constexpr float DODGE_COOLDOWN_TIME = 0.8f;
     static constexpr float DODGE_SPEED = 1000.f;
-
-    static constexpr sf::Vector2i FRAME_SIZE = {224, 222};
-    static constexpr float SPRITE_OFFSET_Y = -7.f;
 
     static constexpr int ANIM_ROW_IDLE = 0;
     static constexpr int ANIM_ROW_SHOOT = 1;
@@ -116,35 +117,38 @@ public:
         return *this;
     }
 
-    Player(const Player &other) :
-    Entity(other),
-    velocity(other.velocity),
-    maxJump(other.maxJump),
-    jumpCooldown(other.jumpCooldown),
-    weapon(other.weapon ? other.weapon->clone() : nullptr),
-    animationTimer(other.animationTimer),
-    frameDuration(other.frameDuration),
-    shootingTimer(other.shootingTimer),
-    damageEffectTimer(other.damageEffectTimer),
-    isDodging(other.isDodging),
-    dodgeTimer(other.dodgeTimer),
-    dodgeCooldownTimer(other.dodgeCooldownTimer),
-    storedDodgeDir(other.storedDodgeDir),
-    isRunning(other.isRunning),
-    isJumping(other.isJumping),
-    facingRight(other.facingRight),
-    facingUp(other.facingUp),
-    isHit(other.isHit),
-    wasRPressedLastFrame(other.wasRPressedLastFrame),
-    isCrouching{other.isCrouching},
-    frameSize(other.frameSize),
-    currentFrame(other.currentFrame),
-    animationRow(other.animationRow),
-    animationStartIndex(other.animationStartIndex),
-    animationFrameCount(other.animationFrameCount),
-    damageOverlay(other.damageOverlay),
-    activeSounds(other.activeSounds),
-    jumpSound(other.jumpSound) {
+    Player(const Player &other)
+        : Entity(other),
+          velocity(other.velocity),
+          maxJump(other.maxJump),
+          jumpCooldown(other.jumpCooldown),
+          weapon(other.weapon ? other.weapon->clone() : nullptr),
+          totalScore(other.totalScore),
+          enemiesDefeated(other.enemiesDefeated),
+          animationTimer(other.animationTimer),
+          idleTimer(other.idleTimer),
+          frameDuration(other.frameDuration),
+          shootingTimer(other.shootingTimer),
+          damageEffectTimer(other.damageEffectTimer),
+          isDodging(other.isDodging),
+          dodgeTimer(other.dodgeTimer),
+          dodgeCooldownTimer(other.dodgeCooldownTimer),
+          storedDodgeDir(other.storedDodgeDir),
+          isRunning(other.isRunning),
+          isJumping(other.isJumping),
+          facingRight(other.facingRight),
+          facingUp(other.facingUp),
+          isHit(other.isHit),
+          wasRPressedLastFrame(other.wasRPressedLastFrame),
+          isCrouching(other.isCrouching),
+          m_frameSize(other.m_frameSize),
+          currentFrame(other.currentFrame),
+          animationRow(other.animationRow),
+          animationStartIndex(other.animationStartIndex),
+          animationFrameCount(other.animationFrameCount),
+          damageOverlay(other.damageOverlay),
+          activeSounds(other.activeSounds),
+          jumpSound(other.jumpSound) {
     }
 
     friend void swap(Player &lhs, Player &rhs) noexcept {
@@ -154,7 +158,10 @@ public:
         swap(lhs.maxJump, rhs.maxJump);
         swap(lhs.jumpCooldown, rhs.jumpCooldown);
         swap(lhs.weapon, rhs.weapon);
+        swap(lhs.totalScore, rhs.totalScore);
+        swap(lhs.enemiesDefeated, rhs.enemiesDefeated);
         swap(lhs.animationTimer, rhs.animationTimer);
+        swap(lhs.idleTimer, rhs.idleTimer);
         swap(lhs.frameDuration, rhs.frameDuration);
         swap(lhs.shootingTimer, rhs.shootingTimer);
         swap(lhs.damageEffectTimer, rhs.damageEffectTimer);
@@ -169,7 +176,7 @@ public:
         swap(lhs.isHit, rhs.isHit);
         swap(lhs.wasRPressedLastFrame, rhs.wasRPressedLastFrame);
         swap(lhs.isCrouching, rhs.isCrouching);
-        swap(lhs.frameSize, rhs.frameSize);
+        swap(lhs.m_frameSize, rhs.m_frameSize);
         swap(lhs.currentFrame, rhs.currentFrame);
         swap(lhs.animationRow, rhs.animationRow);
         swap(lhs.animationStartIndex, rhs.animationStartIndex);
@@ -186,10 +193,12 @@ public:
     void resurrect();
     void draw(sf::RenderWindow& window) const override;
     void fire(const sf::Vector2f& direction);
+    void processKill(int scoreReward);
     void checkProjectileCollisions(const std::vector<std::unique_ptr<Entity>>& targets) const;
     void resetWeaponProjectiles() const;
 
     sf::Vector2f getWeaponTipPos() const;
+    [[nodiscard]]std::pair<int, int> combatStats() const { return {enemiesDefeated, totalScore}; }
     [[nodiscard]]int getHealth() const { return health; }
     [[nodiscard]]const Weapon* getWeapon() const { return weapon.get(); }
 };

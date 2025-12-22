@@ -310,14 +310,6 @@ void Map::updateEntities(const float deltaTime) const {
 void Map::drawEntities(sf::RenderWindow& window) const{
     for (const auto& ent : entities) {
         ent->draw(window);
-        const sf::FloatRect bounds = ent->getBounds();
-        sf::RectangleShape debugRect;
-        debugRect.setPosition(bounds.position);
-        debugRect.setSize(bounds.size);
-        debugRect.setFillColor(sf::Color::Transparent);
-        debugRect.setOutlineColor(sf::Color::Red);
-        debugRect.setOutlineThickness(2.0f);
-        window.draw(debugRect);
     }
 }
 
@@ -396,6 +388,11 @@ void Map::cleanupAndRespawn() {
     int deadCount = 0;
     std::erase_if(entities, [&](const std::unique_ptr<Entity>& en) {
         if (!en->isAlive()) {
+            if (const auto* enemy = dynamic_cast<Enemy*>(en.get())) {
+                if (playerTarget) {
+                    enemy->grantReward(*playerTarget);
+                }
+            }
             deadCount++;
             return true;
         }

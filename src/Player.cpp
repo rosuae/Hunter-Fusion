@@ -16,6 +16,7 @@ Player::Player(const std::string& n, sf::Texture& tex,
     jumpCooldown{0.f},
     weapon{std::move(startingWeapon)},
     animationTimer{0.f},
+    idleTimer{0.f},
     frameDuration{0.12f},
     shootingTimer{0.f},
     damageEffectTimer{0.f},
@@ -30,7 +31,6 @@ Player::Player(const std::string& n, sf::Texture& tex,
     isHit{false},
     wasRPressedLastFrame{false},
     isCrouching{false},
-    frameSize{FRAME_SIZE},
     currentFrame{0},
     animationRow{0},
     animationStartIndex{0},
@@ -38,16 +38,22 @@ Player::Player(const std::string& n, sf::Texture& tex,
     activeSounds{activeSounds_},
     jumpSound{jumpSound_}
 {
+    constexpr int cols = 6;
+    constexpr int rows = 5;
+
+    m_frameSize.x = static_cast<int>(tex.getSize().x) / cols;
+    m_frameSize.y = static_cast<int>(tex.getSize().y) / rows;
+
     damageOverlay.setSize(sf::Vector2f(3000.f, 3000.f));
     damageOverlay.setFillColor(sf::Color::Transparent);
 
     sprite.setPosition(sf::Vector2f(posX, posY));
-    sprite.setOrigin(sf::Vector2f(static_cast<float>(FRAME_SIZE.x) / 2.f,
-                                  static_cast<float>(FRAME_SIZE.y) + SPRITE_OFFSET_Y));
+    sprite.setOrigin(sf::Vector2f(static_cast<float>(m_frameSize.x) / 2.f,
+                                  static_cast<float>(m_frameSize.y)));
 
-    sprite.setTextureRect(sf::IntRect(sf::Vector2i(0, 0), FRAME_SIZE));
+    sprite.setTextureRect(sf::IntRect(sf::Vector2i(0, 0), m_frameSize));
     updateHitbox();
-    jumpSound.setVolume(50.f); // until volume change option
+    jumpSound.setVolume(25.f); // until volume change option
 }
 
 void Player::doBehavior(const float deltaTime, const Map& map) {
@@ -123,14 +129,24 @@ void Player::handleCrouchInput(const Map& map) {
     const bool isPressingS = sf::Keyboard::isKeyPressed(sf::Keyboard::Key::S);
 
     if (isPressingS && !isDodging && dodgeCooldownTimer <= 0.0f && !isJumping) {
-        if (std::abs(velocity.x) > 50.f) {
+        if (std::abs(velocity.x) > 40.f) {
             startDodge();
             return;
         }
     }
 
     bool wantsToCrouch = isPressingS;
-    if (isJumping) wantsToCrouch = (shootingTimer <= 0.0f);
+
+    if (wantsToCrouch && dodgeCooldownTimer > 0.0f) {
+        const bool isTryingToRun = sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A) ||
+                                   sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D);
+
+        if (isTryingToRun) {
+            wantsToCrouch = false;
+        }
+    }
+
+    if (isJumping) wantsToCrouch = shootingTimer <= 0.0f;
 
     float targetHeight = wantsToCrouch ? HITBOX_HEIGHT_CROUCHING : HITBOX_HEIGHT_STANDING;
 
@@ -243,8 +259,10 @@ void Player::handleShootingInput(const Map& map) {
         shootDirection = {1.f, 0.f};
         wantsToShoot = true;
     } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Up)) {
-        shootDirection = {0.f, -1.f};
-        wantsToShoot = true;
+        if (!isCrouching || isJumping) {
+            shootDirection = {0.f, -1.f};
+            wantsToShoot = true;
+        }
     }
 
     if (wantsToShoot) {
@@ -289,9 +307,16 @@ void Player::applyGravity(const float deltaTime) {
 
 void Player::updateAnimation(const float deltaTime) {
     int nextFrameCount;
-    if (isJumping || isDodging) nextFrameCount = 3;
-    else if (isRunning && !isCrouching) nextFrameCount = 4;
-    else nextFrameCount = 1;
+
+    if (isJumping || isDodging) {
+        nextFrameCount = 4;
+    }
+    else if (isRunning && !isCrouching) {
+        nextFrameCount = 4;
+    }
+    else {
+        nextFrameCount = 1;
+    }
 
     if (nextFrameCount != animationFrameCount) {
         currentFrame = 0;
@@ -301,13 +326,22 @@ void Player::updateAnimation(const float deltaTime) {
     animationFrameCount = nextFrameCount;
 
     if (animationFrameCount > 1) {
+        idleTimer = 0.f;
+
         animationTimer += deltaTime;
         if (animationTimer >= frameDuration) {
             animationTimer -= frameDuration;
             currentFrame = (currentFrame + 1) % animationFrameCount;
         }
-    } else {
+    }
+    else {
         currentFrame = 0;
+        if (isCrouching || shootingTimer > 0.0f) {
+            idleTimer = 0.f;
+        }
+        else {
+            idleTimer += deltaTime;
+        }
     }
 
     sprite.setTextureRect(calculateAnimationRect());
@@ -315,43 +349,86 @@ void Player::updateAnimation(const float deltaTime) {
 }
 
 sf::IntRect Player::calculateAnimationRect() {
-    int col = 0;
-    int row;
-
     if (isDodging) {
-        col = 5;
-        row = currentFrame;
+        constexpr int baseCol = 5;
+        constexpr int baseRow = 0;
+
+        int dodgeW = m_frameSize.x / 2;
+        int dodgeH = m_frameSize.y / 2;
+
+        const int subCol = currentFrame % 2;
+        const int subRow = currentFrame / 2;
+
+        int rectLeft = baseCol * m_frameSize.x + subCol * dodgeW;
+        int rectTop  = baseRow * m_frameSize.y + subRow * dodgeH;
+
+        return sf::IntRect({rectLeft, rectTop}, {dodgeW, dodgeH});
     }
-    else if (isJumping) {
+
+    int col = 0;
+    int row = 0;
+    int actionRow = 1;
+
+    if (shootingTimer > 0.0f) {
+        if (facingUp) actionRow = 3;
+        else actionRow = 2;
+    }
+
+    if (isJumping) {
         if (shootingTimer > 0.0f) {
+            row = actionRow;
             col = 2;
-            row = facingUp ? ANIM_ROW_UP : ANIM_ROW_SHOOT;
         } else {
             col = 5;
-            row = currentFrame;
+            row = 1 + currentFrame;
         }
     }
     else if (isCrouching) {
-        col = ANIM_COLS_CROUCH;
-        if (facingUp) row = ANIM_ROW_UP;
-        else row = (shootingTimer > 0.0f) ? ANIM_ROW_SHOOT : ANIM_ROW_IDLE;
+        row = 0;
+        col = 1;
     }
     else {
-        row = (shootingTimer > 0.0f) ? (facingUp ? ANIM_ROW_UP : ANIM_ROW_SHOOT) : ANIM_ROW_IDLE;
-        col = isRunning ? currentFrame : 0;
+        if (isRunning) {
+            row = actionRow;
+            col = currentFrame;
+        }
+        else {
+            if (shootingTimer > 0.0f) {
+                row = actionRow;
+                col = 0;
+            }
+            else {
+                if (idleTimer > 2.5f) {
+                    row = 0; col = 0;
+                } else {
+                    row = 1; col = 0;
+                }
+            }
+        }
     }
 
     animationRow = row;
-    return {sf::Vector2i(col * FRAME_SIZE.x, row * FRAME_SIZE.y), FRAME_SIZE};
+    return {sf::Vector2i(col * m_frameSize.x, row * m_frameSize.y), m_frameSize};
 }
 
 void Player::applySpriteOriginCorrection() {
-    float yOffset = 0.f;
-    if (animationRow == ANIM_ROW_SHOOT) yOffset = 2.5f;
-    else if (animationRow == ANIM_ROW_UP) yOffset = 4.5f;
+    constexpr float GLOBAL_FEET_OFFSET = -11.f;
 
-    sprite.setOrigin(sf::Vector2f(static_cast<float>(FRAME_SIZE.x) / 2.f,
-                                  static_cast<float>(FRAME_SIZE.y) + SPRITE_OFFSET_Y + yOffset));
+    if (isDodging) {
+        const float dodgeWidth = static_cast<float>(m_frameSize.x) / 2.f;
+        const float dodgeHeight = static_cast<float>(m_frameSize.y) / 2.f;
+
+        sprite.setOrigin(sf::Vector2f(
+            dodgeWidth / 2.f,
+            dodgeHeight + GLOBAL_FEET_OFFSET
+        ));
+    }
+    else {
+        sprite.setOrigin(sf::Vector2f(
+            static_cast<float>(m_frameSize.x) / 2.f,
+            static_cast<float>(m_frameSize.y) + GLOBAL_FEET_OFFSET
+        ));
+    }
 }
 
 void Player::updateSpriteDirection() {
@@ -378,6 +455,11 @@ void Player::takeDamage(const int damageAmount) {
     damageOverlay.setFillColor(sf::Color(255, 0, 0, 150));
 }
 
+void Player::processKill(const int scoreReward) {
+    enemiesDefeated++;
+    totalScore += scoreReward;
+}
+
 void Player::updateDamageEffect(const float deltaTime) {
     if (damageEffectTimer > 0.0f) {
         damageEffectTimer -= deltaTime;
@@ -400,11 +482,11 @@ bool Player::checkCeilingCollision(const Map& map) const {
 }
 
 sf::Vector2f Player::getWeaponTipPos() const {
-    float offsetX = facingUp ? 10.f : static_cast<float>(FRAME_SIZE.x) * 0.25f;
-    if (!facingRight) offsetX = facingUp ? -10.f : -static_cast<float>(FRAME_SIZE.x) * 0.3f;
+    float offsetX = facingUp ? 25.f : static_cast<float>(m_frameSize.x) * 0.25f;
+    if (!facingRight) offsetX = facingUp ? -10.f : -static_cast<float>(m_frameSize.x) * 0.3f;
 
-    float offsetY = facingUp ? -(static_cast<float>(FRAME_SIZE.y) * 0.9f)
-                             : -(static_cast<float>(FRAME_SIZE.y) * 0.5f);
+    float offsetY = facingUp ? -(static_cast<float>(m_frameSize.y) * 0.9f)
+                             : -(static_cast<float>(m_frameSize.y) * 0.47f);
 
     if (isCrouching) offsetY += facingUp ? 40.f : 50.f;
     return {posX + offsetX, posY + offsetY};
@@ -442,6 +524,8 @@ void Player::spawn(const float x, const float y) {
 
 void Player::resurrect() {
     health = max_health;
+    totalScore = 0;
+    enemiesDefeated = 0;
     alive = true;
     isHit = false;
     velocity = {0.f, 0.f};

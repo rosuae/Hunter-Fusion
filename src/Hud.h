@@ -18,6 +18,8 @@ class Hud {
     static constexpr float BAR_OFFSET_Y = 44.f;
     static constexpr float AMMO_OFFSET_X = 647.f;
     static constexpr float AMMO_OFFSET_Y = 35.f;
+    static constexpr float SCORE_OFFSET_X = 380.f;
+    static constexpr float SCORE_OFFSET_Y = 77.f;
 
     static constexpr unsigned MINIMAP_WIDTH = 250u;
     static constexpr unsigned MINIMAP_HEIGHT = 150u;
@@ -32,6 +34,7 @@ class Hud {
 
     sf::Text m_healthText;
     sf::Text m_ammoText;
+    sf::Text m_scoreText;
 
     float m_barMaxWidth;
     float m_barHeight;
