@@ -515,9 +515,9 @@ std::unique_ptr<Entity> Player::clone() const {
 }
 
 void Player::checkTierUpgrade() {
-    for (auto&[scoreThreshold, texture, sound, unlocked] : m_availableSkins) {
+    for (auto&[scoreThreshold, skinTexture_, sound, unlocked] : m_availableSkins) {
         if (!unlocked && totalScore >= scoreThreshold) {
-            changeSkin(*texture);
+            changeSkin(*skinTexture_);
 
             if (sound) {
                 activeSounds.emplace_back(*sound);
