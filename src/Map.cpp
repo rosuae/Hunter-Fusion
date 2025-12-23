@@ -296,7 +296,7 @@ std::unique_ptr<Pet> Map::extractPet(const sf::FloatRect& playerBounds) {
     if (it != entities.end()) {
         std::unique_ptr<Entity> foundEntity = std::move(*it);
         entities.erase(it);
-        return std::unique_ptr<Pet>(static_cast<Pet*>(foundEntity.release()));
+        return std::unique_ptr<Pet>(dynamic_cast<Pet*>(foundEntity.release()));
     }
     return nullptr;
 }

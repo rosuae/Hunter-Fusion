@@ -424,7 +424,7 @@ void Game::renderUI(sf::RenderWindow& window) {
 
 
     if (m_state == GameState::MainMenu) {
-        m_uiText.setString("HUNTER FUSION\n\n GAIN 1000 SCORE FOR TIER 1 UPGRADE \n\n AND FIND THE HELPER ANIMAL\n\nStart - ENTER\nQuit - ESCAPE");
+        m_uiText.setString("HUNTER FUSION\n\n Gain 1000 bounty for tier 1 upgrade \n\n Find the helper animal\n\nStart - ENTER\nQuit - ESCAPE");
         m_uiText.setCharacterSize(40);
         m_uiText.setFillColor(sf::Color::White);
     }

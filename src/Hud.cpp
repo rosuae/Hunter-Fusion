@@ -117,9 +117,9 @@ void Hud::update() {
         m_ammoText.setString("NO WEAPON");
     }
 
-    const auto [kills, score] = m_player.combatStats();
+    const auto [kills, bounty] = m_player.combatStats();
 
-    const std::string scoreString = "SCORE " + std::to_string(score);
+    const std::string scoreString = "Bounty " + std::to_string(bounty);
     m_scoreText.setString(scoreString);
 
     const sf::Vector2f playerWorldPos = m_player.getPos();

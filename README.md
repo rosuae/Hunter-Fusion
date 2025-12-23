@@ -1,11 +1,10 @@
-# Metroid: Hunter Fusion
+# Hunter Fusion
 
-Metroid: Hunter Fusion este un platformer realizat în C++, cu structură pe camere interconectate. Jocul va utiliza biblioteca SFML pentru randare, input și sunet. Elementele principale includ un engine simplu cu sistem de randare pe bază de tilemap și sprites, fizică 2D (gravitație, viteză, coliziuni), cameră dinamică ce urmărește jucătorul și încărcare modulară a nivelurilor.
+Hunter Fusion is a C++ platformer inspired by the Metroid series, featuring a structure based on interconnected rooms. The game utilizes the SFML library for rendering, input, and audio. Core elements include a simple engine with a tilemap and sprite-based rendering system, 2D physics (gravity, velocity, collisions), a dynamic camera that tracks the player, and modular room loading.
 
-Gameplay-ul se bazează pe controlul unui personaj care poate merge, sări, trage proiectile și obține upgrade-uri precum dublu-salt sau dash. Structura de nivel este împărțită în camere conectate prin uși, iar deplasarea este limitată inițial de abilitățile jucătorului. Vor exista inamici cu comportament de bază (patrulare, urmărire, atac), proiectile, precum și bătălii cu boși ce utilizează atacuri scriptate. Sistemele implementate vor include coliziuni precise, "health system" și damage, spawn de entități și colectabile.
+The gameplay focuses on controlling a character capable of walking, jumping, firing projectiles, and acquiring upgrades. The level structure is divided into rooms connected by doors, with progression initially restricted by the player's abilities. The game will feature various enemies with basic behaviors (patrolling, chasing, attacking), as well as boss battles utilizing scripted attacks. The collision detection is implemented using an Axis-Aligned Bounding Box (AABB) system.
 
-
-
+The current objective of the game is to accumulate the highest possible Bounty by defeating enemies. Each enemy is assigned a bounty value based on its difficulty. This currency facilitates game progression; reaching specific bounty thresholds unlocks superior abilities (such as new suits, increased speed, or higher jump height). Additionally, the game features a Pet system, which will provide functional benefits to the player in future updates.
 ## Controls:
 - `A, D` Move Left / Right.
 - `S` Crouch.
@@ -35,6 +34,7 @@ Gameplay-ul se bazează pe controlul unui personaj care poate merge, sări, trag
 - More enemies + Bosses
 - Option to change the game volume
 - Ammo and Health Drops
+- Observer system
 
 ## Known Bugs:
 
@@ -86,7 +86,12 @@ Gameplay-ul se bazează pe controlul unui personaj care poate merge, sări, trag
 
 ## Resurse
 <!-- renovate: datasource=github-tags depName=SFML/SFML versioning=loose -->
-- [SFML](https://github.com/SFML/SFML/tree/3.0.2) (Zlib)
-- https://code.tutsplus.com/how-to-use-tile-bitmasking-to-auto-tile-your-level-layouts--cms-25673t (Map creation logic)
-
-![metroid-samus-aran-vs-alien-4k-wallpaper-uhdpaper com-572@2@a](https://github.com/user-attachments/assets/b9edee4b-5e42-41d3-9d38-f47047061e10)
+- SFML3 Documentaion
+  - https://www.sfml-dev.org/tutorials/3.0/
+  - https://github.com/SFML/SFML/tree/3.0.2
+- MAP CREATION
+  - https://code.tutsplus.com/how-to-use-tile-bitmasking-to-auto-tile-your-level-layouts--cms-25673t
+- COLLISION LOGIC
+  - https://www.youtube.com/watch?v=l2iCYCLi6MU
+  - https://manbeardgames.github.io/docs/tutorials/monogame-3-8/collision-detection/aabb-collision/
+  ![metroid-samus-aran-vs-alien-4k-wallpaper-uhdpaper com-572@2@a](https://github.com/user-attachments/assets/b9edee4b-5e42-41d3-9d38-f47047061e10)

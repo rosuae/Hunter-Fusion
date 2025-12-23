@@ -18,7 +18,7 @@ class Player : public Entity {
 
     std::unique_ptr<Weapon> weapon;
 
-    int totalScore = 0;
+    int totalBounty = 0;
     int enemiesDefeated = 0;
 
     float animationTimer;
@@ -134,7 +134,7 @@ public:
           maxJump(other.maxJump),
           jumpCooldown(other.jumpCooldown),
           weapon(other.weapon ? other.weapon->clone() : nullptr),
-          totalScore(other.totalScore),
+          totalBounty(other.totalBounty),
           enemiesDefeated(other.enemiesDefeated),
           animationTimer(other.animationTimer),
           idleTimer(other.idleTimer),
@@ -169,7 +169,7 @@ public:
         swap(lhs.maxJump, rhs.maxJump);
         swap(lhs.jumpCooldown, rhs.jumpCooldown);
         swap(lhs.weapon, rhs.weapon);
-        swap(lhs.totalScore, rhs.totalScore);
+        swap(lhs.totalBounty, rhs.totalBounty);
         swap(lhs.enemiesDefeated, rhs.enemiesDefeated);
         swap(lhs.animationTimer, rhs.animationTimer);
         swap(lhs.idleTimer, rhs.idleTimer);
@@ -210,7 +210,7 @@ public:
     void resetWeaponProjectiles() const;
 
     sf::Vector2f getWeaponTipPos() const;
-    [[nodiscard]]std::pair<int, int> combatStats() const { return {enemiesDefeated, totalScore}; }
+    [[nodiscard]]std::pair<int, int> combatStats() const { return {enemiesDefeated, totalBounty}; }
     [[nodiscard]]int getHealth() const { return health; }
     [[nodiscard]]const Weapon* getWeapon() const { return weapon.get(); }
 };

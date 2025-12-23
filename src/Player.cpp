@@ -308,10 +308,7 @@ void Player::applyGravity(const float deltaTime) {
 void Player::updateAnimation(const float deltaTime) {
     int nextFrameCount;
 
-    if (isJumping || isDodging) {
-        nextFrameCount = 4;
-    }
-    else if (isRunning && !isCrouching) {
+    if (isJumping || isDodging || (isRunning && !isCrouching)) {
         nextFrameCount = 4;
     }
     else {
@@ -360,9 +357,9 @@ sf::IntRect Player::calculateAnimationRect() {
         const int subRow = currentFrame / 2;
 
         int rectLeft = baseCol * m_frameSize.x + subCol * dodgeW;
-        int rectTop  = baseRow * m_frameSize.y + subRow * dodgeH;
+        int rectTop = baseRow * m_frameSize.y + subRow * dodgeH;
 
-        return sf::IntRect({rectLeft, rectTop}, {dodgeW, dodgeH});
+        return {{rectLeft, rectTop}, {dodgeW, dodgeH}};
     }
 
     int col = 0;
@@ -457,7 +454,7 @@ void Player::takeDamage(const int damageAmount) {
 
 void Player::processKill(const int scoreReward) {
     enemiesDefeated++;
-    totalScore += scoreReward;
+    totalBounty += scoreReward;
 
     checkTierUpgrade();
 }
@@ -516,7 +513,7 @@ std::unique_ptr<Entity> Player::clone() const {
 
 void Player::checkTierUpgrade() {
     for (auto&[scoreThreshold, skinTexture_, sound, unlocked] : m_availableSkins) {
-        if (!unlocked && totalScore >= scoreThreshold) {
+        if (!unlocked && totalBounty >= scoreThreshold) {
             changeSkin(*skinTexture_);
 
             if (sound) {
@@ -526,7 +523,7 @@ void Player::checkTierUpgrade() {
 
             unlocked = true;
 
-            max_health *= 1.2f;
+            max_health = static_cast<int>(max_health * 1.2);
             health += max_health;
             speed *= 1.2f;
             maxJump *= 1.2f;
@@ -562,7 +559,7 @@ void Player::spawn(const float x, const float y) {
 
 void Player::resurrect() {
     health = max_health;
-    totalScore = 0;
+    totalBounty = 0;
     enemiesDefeated = 0;
     alive = true;
     isHit = false;
