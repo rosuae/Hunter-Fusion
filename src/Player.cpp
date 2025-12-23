@@ -462,8 +462,8 @@ void Player::processKill(const int scoreReward) {
     checkTierUpgrade();
 }
 
-void Player::addSkinUnlock(int score, const sf::Texture& texture, const sf::SoundBuffer& sound) {
-    m_availableSkins.push_back({score, &texture, &sound, false});
+void Player::addSkinUnlock(const int score, const sf::Texture& skinTexture_, const sf::SoundBuffer& sound) {
+    m_availableSkins.push_back({score, &skinTexture_, &sound, false});
 }
 
 void Player::updateDamageEffect(const float deltaTime) {

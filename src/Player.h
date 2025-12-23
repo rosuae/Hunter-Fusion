@@ -79,7 +79,7 @@ class Player : public Entity {
 
     struct tierUpgrade {
         int scoreThreshold;
-        const sf::Texture* texture;
+        const sf::Texture* skinTexture;
         const sf::SoundBuffer* sound;
         bool unlocked;
     };
@@ -205,7 +205,7 @@ public:
     void draw(sf::RenderWindow& window) const override;
     void fire(const sf::Vector2f& direction);
     void processKill(int scoreReward);
-    void addSkinUnlock(int score, const sf::Texture& texture, const sf::SoundBuffer& sound);
+    void addSkinUnlock(int score, const sf::Texture& skinTexture_, const sf::SoundBuffer& sound);
     void checkProjectileCollisions(const std::vector<std::unique_ptr<Entity>>& targets) const;
     void resetWeaponProjectiles() const;
 
