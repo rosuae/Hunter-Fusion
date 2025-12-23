@@ -289,24 +289,23 @@ void Map::spawnEntityAt(std::unique_ptr<Entity> entity) {
 std::unique_ptr<Pet> Map::extractPet(const sf::FloatRect& playerBounds) {
     const auto it = std::find_if(entities.begin(), entities.end(),
         [&](const std::unique_ptr<Entity>& e) {
-            const auto p = dynamic_cast<Pet*>(e.get());
+            const auto* p = dynamic_cast<Pet*>(e.get());
             return p != nullptr && p->getBounds().findIntersection(playerBounds).has_value();
         });
 
     if (it != entities.end()) {
-        const auto rawPtr = dynamic_cast<Pet*>(it->get());
-        it->release();
+        std::unique_ptr<Entity> foundEntity = std::move(*it);
         entities.erase(it);
-        return std::unique_ptr<Pet>(rawPtr);
+        return std::unique_ptr<Pet>(static_cast<Pet*>(foundEntity.release()));
     }
     return nullptr;
 }
 
-void Map::depositPet(std::unique_ptr<Pet> pet) {
-    if (pet) {
-        spawnEntityAt(std::move(pet));
-    }
-}
+// void Map::depositPet(std::unique_ptr<Pet> pet) {
+//     if (pet) {
+//         spawnEntityAt(std::move(pet));
+//     }
+// }
 
 int Map::processEnemyAttacks() const {
     int totalDamage = 0;
