@@ -9,7 +9,7 @@
 #include <iostream>
 
 class Pet : public Entity {
-    const Entity* target;
+    Entity* target;
     bool isActivated;
     float activationRange;
     float minDistance;
@@ -22,15 +22,18 @@ class Pet : public Entity {
     bool isMoving;
 
     float getDistanceToTarget() const;
+    void updateAI(float deltaTime, const Map& map);
+    void moveTowardsTarget( float deltaTime, const Map& map);
+    void updateMapPhysics(float deltaTime, const Map& map);
+    void updateAnimation(float deltaTime);
 
     sf::FloatRect doGetBounds() const override;
     void takeDamage(int damageAmount) override;
     void doBehavior(float deltaTime, const Map& map) override;
-    void updateAnimation(float deltaTime);
     void applyGravity(float deltaTime) override;
 
 public:
-    Pet(std::string n, float x, float y, sf::Texture& tex, const Entity* playerTarget);
+    Pet(std::string n, float x, float y, sf::Texture& tex, Entity* playerTarget);
 
     Pet(const Pet &other)
         : Entity(other),
@@ -69,7 +72,7 @@ public:
 
     std::unique_ptr<Entity> clone() const override;
     ~Pet() override;
-
+    void setOwner(Entity* owner) { target = owner; }
     void teleport(float x, float y);
 };
 

@@ -101,7 +101,8 @@ void Hud::update() {
     constexpr int maxHP = 100;
 
     if (currentHP < 0) currentHP = 0;
-    const float hpRatio = static_cast<float>(currentHP) / static_cast<float>(maxHP);
+    float hpRatio = static_cast<float>(currentHP) / static_cast<float>(maxHP);
+    if (hpRatio > 1.0f) hpRatio = 1.0f;
 
     m_healthBar.setSize(sf::Vector2f(m_barMaxWidth * hpRatio, m_barHeight));
 

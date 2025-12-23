@@ -13,6 +13,7 @@ ResourceManager::ResourceManager() {
     loadTextures("assets/textures","portal.png");
     loadTextures("assets/textures","enemyAgro.png");
     loadTextures("assets/textures","helperanimal.png");
+    loadTextures("assets/textures","tier1Costume.png");
 
 
     loadSounds("assets/sound","jump.wav");
@@ -21,6 +22,7 @@ ResourceManager::ResourceManager() {
     loadSounds("assets/sound","enemydeath.wav");
     loadSounds("assets/sound","enemydamage.wav");
     loadSounds("assets/sound","portalactive.wav");
+    loadSounds("assets/sound","tier1.wav");
 
     loadFonts("assets/textures", "Metroid-Fusion.ttf");
 }

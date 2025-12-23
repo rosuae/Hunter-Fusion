@@ -17,7 +17,9 @@ Gameplay-ul se bazează pe controlul unui personaj care poate merge, sări, trag
 
 ## Assets:
 ### Sprites:
-- *Player:* https://www.spriters-resource.com/browser_games/supermariobroscrossover/asset/177036/
+- *Player:* 
+  - https://www.spriters-resource.com/browser_games/supermariobroscrossover/asset/177645/
+  - https://www.spriters-resource.com/browser_games/supermariobroscrossover/asset/177036/
 - *Enemies:* https://www.spriters-resource.com/snes/smetroid/asset/1725/
 - *Tiles:* https://www.spriters-resource.com/snes/smetroid/asset/144515/
 - *More Sprites:* https://www.spriters-resource.com/snes/smetroid/
@@ -31,13 +33,13 @@ Gameplay-ul se bazează pe controlul unui personaj care poate merge, sări, trag
 ## To do:
  
 - More enemies + Bosses
-- Ability to change player look
 - Option to change the game volume
-- PowerUps + Ammo and Health Drops
+- Ammo and Health Drops
 
 ## Known Bugs:
 
-- Player can get stuck in tiles while performing actions like shooting while jumping
+- Player can get stuck in tiles while performing actions like shooting while jumping (Rare)
+- One frame drop spike when entering the game
 
 ## Tema 2
 

@@ -46,29 +46,7 @@ void Game::instanceObjects() {
         );
     m_map = std::move(tempMap);
 
-    m_player = std::make_unique<Player>(
-            playerName,
-            m_resManager.getTexture("samussheet.png"),
-            0.f, 0.f,
-            m_playingSounds,
-            m_resManager.getSound("jump.wav"),
-            std::move(tempWeapon)
-        );
-
-    m_map->placeEntity(*m_player, 'P');
-
-    try {
-        m_pet = std::make_unique<Pet>(
-            "Companion",
-            0.0f, 0.0f,
-            m_resManager.getTexture("helperanimal.png"),
-            m_player.get()
-        );
-        m_map->placeEntity(*m_pet, 'C');
-
-    } catch (const ResourceException& e) {
-        std::cout << "Couldn't load pet: " << e.what();
-    }
+    initPlayerAndPet(playerName, playerWeapon, projectileName);
 
     m_map->initializeWithExistingPlayer(*m_player);
 
@@ -82,6 +60,46 @@ void Game::instanceObjects() {
 
     m_lastMapPath = initialMapPath;
     m_lastSpawnPos = m_player->getPos();
+}
+
+void Game::initPlayerAndPet(const std::string& playerName, const std::string& weaponName, const std::string& projName) {
+    auto tempWeapon = std::make_unique<Weapon>(
+        weaponName, projName, 25,
+        m_resManager.getTexture("projectile.png"), 120,
+        m_playingSounds, m_resManager.getSound("shoot.wav"), m_resManager.getSound("reload.wav")
+    );
+
+    m_player = std::make_unique<Player>(
+        playerName,
+        m_resManager.getTexture("samussheet.png"),
+        0.f, 0.f,
+        m_playingSounds,
+        m_resManager.getSound("jump.wav"),
+        std::move(tempWeapon)
+    );
+
+    m_map->placeEntity(*m_player, 'P');
+
+    try {
+        m_player->addSkinUnlock(1000, m_resManager.getTexture("tier1Costume.png"), m_resManager.getSound("tier1.wav"));
+    }
+    catch (const ResourceException& e) {
+        std::cout << "Warning: Could not load upgrade skins: " << e.what() << "\n";
+    }
+
+    try {
+        auto tempPet = std::make_unique<Pet>(
+            "Companion", 0.0f, 0.0f,
+            m_resManager.getTexture("helperanimal.png"),
+            nullptr
+        );
+
+        m_map->placeEntity(*tempPet, 'C');
+        m_map->spawnEntityAt(std::move(tempPet));
+
+    } catch (const ResourceException& e) {
+        std::cout << "Couldn't load pet: " << e.what();
+    }
 }
 
 void Game::loadLevel(const std::string& mapFile, const sf::Vector2f spawnPos) {
@@ -124,10 +142,6 @@ void Game::loadLevel(const std::pair<std::string, sf::Vector2f>& nextDestination
         }
     }
 
-    if (m_player) {
-        m_player->resetWeaponProjectiles();
-    }
-
     if (const auto it = m_savedMaps.find(nextMapPath); it != m_savedMaps.end()) {
         m_map = std::move(it->second);
         m_savedMaps.erase(it);
@@ -144,12 +158,9 @@ void Game::loadLevel(const std::pair<std::string, sf::Vector2f>& nextDestination
 
     m_currentMapPath = nextMapPath;
 
-    if (m_camera && m_map) {
-        m_camera->updateMinimap(m_map->getLayout());
-    }
-
     if (m_player) {
-        if (spawnPos.x < 0 && spawnPos.y < 0) {
+        m_player->resetWeaponProjectiles();
+        if (spawnPos.x < 0) {
             m_map->initializeWithExistingPlayer(*m_player);
         } else {
             m_player->spawn(spawnPos.x, spawnPos.y);
@@ -157,7 +168,12 @@ void Game::loadLevel(const std::pair<std::string, sf::Vector2f>& nextDestination
         }
         if (m_camera) {
             m_camera->snapToPlayer();
+            m_camera->updateMinimap(m_map->getLayout());
         }
+    }
+
+    if (m_pet) {
+        m_map->placeEntity(*m_pet, 'C');
     }
 
     m_clock.restart();
@@ -288,6 +304,13 @@ void Game::handleCollisions() {
         m_playerDamageCooldown.restart();
     }
 
+    if (!m_pet) {
+        m_pet = m_map->extractPet(m_player->getBounds());
+        if (m_pet) {
+            m_pet->setOwner(m_player.get());
+        }
+    }
+
     m_map->cleanupAndRespawn();
 }
 
@@ -306,9 +329,10 @@ void Game::resetGame() {
     for (auto& sound : m_playingSounds) {
         sound.stop();
     }
-    m_playingSounds.clear();
 
+    m_playingSounds.clear();
     m_savedMaps.clear();
+    m_pet.reset();
 
     std::ifstream fin("date.txt");
     if (!fin.is_open()) {
@@ -344,30 +368,9 @@ void Game::resetGame() {
         );
     m_map = std::move(tempMap);
 
-    m_player = std::make_unique<Player>(
-            playerName,
-            m_resManager.getTexture("samussheet.png"),
-            0.f, 0.f,
-            m_playingSounds,
-            m_resManager.getSound("jump.wav"),
-            std::move(tempWeapon)
-        );
+    initPlayerAndPet(playerName, playerWeapon, projectileName);
 
-    m_map->placeEntity(*m_player, 'P');
     m_lastSpawnPos = m_player->getPos();
-
-    try {
-        m_pet = std::make_unique<Pet>(
-            "Companion",
-            0.0f, 0.0f,
-            m_resManager.getTexture("helperanimal.png"),
-            m_player.get()
-        );
-        m_map->placeEntity(*m_pet, 'C');
-    } catch (const ResourceException& e) {
-        std::cout << "Couldn't load pet: " << e.what();
-    }
-
     m_camera = std::make_unique<Camera>(m_width, m_height, *m_player, m_resManager);
 
     m_map->initializeWithExistingPlayer(*m_player);
@@ -421,7 +424,7 @@ void Game::renderUI(sf::RenderWindow& window) {
 
 
     if (m_state == GameState::MainMenu) {
-        m_uiText.setString("HUNTER FUSION\nFIND THE HELPER ANIMAL\n\nStart - ENTER\nQuit - ESCAPE");
+        m_uiText.setString("HUNTER FUSION\n\n GAIN 1000 SCORE FOR TIER 1 UPGRADE \n\n AND FIND THE HELPER ANIMAL\n\nStart - ENTER\nQuit - ESCAPE");
         m_uiText.setCharacterSize(40);
         m_uiText.setFillColor(sf::Color::White);
     }

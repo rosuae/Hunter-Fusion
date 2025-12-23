@@ -270,7 +270,6 @@ void Map::spawnAdditionalEnemies(const int count) {
     }
 }
 
-
 void Map::spawnEntityAt(std::unique_ptr<Entity> entity) {
     if (!entity)
         return;
@@ -284,6 +283,28 @@ void Map::spawnEntityAt(std::unique_ptr<Entity> entity) {
 
     if (isObs) {
         solidEntitiesCache.push_back(entities.back().get());
+    }
+}
+
+std::unique_ptr<Pet> Map::extractPet(const sf::FloatRect& playerBounds) {
+    const auto it = std::find_if(entities.begin(), entities.end(),
+        [&](const std::unique_ptr<Entity>& e) {
+            const auto p = dynamic_cast<Pet*>(e.get());
+            return p != nullptr && p->getBounds().findIntersection(playerBounds).has_value();
+        });
+
+    if (it != entities.end()) {
+        const auto rawPtr = dynamic_cast<Pet*>(it->get());
+        it->release();
+        entities.erase(it);
+        return std::unique_ptr<Pet>(rawPtr);
+    }
+    return nullptr;
+}
+
+void Map::depositPet(std::unique_ptr<Pet> pet) {
+    if (pet) {
+        spawnEntityAt(std::move(pet));
     }
 }
 

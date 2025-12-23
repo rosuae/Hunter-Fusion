@@ -8,7 +8,7 @@
 
 #include "Map.h"
 
-Pet::Pet(std::string n, const float x, const float y, sf::Texture& tex, const Entity* playerTarget)
+Pet::Pet(std::string n, const float x, const float y, sf::Texture& tex, Entity* playerTarget)
     : Entity(std::move(n), x, y, 350.0f, 600.0f, tex, static_cast<int>(tex.getSize().x), static_cast<int>(tex.getSize().y)),
     target{playerTarget},
     isActivated{false},
@@ -43,65 +43,68 @@ float Pet::getDistanceToTarget() const {
     return std::sqrt(dx * dx + dy * dy);
 }
 
-void Pet::doBehavior(const float deltaTime, const Map& map) {
-    if (!target) return;
+void Pet::updateAI(const float deltaTime, const Map& map) {
+    if (!target) {
+        isMoving = false;
+        return;
+    }
 
-    isMoving = false;
     const float dist = getDistanceToTarget();
 
     if (!isActivated) {
-        if (dist < activationRange) {
-            isActivated = true;
-        }
+        if (dist < activationRange) isActivated = true;
+        else return;
     }
 
-    if (isActivated) {
-        if (dist > 1200.0f) {
-            const sf::Vector2f targetPos = target->getPos();
-            teleport(targetPos.x, targetPos.y - 50.0f);
-        }
-        else if (dist > minDistance) {
-            const sf::Vector2f targetPos = target->getPos();
-            const float dx = targetPos.x - posX;
-
-            float dirX = 0.0f;
-            if (std::abs(dx) > 5.0f) {
-                dirX = dx > 0 ? 1.0f : -1.0f;
-            }
-
-            if (dirX != 0.0f) {
-                isMoving = true;
-            }
-
-            const float oldX = posX;
-            posX += dirX * speed * deltaTime;
-            updateHitbox();
-
-            if (map.isWall(hitbox, true)) {
-                posX = oldX;
-                updateHitbox();
-
-                posY -= Map::getTileSize() - 10.f;
-            }
-
-            if (dirX < 0) {
-                sprite.setScale({-1.0f, 1.0f});
-            } else {
-                sprite.setScale({1.0f, 1.0f});
-            }
-        }
+    if (dist > 1200.0f) {
+        const sf::Vector2f targetPos = target->getPos();
+        teleport(targetPos.x, targetPos.y - 50.0f);
+        return;
     }
 
+    if (dist <= minDistance) {
+        isMoving = false;
+        return;
+    }
+    moveTowardsTarget(deltaTime, map);
+}
+
+void Pet::moveTowardsTarget(const float deltaTime, const Map& map) {
+    const sf::Vector2f targetPos = target->getPos();
+    const float dx = targetPos.x - posX;
+
+    if (std::abs(dx) <= 5.0f) return;
+    float dirX = (dx > 0) ? 1.0f : -1.0f;
+
+    isMoving = true;
+
+    sprite.setScale({dirX, 1.0f});
+
+    const float oldX = posX;
+    posX += dirX * speed * deltaTime;
+    updateHitbox();
+
+    if (map.isWall(hitbox, true)) {
+        posX = oldX;
+        updateHitbox();
+        posY -= Map::getTileSize() - 5.f;
+    }
+}
+
+void Pet::updateMapPhysics(const float deltaTime, const Map& map) {
     applyGravity(deltaTime);
     updateHitbox();
 
     if (map.isWall(hitbox, true)) {
         const float tileSize = Map::getTileSize();
         posY = std::floor(posY / tileSize) * tileSize;
-
         updateHitbox();
     }
+}
 
+void Pet::doBehavior(const float deltaTime, const Map& map) {
+    updateAI(deltaTime, map);
+    updateMapPhysics(deltaTime, map);
     updateAnimation(deltaTime);
 }
 

@@ -439,7 +439,7 @@ void Player::fire(const sf::Vector2f& direction) {
     if (direction.y < 0) facingUp = true;
     else {
         facingUp = false;
-        if (direction.x != 0) facingRight = (direction.x > 0);
+        if (direction.x != 0) facingRight = direction.x > 0;
     }
     updateSpriteDirection();
 
@@ -458,6 +458,12 @@ void Player::takeDamage(const int damageAmount) {
 void Player::processKill(const int scoreReward) {
     enemiesDefeated++;
     totalScore += scoreReward;
+
+    checkTierUpgrade();
+}
+
+void Player::addSkinUnlock(int score, const sf::Texture& texture, const sf::SoundBuffer& sound) {
+    m_availableSkins.push_back({score, &texture, &sound, false});
 }
 
 void Player::updateDamageEffect(const float deltaTime) {
@@ -506,6 +512,38 @@ void Player::resetWeaponProjectiles() const {
 
 std::unique_ptr<Entity> Player::clone() const {
     return std::make_unique<Player>(*this);
+}
+
+void Player::checkTierUpgrade() {
+    for (auto&[scoreThreshold, texture, sound, unlocked] : m_availableSkins) {
+        if (!unlocked && totalScore >= scoreThreshold) {
+            changeSkin(*texture);
+
+            if (sound) {
+                activeSounds.emplace_back(*sound);
+                activeSounds.back().play();
+            }
+
+            unlocked = true;
+
+            max_health *= 1.2f;
+            health += max_health;
+            speed *= 1.2f;
+            maxJump *= 1.2f;
+        }
+    }
+}
+
+void Player::changeSkin(const sf::Texture& newTexture) {
+    sprite.setTexture(newTexture);
+    constexpr int cols = 6;
+    constexpr int rows = 5;
+
+    m_frameSize.x = static_cast<int>(newTexture.getSize().x) / cols;
+    m_frameSize.y = static_cast<int>(newTexture.getSize().y) / rows;
+
+    applySpriteOriginCorrection();
+    sprite.setTextureRect(calculateAnimationRect());
 }
 
 Player::~Player() {

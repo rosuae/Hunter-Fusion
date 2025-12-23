@@ -77,6 +77,15 @@ class Player : public Entity {
     static constexpr int ANIM_ROW_UP = 2;
     static constexpr int ANIM_COLS_CROUCH = 4;
 
+    struct tierUpgrade {
+        int scoreThreshold;
+        const sf::Texture* texture;
+        const sf::SoundBuffer* sound;
+        bool unlocked;
+    };
+
+    std::vector<tierUpgrade> m_availableSkins;
+
     sf::FloatRect doGetBounds() const override;
     void takeDamage(int damageAmount) override;
     void doBehavior(float deltaTime, const Map&) override;
@@ -94,6 +103,8 @@ class Player : public Entity {
     void resolveCollisionY(const Map& map, float lastPosY);
     bool checkCeilingCollision(const Map& map) const;
 
+    void checkTierUpgrade();
+    void changeSkin(const sf::Texture& newTexture);
     void updateSpriteDirection();
     void updateAnimation(float deltaTime);
     sf::IntRect calculateAnimationRect();
@@ -194,6 +205,7 @@ public:
     void draw(sf::RenderWindow& window) const override;
     void fire(const sf::Vector2f& direction);
     void processKill(int scoreReward);
+    void addSkinUnlock(int score, const sf::Texture& texture, const sf::SoundBuffer& sound);
     void checkProjectileCollisions(const std::vector<std::unique_ptr<Entity>>& targets) const;
     void resetWeaponProjectiles() const;
 
