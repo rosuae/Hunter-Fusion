@@ -28,17 +28,6 @@ void Game::instanceObjects() {
         std::cout << "Warning: Failed to preload pickup textures: " << e.what() << std::endl;
     }
 
-    auto tempWeapon = std::make_unique<Weapon>(
-    playerWeapon,
-    projectileName,
-    50,
-    m_resManager.getTexture("projectile.png"),
-    60,
-    m_playingSounds,
-    m_resManager.getSound("shoot.wav"),
-    m_resManager.getSound("reload.wav")
-    );
-
     fin.close();
 
     std::string initialMapPath = "assets/textures/map/harta.txt";
@@ -369,17 +358,6 @@ void Game::resetGame() {
         return;
     }
     fin.close();
-
-    auto tempWeapon = std::make_unique<Weapon>(
-        playerWeapon,
-        projectileName,
-        50,
-        m_resManager.getTexture("projectile.png"),
-        60,
-        m_playingSounds,
-        m_resManager.getSound("shoot.wav"),
-        m_resManager.getSound("reload.wav")
-    );
 
     std::string initialMapPath = "assets/textures/map/harta.txt";
     m_currentMapPath = initialMapPath;
