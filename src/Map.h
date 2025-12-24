@@ -12,6 +12,7 @@
 class Entity;
 class Player;
 class Pet;
+class Pickup;
 class Portal;
 class Enemy;
 class Projectile;
@@ -35,7 +36,7 @@ class Map {
     sf::Sprite tileBackgroundSprite;
 
     Player* playerTarget = nullptr;
-    std::list <sf::Sound> playingSounds;
+    std::list<sf::Sound> playingSounds;
     std::vector<std::pair<std::string, int>> enemies;
     std::vector<Entity*> solidEntitiesCache;
 
@@ -46,7 +47,7 @@ class Map {
     sf::IntRect getWallTextureRect(int x, int y) const;
     void generateMapGeometry();
     void spawnEnemies();
-    std::pair<float, float> findSpawnLocation(char symbol) const;
+
     [[nodiscard]] std::pair<float, float> generateRandomEnemySpawn() const;
     [[nodiscard]] static sf::Vector2f gridToWorld(int x, int y);
     void handleEnemyRespawn(int enemiesDied);
@@ -66,8 +67,10 @@ public:
     int processEnemyAttacks() const;
 
     void processProjectileCollisions() const;
+    void handlePickupCollisions(Player& player) const;
     void spawnAdditionalEnemies(int count);
     void spawnEntityAt(std::unique_ptr<Entity> entity);
+    std::pair<float, float> findSpawnLocation(char symbol) const;
 
     std::unique_ptr<Pet> extractPet(const sf::FloatRect& playerBounds);
     // void depositPet(std::unique_ptr<Pet> pet);

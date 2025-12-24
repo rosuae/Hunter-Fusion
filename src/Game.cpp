@@ -22,6 +22,12 @@ void Game::instanceObjects() {
         throw ResourceException("File: date.txt ; incomplete or currupted");
     }
 
+    try {
+        m_resManager.getTexture("ammo.png");
+    } catch (const ResourceException& e) {
+        std::cout << "Warning: Failed to preload pickup textures: " << e.what() << std::endl;
+    }
+
     auto tempWeapon = std::make_unique<Weapon>(
     playerWeapon,
     projectileName,
@@ -49,6 +55,8 @@ void Game::instanceObjects() {
     initPlayerAndPet(playerName, playerWeapon, projectileName);
 
     m_map->initializeWithExistingPlayer(*m_player);
+
+    managePetSpawn();
 
     m_window.create(sf::VideoMode({m_width, m_height}), "Hunter Fusion", settings.GetWindowStyle());
     m_window.setFramerateLimit(90);
@@ -82,23 +90,37 @@ void Game::initPlayerAndPet(const std::string& playerName, const std::string& we
 
     try {
         m_player->addSkinUnlock(1000, m_resManager.getTexture("tier1Costume.png"), m_resManager.getSound("tier1.wav"));
+        m_player->addSkinUnlock(6000, m_resManager.getTexture("tier2Costume.png"), m_resManager.getSound("tier1.wav"));
+        m_player->addSkinUnlock(10000, m_resManager.getTexture("tier3Costume.png"), m_resManager.getSound("tier1.wav"));
     }
     catch (const ResourceException& e) {
         std::cout << "Warning: Could not load upgrade skins: " << e.what() << "\n";
     }
+}
 
-    try {
-        auto tempPet = std::make_unique<Pet>(
-            "Companion", 0.0f, 0.0f,
-            m_resManager.getTexture("helperanimal.png"),
-            nullptr
-        );
+void Game::managePetSpawn() const {
+    if (m_pet) {
+        m_map->placeEntity(*m_pet, 'C');
+        return;
+    }
 
-        m_map->placeEntity(*tempPet, 'C');
-        m_map->spawnEntityAt(std::move(tempPet));
+    auto [x, y] = m_map->findSpawnLocation('C');
 
-    } catch (const ResourceException& e) {
-        std::cout << "Couldn't load pet: " << e.what();
+    if (x >= 0 && y >= 0) {
+        try {
+            auto tempPet = std::make_unique<Pet>(
+                "Companion",
+                0.0f, 0.0f,
+                m_resManager.getTexture("helperanimal.png"),
+                nullptr
+            );
+
+            tempPet->teleport(x, y);
+            m_map->spawnEntityAt(std::move(tempPet));
+
+        } catch (const ResourceException& e) {
+            std::cout << "Warning: Map has 'C' tag but pet failed to load: " << e.what() << "\n";
+        }
     }
 }
 
@@ -125,9 +147,7 @@ void Game::loadLevel(const std::string& mapFile, const sf::Vector2f spawnPos) {
         }
     }
 
-    if (m_pet) {
-        m_map->placeEntity(*m_pet, 'C');
-    }
+    managePetSpawn();
 
     m_clock.restart();
 }
@@ -172,9 +192,7 @@ void Game::loadLevel(const std::pair<std::string, sf::Vector2f>& nextDestination
         }
     }
 
-    if (m_pet) {
-        m_map->placeEntity(*m_pet, 'C');
-    }
+    managePetSpawn();
 
     m_clock.restart();
 }
@@ -296,6 +314,7 @@ void Game::handleCollisions() {
     }
 
     m_map->processProjectileCollisions();
+    m_map->handlePickupCollisions(*m_player);
 
     if (const int totalDamage = m_map->processEnemyAttacks();
         totalDamage > 0 && m_playerDamageCooldown.getElapsedTime().asSeconds() > 1.f) {
@@ -371,9 +390,11 @@ void Game::resetGame() {
     initPlayerAndPet(playerName, playerWeapon, projectileName);
 
     m_lastSpawnPos = m_player->getPos();
-    m_camera = std::make_unique<Camera>(m_width, m_height, *m_player, m_resManager);
 
     m_map->initializeWithExistingPlayer(*m_player);
+    managePetSpawn();
+
+    m_camera = std::make_unique<Camera>(m_width, m_height, *m_player, m_resManager);
     m_camera->snapToPlayer();
     m_camera->updateMinimap(m_map->getLayout());
 
@@ -424,7 +445,7 @@ void Game::renderUI(sf::RenderWindow& window) {
 
 
     if (m_state == GameState::MainMenu) {
-        m_uiText.setString("HUNTER FUSION\n\n Gain 1000 bounty for tier 1 upgrade \n\n Find the helper animal\n\nStart - ENTER\nQuit - ESCAPE");
+        m_uiText.setString("HUNTER FUSION\n\n 1k bounty - tier 1 upgrade \n\n 6k bounty - tier 2 upgrade \n\n 10k bounty - tier 3 upgrade \n\nFind the helper animal\n\nStart - ENTER\nQuit - ESCAPE");
         m_uiText.setCharacterSize(40);
         m_uiText.setFillColor(sf::Color::White);
     }
@@ -432,7 +453,7 @@ void Game::renderUI(sf::RenderWindow& window) {
         overlay.setFillColor(sf::Color(0, 0, 0, 150));
         window.draw(overlay);
 
-        m_uiText.setString("PAUSED\n\nResume - ESCAPE\nMain Menu - M");
+        m_uiText.setString("PAUSED\n\n \n\n 1k bounty - tier 1 \n\n 6k bounty - tier 2 \n\n 10k bounty - tier 3 \n\n Resume - ESCAPE\nMain Menu - M");
     }
     else if (m_state == GameState::GameOver) {
         overlay.setFillColor(sf::Color(150, 0, 0, 100));

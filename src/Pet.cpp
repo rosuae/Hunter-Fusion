@@ -49,20 +49,21 @@ void Pet::updateAI(const float deltaTime, const Map& map) {
         return;
     }
 
-    const float dist = getDistanceToTarget();
+    const float distTotal = getDistanceToTarget();
 
     if (!isActivated) {
-        if (dist < activationRange) isActivated = true;
+        if (distTotal < activationRange) isActivated = true;
         else return;
     }
 
-    if (dist > 1200.0f) {
+    if (distTotal > 1200.0f) {
         const sf::Vector2f targetPos = target->getPos();
         teleport(targetPos.x, targetPos.y - 50.0f);
         return;
     }
 
-    if (dist <= minDistance) {
+    const float distX = std::abs(target->getPos().x - posX);
+    if (distX <= minDistance) {
         isMoving = false;
         return;
     }
@@ -74,7 +75,7 @@ void Pet::moveTowardsTarget(const float deltaTime, const Map& map) {
     const float dx = targetPos.x - posX;
 
     if (std::abs(dx) <= 5.0f) return;
-    float dirX = (dx > 0) ? 1.0f : -1.0f;
+    float dirX = dx > 0 ? 1.0f : -1.0f;
 
     isMoving = true;
 

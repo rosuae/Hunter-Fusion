@@ -9,7 +9,7 @@ Enemy::Enemy(const std::string& n, const int damage_, const int bountyScore_, co
              const sf::SoundBuffer& hitSound_,
              const sf::SoundBuffer& deathSound_,
              Entity* target_)
-    : Entity(n, posx_, posy_, 200.f, 1000.f, tex, 120, 180),
+    : Entity(n, posx_, posy_, 200.f, 1000.f, tex, 100, 180),
     damage{damage_},
     bountyScore{bountyScore_},
     target{target_},
@@ -17,8 +17,7 @@ Enemy::Enemy(const std::string& n, const int damage_, const int bountyScore_, co
     canDealDamage{false},
     state{EnemyState::Patrolling},
     detectionRange{400.f},
-    attackRange{60.f},
-    attackCooldown{0.2f},
+    attackCooldown{0.3f},
     currentAttackTimer{0.f},
     aggroTimer{0.f},
     patrolTimer{0.f},
@@ -73,7 +72,6 @@ Enemy::Enemy (const Enemy& other)
     canDealDamage{other.canDealDamage},
     state{EnemyState::Patrolling},
     detectionRange{other.detectionRange},
-    attackRange{other.attackRange},
     attackCooldown{other.attackCooldown},
     currentAttackTimer{other.currentAttackTimer},
     aggroTimer{other.aggroTimer},
@@ -130,22 +128,31 @@ void Enemy::updateAI(const float deltaTime) {
             if (distToPlayer > detectionRange * 1.5f && aggroTimer <= 0.0f) {
                 state = EnemyState::Patrolling;
             }
-            else if (distToPlayer < attackRange) {
-                state = EnemyState::Attacking;
-                currentAttackTimer = attackCooldown;
-                canDealDamage = false;
-            }
             else {
-                updateChase(deltaTime);
+                if (target && this->getBounds().findIntersection(target->getBounds()).has_value()) {
+                    state = EnemyState::Attacking;
+                    currentAttackTimer = attackCooldown;
+                    canDealDamage = false;
+                }
+                else {
+                    updateChase(deltaTime);
+                }
             }
             break;
 
         case EnemyState::Attacking:
-            if (distToPlayer > attackRange) {
+            if (currentAttackTimer > 0.0f) {
+                updateAttack(deltaTime);
+                break;
+            }
+            if (target && !this->getBounds().findIntersection(target->getBounds()).has_value()) {
                 state = EnemyState::Chasing;
                 canDealDamage = false;
+                currentAttackTimer = attackCooldown;
             }
-            updateAttack(deltaTime);
+            else {
+                updateAttack(deltaTime);
+            }
             break;
     }
 }
@@ -197,12 +204,7 @@ int Enemy::attackPlayer() {
     if (!target || !target->isAlive()) return 0;
 
     if (canDealDamage) {
-
-        const float dx = target->getPos().x - posX;
-        const float dy = target->getPos().y - posY;
-        const float distSq = dx*dx + dy*dy;
-
-        if (const float attackRangeSq = attackRange * attackRange; distSq <= attackRangeSq) {
+        if (this->getBounds().findIntersection(target->getBounds()).has_value()) {
             canDealDamage = false;
             currentAttackTimer = attackCooldown;
             return damage;

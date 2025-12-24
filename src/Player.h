@@ -204,6 +204,7 @@ public:
     void resurrect();
     void draw(sf::RenderWindow& window) const override;
     void fire(const sf::Vector2f& direction);
+    bool pickupAmmo(int amount) const;
     void processKill(int scoreReward);
     void addSkinUnlock(int score, const sf::Texture& skinTexture_, const sf::SoundBuffer& sound);
     void checkProjectileCollisions(const std::vector<std::unique_ptr<Entity>>& targets) const;

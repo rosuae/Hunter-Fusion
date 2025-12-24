@@ -86,6 +86,10 @@ void Player::doBehavior(const float deltaTime, const Map& map) {
         resolveCollisionX(map, oldX);
     }
 
+    if (std::abs(velocity.x) < 0.1f) {
+        isRunning = false;
+    }
+
     applyGravity(deltaTime);
     handleVariableJumpHeight(deltaTime);
     posY += velocity.y * deltaTime;
@@ -443,6 +447,13 @@ void Player::fire(const sf::Vector2f& direction) {
     if (weapon->tryFire(*this, direction)) shootingTimer = shootingDuration;
 }
 
+bool Player::pickupAmmo(const int amount) const {
+    if (weapon) {
+        return weapon->stockAmmo(amount);
+    }
+    return false;
+}
+
 void Player::takeDamage(const int damageAmount) {
     if (isDodging) return;
 
@@ -524,7 +535,7 @@ void Player::checkTierUpgrade() {
             unlocked = true;
 
             max_health = static_cast<int>(max_health * 1.2);
-            health += max_health;
+            health = max_health;
             speed *= 1.2f;
             maxJump *= 1.2f;
         }

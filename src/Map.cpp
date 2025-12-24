@@ -4,6 +4,7 @@
 #include "Pet.h"
 #include "Enemy.h"
 #include "Portal.h"
+#include "Pickup.h"
 #include "Entity.h"
 #include "ResourceManager.h"
 #include "GameExceptions.h"
@@ -242,6 +243,21 @@ void Map::processProjectileCollisions() const {
     playerTarget->checkProjectileCollisions(entities);
 }
 
+void Map::handlePickupCollisions(Player& player) const {
+    if (!player.isAlive()) return;
+
+    const sf::FloatRect playerBounds = player.getBounds();
+    for (auto& entity : entities) {
+        if (entity->isAlive()) {
+            if (auto* pickup = dynamic_cast<Pickup*>(entity.get())) {
+                if (pickup->getBounds().findIntersection(playerBounds).has_value()) {
+                    pickup->apply(player);
+                }
+            }
+        }
+    }
+}
+
 void Map::spawnAdditionalEnemies(const int count) {
     if (!playerTarget) return;
 
@@ -406,18 +422,47 @@ void Map::initializeWithExistingPlayer(Player &player) {
 
 void Map::cleanupAndRespawn() {
     int deadCount = 0;
+
+    std::vector<std::unique_ptr<Entity>> drops;
+
     std::erase_if(entities, [&](const std::unique_ptr<Entity>& en) {
         if (!en->isAlive()) {
             if (const auto* enemy = dynamic_cast<Enemy*>(en.get())) {
                 if (playerTarget) {
                     enemy->grantReward(*playerTarget);
+                    deadCount++;
+                }
+                if (Game::generateRandomInt(1, 100) <= 25) {
+                    try {
+                        constexpr float groundOffsetY = 40;
+                        auto drop = PickupFactory::create(
+                            PickupType::Ammo,
+                            enemy->getPos().x,
+                            enemy->getPos().y - groundOffsetY,
+                            resManager,
+                            playingSounds
+                        );
+
+                        if (drop) {
+                            drops.push_back(std::move(drop));
+                        }
+                    } catch (const ResourceException& e) {
+                        std::cout << "[Drop Error] " << e.what() << std::endl;
+                    }
                 }
             }
-            deadCount++;
             return true;
         }
         return false;
     });
+
+    for (auto& drop : drops) {
+        try {
+            spawnEntityAt(std::move(drop));
+        } catch (const MapEntityException& e) {
+            std::cout << "Could not drop pickup" << e.what();
+        }
+    }
 
     solidEntitiesCache.clear();
     for (const auto& ent : entities) {

@@ -19,7 +19,6 @@ Weapon::Weapon(std::string n, std::string projName, const int projDmg, sf::Textu
     reloada{30},
     ammoAmount{a},
     max_ammo{ammoAmount},
-    current_ammo{ammoAmount},
     projectileDmg{projDmg},
     fireRate{0.2f},
     fireTimer{0.f},
@@ -84,11 +83,21 @@ void Weapon::finishReload() {
 void Weapon::resetAmmo() {
     reloada = magCapacity;
     ammoAmount = max_ammo;
-    current_ammo = max_ammo;
 
     state = WeaponState::Ready;
     fireTimer = 0.0f;
     reloadTimer = 0.0f;
+}
+
+bool Weapon::stockAmmo(const int amount) {
+    if (ammoAmount >= max_ammo) {
+        return false;
+    }
+    ammoAmount += amount;
+    if (ammoAmount > max_ammo) {
+        ammoAmount = max_ammo;
+    }
+    return true;
 }
 
 void Weapon::clearProjectiles() {

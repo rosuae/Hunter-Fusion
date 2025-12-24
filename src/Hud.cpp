@@ -105,8 +105,8 @@ void Hud::update() {
     if (hpRatio > 1.0f) hpRatio = 1.0f;
 
     m_healthBar.setSize(sf::Vector2f(m_barMaxWidth * hpRatio, m_barHeight));
-
-    m_healthText.setString( std::to_string(currentHP) + "  HEALTH");
+    const int percentage = static_cast<int>(hpRatio * 100.f);
+    m_healthText.setString( std::to_string(percentage) + "  ENERGY");
 
     if (const Weapon* currentWeapon = m_player.getWeapon()){
         const int clip = currentWeapon->getAmmoInClip();

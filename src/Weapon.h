@@ -31,7 +31,6 @@ class Weapon {
     int reloada;
     int ammoAmount;
     int max_ammo;
-    int current_ammo;
 
     int projectileDmg;
     float fireRate;
@@ -60,7 +59,6 @@ public:
     reloada(other.reloada),
     ammoAmount(other.ammoAmount),
     max_ammo(other.max_ammo),
-    current_ammo(other.current_ammo),
     projectileDmg(other.projectileDmg),
     fireRate(other.fireRate),
     fireTimer(other.fireTimer),
@@ -81,7 +79,6 @@ public:
     reloada(other.reloada),
     ammoAmount(other.ammoAmount),
     max_ammo(other.max_ammo),
-    current_ammo(other.current_ammo),
     projectileDmg(other.projectileDmg),
     fireRate(other.fireRate),
     fireTimer(other.fireTimer),
@@ -115,6 +112,7 @@ public:
     bool tryReload();
 
     void resetAmmo();
+    bool stockAmmo(int amount);
     void clearProjectiles();
     void update(float deltaTime, const Map& map);
     void draw(sf::RenderWindow& window) const;

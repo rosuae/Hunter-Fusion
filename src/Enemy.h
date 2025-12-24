@@ -23,7 +23,6 @@ class Enemy : public Entity{
     bool canDealDamage;
     EnemyState state;
     float detectionRange;
-    float attackRange;
     float attackCooldown;
     float currentAttackTimer;
     float aggroTimer;
@@ -89,7 +88,6 @@ public:
         swap(lhs.canDealDamage, rhs.canDealDamage);
         swap(lhs.state, rhs.state);
         swap(lhs.detectionRange, rhs.detectionRange);
-        swap(lhs.attackRange, rhs.attackRange);
         swap(lhs.attackCooldown, rhs.attackCooldown);
         swap(lhs.currentAttackTimer, rhs.currentAttackTimer);
         swap(lhs.aggroTimer, rhs.aggroTimer);

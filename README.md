@@ -8,7 +8,7 @@ The current objective of the game is to accumulate the highest possible Bounty b
 ## Controls:
 - `A, D` Move Left / Right.
 - `S` Crouch.
-- `S + A / D` Dodge.
+- `S + A / D` Dodge / Morphball.
 - `W / Space (Hold)` Jump.
 - `Left / Right / Up Arrow` Shoot.
 - `R` Reload.
@@ -35,6 +35,8 @@ The current objective of the game is to accumulate the highest possible Bounty b
 - Option to change the game volume
 - Ammo and Health Drops
 - Observer system
+- Robust game state system
+- New, Save, Load Game features
 
 ## Known Bugs:
 
@@ -84,7 +86,7 @@ The current objective of the game is to accumulate the highest possible Bounty b
 - [ ] tag de `git` pe commit cu **toate bifele**: de exemplu `v0.3` sau `v1.0`
 - [ ] code review #3 2 proiecte
 
-## Resurse
+## Resources
 <!-- renovate: datasource=github-tags depName=SFML/SFML versioning=loose -->
 - SFML3 Documentaion
   - https://www.sfml-dev.org/tutorials/3.0/
@@ -94,4 +96,5 @@ The current objective of the game is to accumulate the highest possible Bounty b
 - COLLISION LOGIC
   - https://www.youtube.com/watch?v=l2iCYCLi6MU
   - https://manbeardgames.github.io/docs/tutorials/monogame-3-8/collision-detection/aabb-collision/
-  ![metroid-samus-aran-vs-alien-4k-wallpaper-uhdpaper com-572@2@a](https://github.com/user-attachments/assets/b9edee4b-5e42-41d3-9d38-f47047061e10)
+
+- ![metroid-samus-aran-vs-alien-4k-wallpaper-uhdpaper com-572@2@a](https://github.com/user-attachments/assets/b9edee4b-5e42-41d3-9d38-f47047061e10)
