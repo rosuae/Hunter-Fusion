@@ -56,6 +56,7 @@ public:
     Map(std::string n, const std::string& filePath, ResourceManager& resManager,
         std::list<sf::Sound>& playingSounds_);
 
+    bool hasPet() const;
     static float getTileSize() { return TILE_SIZE; }
     void initializeWithPlayer(Player& player);
     void initializeWithExistingPlayer(Player& player);

@@ -27,7 +27,7 @@ class Weapon {
     std::string nume;
     std::string projectileName;
 
-    const int magCapacity = 30;
+    const int magCapacity;
     int reloada;
     int ammoAmount;
     int max_ammo;
@@ -56,6 +56,7 @@ public:
     state(other.state),
     nume(other.nume),
     projectileName(other.projectileName),
+    magCapacity{other.magCapacity},
     reloada(other.reloada),
     ammoAmount(other.ammoAmount),
     max_ammo(other.max_ammo),
@@ -76,6 +77,7 @@ public:
     state(other.state),
     nume(std::move(other.nume)),
     projectileName(std::move(other.projectileName)),
+    magCapacity{other.magCapacity},
     reloada(other.reloada),
     ammoAmount(other.ammoAmount),
     max_ammo(other.max_ammo),

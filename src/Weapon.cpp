@@ -16,11 +16,12 @@ Weapon::Weapon(std::string n, std::string projName, const int projDmg, sf::Textu
     state{WeaponState::Ready},
     nume{std::move (n)},
     projectileName{std::move(projName)},
-    reloada{30},
+    magCapacity{15},
+    reloada{magCapacity},
     ammoAmount{a},
     max_ammo{ammoAmount},
     projectileDmg{projDmg},
-    fireRate{0.2f},
+    fireRate{0.5f},
     fireTimer{0.f},
     reloadDuration{1.f},
     reloadTimer{0.f},
@@ -29,8 +30,8 @@ Weapon::Weapon(std::string n, std::string projName, const int projDmg, sf::Textu
     shootSound{shootSound_},
     reloadSound{reloadSound_}
 {
-    shootSound.setVolume(30); //until volume settings feature
-    reloadSound.setVolume(30);
+    shootSound.setVolume(50); //until volume settings feature
+    reloadSound.setVolume(50);
 }
 
 std::unique_ptr<Weapon> Weapon::clone() const {

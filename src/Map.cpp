@@ -118,6 +118,15 @@ Map::Map(std::string n, const std::string& filePath, ResourceManager& resM, std:
     generateMapGeometry();
 }
 
+bool Map::hasPet() const {
+    for (const auto& entity : entities) {
+        if (dynamic_cast<const Pet*>(entity.get())) {
+            return true;
+        }
+    }
+    return false;
+}
+
 bool Map::isWallAt(const int x, const int y) const {
     if (y < 0 || y >= static_cast<int>(mapLayout.size())) return false;
     if (x < 0 || x >= static_cast<int>(mapLayout[y].size())) return false;

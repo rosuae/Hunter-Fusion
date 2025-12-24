@@ -27,6 +27,8 @@ ResourceManager::ResourceManager() {
     loadSounds("assets/sound","portalactive.wav");
     loadSounds("assets/sound","tier1.wav");
     loadSounds("assets/sound","pickupammo.wav");
+    loadSounds("assets/sound","final_shot.wav");
+    loadSounds("assets/sound","samus_flip.wav");
 
     loadFonts("assets/textures", "Metroid-Fusion.ttf");
 }

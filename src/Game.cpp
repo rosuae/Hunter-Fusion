@@ -31,9 +31,9 @@ void Game::instanceObjects() {
     auto tempWeapon = std::make_unique<Weapon>(
     playerWeapon,
     projectileName,
-    25,
+    50,
     m_resManager.getTexture("projectile.png"),
-    120,
+    60,
     m_playingSounds,
     m_resManager.getSound("shoot.wav"),
     m_resManager.getSound("reload.wav")
@@ -72,8 +72,8 @@ void Game::instanceObjects() {
 
 void Game::initPlayerAndPet(const std::string& playerName, const std::string& weaponName, const std::string& projName) {
     auto tempWeapon = std::make_unique<Weapon>(
-        weaponName, projName, 25,
-        m_resManager.getTexture("projectile.png"), 120,
+        weaponName, projName, 50,
+        m_resManager.getTexture("projectile.png"), 60,
         m_playingSounds, m_resManager.getSound("shoot.wav"), m_resManager.getSound("reload.wav")
     );
 
@@ -83,6 +83,8 @@ void Game::initPlayerAndPet(const std::string& playerName, const std::string& we
         0.f, 0.f,
         m_playingSounds,
         m_resManager.getSound("jump.wav"),
+        m_resManager.getSound("final_shot.wav"),
+        m_resManager.getSound("samus_flip.wav"),
         std::move(tempWeapon)
     );
 
@@ -101,6 +103,10 @@ void Game::initPlayerAndPet(const std::string& playerName, const std::string& we
 void Game::managePetSpawn() const {
     if (m_pet) {
         m_map->placeEntity(*m_pet, 'C');
+        return;
+    }
+
+    if (m_map->hasPet()) {
         return;
     }
 
@@ -367,9 +373,9 @@ void Game::resetGame() {
     auto tempWeapon = std::make_unique<Weapon>(
         playerWeapon,
         projectileName,
-        25,
+        50,
         m_resManager.getTexture("projectile.png"),
-        120,
+        60,
         m_playingSounds,
         m_resManager.getSound("shoot.wav"),
         m_resManager.getSound("reload.wav")

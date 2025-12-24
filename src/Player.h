@@ -51,6 +51,8 @@ class Player : public Entity {
 
     std::list<sf::Sound>& activeSounds;
     sf::Sound jumpSound;
+    sf::Sound deathSound;
+    sf::Sound dodgeSound;
 
     static constexpr float DEF_SPEED = 800.f;
     static constexpr float DEF_GRAVITY = 2500.f;
@@ -68,7 +70,7 @@ class Player : public Entity {
     static constexpr float JUMP_BUFFER_X = 10.f;
     static constexpr float GROUND_CHECK_HEIGHT = 10.f;
 
-    static constexpr float DODGE_DURATION = 0.4f;
+    static constexpr float DODGE_DURATION = 0.6f;
     static constexpr float DODGE_COOLDOWN_TIME = 0.8f;
     static constexpr float DODGE_SPEED = 1000.f;
 
@@ -116,6 +118,8 @@ public:
         float posx_, float posy_,
         std::list<sf::Sound>& activeSounds_,
         const sf::SoundBuffer& jumpSound_,
+        const sf::SoundBuffer& deathSound_,
+        const sf::SoundBuffer& dodgeSound_,
         std::unique_ptr<Weapon> startingWeapon);
 
     Player& operator=(const Player& other) {
@@ -159,8 +163,9 @@ public:
           animationFrameCount(other.animationFrameCount),
           damageOverlay(other.damageOverlay),
           activeSounds(other.activeSounds),
-          jumpSound(other.jumpSound) {
-    }
+          jumpSound(other.jumpSound),
+          deathSound(other.deathSound),
+          dodgeSound(other.dodgeSound) {}
 
     friend void swap(Player &lhs, Player &rhs) noexcept {
         using std::swap;
@@ -195,6 +200,9 @@ public:
         swap(lhs.damageOverlay, rhs.damageOverlay);
         swap(lhs.activeSounds, rhs.activeSounds);
         swap(lhs.jumpSound, rhs.jumpSound);
+        swap(lhs.deathSound, rhs.deathSound);
+        swap(lhs.dodgeSound, rhs.dodgeSound);
+
     }
 
     std::unique_ptr<Entity> clone() const override;

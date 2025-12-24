@@ -9,6 +9,8 @@ Player::Player(const std::string& n, sf::Texture& tex,
     const float posx_, const float posy_,
     std::list<sf::Sound>& activeSounds_,
     const sf::SoundBuffer& jumpSound_,
+    const sf::SoundBuffer& deathSound_,
+    const sf::SoundBuffer& dodgeSound_,
     std::unique_ptr<Weapon> startingWeapon)
     : Entity(n, posx_, posy_, DEF_SPEED, DEF_GRAVITY, tex, HITBOX_WIDTH, HITBOX_HEIGHT_STANDING),
     velocity{0.f, 0.f},
@@ -36,7 +38,9 @@ Player::Player(const std::string& n, sf::Texture& tex,
     animationStartIndex{0},
     animationFrameCount{1},
     activeSounds{activeSounds_},
-    jumpSound{jumpSound_}
+    jumpSound{jumpSound_},
+    deathSound{deathSound_},
+    dodgeSound{dodgeSound_}
 {
     constexpr int cols = 6;
     constexpr int rows = 5;
@@ -53,7 +57,8 @@ Player::Player(const std::string& n, sf::Texture& tex,
 
     sprite.setTextureRect(sf::IntRect(sf::Vector2i(0, 0), m_frameSize));
     updateHitbox();
-    jumpSound.setVolume(25.f); // until volume change option
+    jumpSound.setVolume(50.f); // until volume change option
+    deathSound.setVolume(50.f);
 }
 
 void Player::doBehavior(const float deltaTime, const Map& map) {
@@ -175,6 +180,9 @@ void Player::handleCrouchInput(const Map& map) {
 
 void Player::startDodge() {
     isDodging = true;
+
+    activeSounds.emplace_back(dodgeSound);
+    activeSounds.back().play();
     dodgeTimer = DODGE_DURATION;
     dodgeCooldownTimer = DODGE_COOLDOWN_TIME;
 
@@ -455,12 +463,22 @@ bool Player::pickupAmmo(const int amount) const {
 }
 
 void Player::takeDamage(const int damageAmount) {
-    if (isDodging) return;
+    if (isDodging || !isAlive()) return;
 
     health -= damageAmount;
-    isHit = true;
-    damageEffectTimer = damageEffectDuration;
-    damageOverlay.setFillColor(sf::Color(255, 0, 0, 150));
+
+    if (health <= 0) {
+        health = 0;
+        alive = false;
+
+        activeSounds.emplace_back(deathSound);
+        activeSounds.back().play();
+    }
+    else {
+        isHit = true;
+        damageEffectTimer = damageEffectDuration;
+        damageOverlay.setFillColor(sf::Color(255, 0, 0, 150));
+    }
 }
 
 void Player::processKill(const int scoreReward) {

@@ -42,7 +42,7 @@ public:
 };
 
 class AmmoPickup : public Pickup {
-    const int AMMO_REWARD = 15;
+    const int AMMO_REWARD = 6;
 public:
     AmmoPickup(float x, float y, sf::Texture& tex, std::list<sf::Sound>& activeSounds_, const sf::SoundBuffer& pickupSound_);
 
