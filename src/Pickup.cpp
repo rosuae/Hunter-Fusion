@@ -31,10 +31,10 @@ void Pickup::doBehavior(const float deltaTime, const Map& map) {
         floatTimer += deltaTime;
 
         constexpr float amplitude = 10.0f;
-        constexpr float speed = 2.0f;
+        constexpr float animSpeed = 2.0f;
         constexpr float groundOffsetY = 10;
 
-        posY = basePosY + std::cos(floatTimer * speed) * amplitude - groundOffsetY;
+        posY = basePosY + std::cos(floatTimer * animSpeed) * amplitude - groundOffsetY;
 
         updateHitbox();
     }
