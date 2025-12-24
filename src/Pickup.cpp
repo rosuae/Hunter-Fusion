@@ -51,10 +51,6 @@ AmmoPickup::AmmoPickup(const float x, const float y, sf::Texture& tex, std::list
     updateHitbox();
 }
 
-std::unique_ptr<Entity> AmmoPickup::clone() const {
-    return std::make_unique<AmmoPickup>(*this);
-}
-
 void AmmoPickup::apply(Player& player) {
     if (!isAlive()) return;
     if (player.pickupAmmo(AMMO_REWARD)) {

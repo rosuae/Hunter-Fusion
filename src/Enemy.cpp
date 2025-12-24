@@ -63,43 +63,6 @@ Enemy::Enemy(const std::string& n, const int damage_, const int bountyScore_, co
     exclamationSprite.setScale({0.f, 0.f});
 }
 
-Enemy::Enemy (const Enemy& other)
-: Entity(other),
-    damage{other.damage},
-    bountyScore{other.bountyScore},
-    target{other.target},
-    isMoving{other.isMoving},
-    canDealDamage{other.canDealDamage},
-    state{EnemyState::Patrolling},
-    detectionRange{other.detectionRange},
-    attackCooldown{other.attackCooldown},
-    currentAttackTimer{other.currentAttackTimer},
-    aggroTimer{other.aggroTimer},
-    patrolTimer{other.patrolTimer},
-    patrolDuration{other.patrolDuration},
-    patrolDirection{other.patrolDirection},
-    currentFrame{other.currentFrame},
-    animationTimer{other.animationTimer},
-    frameDuration{other.frameDuration},
-    animationFrameCount{other.animationFrameCount},
-    alertTexture{other.alertTexture},
-    exclamationSprite{other.exclamationSprite},
-    alertFrameSize{other.alertFrameSize},
-    alertAnimTimer{other.alertAnimTimer},
-    alertActive{other.alertActive},
-    activeSounds{other.activeSounds},
-    hitSound{other.hitSound},
-    deathSound{other.deathSound}
-{
-    activeEnemyCount++;
-}
-
-std::unique_ptr<Entity> Enemy::clone() const{
-    return std::make_unique<Enemy>(*this);
-}
-
-Enemy::~Enemy() {activeEnemyCount--;}
-
 void Enemy::updateAI(const float deltaTime) {
     if (!target || !target->isAlive()) {
         state = EnemyState::Patrolling;

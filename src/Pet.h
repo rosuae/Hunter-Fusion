@@ -34,22 +34,9 @@ class Pet : public Entity {
 
 public:
     Pet(std::string n, float x, float y, sf::Texture& tex, Entity* playerTarget);
+    ~Pet() override = default;
 
-    Pet(const Pet &other)
-        : Entity(other),
-        target{other.target},
-        isActivated{other.isActivated},
-        activationRange{other.activationRange},
-        minDistance{other.minDistance},
-        frameWidth{other.frameWidth},
-        frameHeight{other.frameHeight},
-        animationTimer{other.animationTimer},
-        animationSpeed{other.animationSpeed},
-        currentFrame{other.currentFrame},
-        isMoving{other.isMoving}
-    {
-        std::cout << "Copy constructor pet";
-    }
+    Pet(const Pet &other) = default;
 
     friend void swap(Pet &lhs, Pet &rhs) noexcept {
         using std::swap;
@@ -58,20 +45,22 @@ public:
         swap(lhs.isActivated, rhs.isActivated);
         swap(lhs.activationRange, rhs.activationRange);
         swap(lhs.minDistance, rhs.minDistance);
+        swap(lhs.frameWidth, rhs.frameWidth);
+        swap(lhs.frameHeight, rhs.frameHeight);
+        swap(lhs.animationTimer, rhs.animationTimer);
+        swap(lhs.animationSpeed, rhs.animationSpeed);
+        swap(lhs.currentFrame, rhs.currentFrame);
+        swap(lhs.isMoving, rhs.isMoving);
     }
 
-    Pet& operator=(const Pet& other) {
-        if (this != &other) {
-            const std::unique_ptr<Entity> clonedEntity = other.clone();
-            auto* clonedPet = dynamic_cast<Pet*>(clonedEntity.get());
-            using std::swap;
-            swap(*this, *clonedPet);
-        }
+    Pet & operator=(Pet other) {
+        Entity::operator=(other);
+        swap(*this, other);
         return *this;
     }
 
     std::unique_ptr<Entity> clone() const override;
-    ~Pet() override;
+
     void setOwner(Entity* owner) { target = owner; }
     void teleport(float x, float y);
 };

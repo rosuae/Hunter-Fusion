@@ -1,6 +1,5 @@
 #include "Entity.h"
 #include <cmath>
-#include <iostream>
 
 Entity::Entity(std::string n, const float x, const float y, const float spd, const float grav, sf::Texture& tex, const int w, const int h)
     :
@@ -16,26 +15,6 @@ Entity::Entity(std::string n, const float x, const float y, const float spd, con
     gravity{grav},
     texture{&tex},
     sprite{*texture} {
-}
-
-Entity::~Entity() {
-    std::cout << "S a apelat destructor Entity\n";
-}
-
-Entity::Entity (const Entity& other):
-name{other.name},
-alive{other.alive},
-max_health{other.max_health},
-health{other.health},
-hitboxWidth{other.hitboxWidth},
-hitboxHeight{other.hitboxHeight},
-posX{other.posX},
-posY{other.posY},
-speed{other.speed},
-gravity{other.gravity},
-texture{other.texture},
-sprite{other.sprite}{
-    std::cout << "S a apelat constructor copiere entity \n";
 }
 
 void Entity::setPosition(const float x, const float y) {

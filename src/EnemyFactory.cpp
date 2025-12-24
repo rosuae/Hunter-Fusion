@@ -7,7 +7,26 @@
 #include "ResourceManager.h"
 #include "GameExceptions.h"
 
-std::unique_ptr<Enemy> EnemyFactory::metroidPrototype = nullptr;
+std::map<std::string, std::unique_ptr<Enemy>> EnemyFactory::registry;
+
+void EnemyFactory::loadPrototype(const std::string& type, ResourceManager& res, std::list<sf::Sound>& sounds, Entity* target) {
+    if (registry.contains(type)) return;
+
+    if (type == "Metroid") {
+        registry[type].reset(new Enemy(
+            "Metroid", 20, 150, 0, 0,
+            res.getTexture("enemy.png"),
+            res.getTexture("enemyAgro.png"),
+            sounds,
+            res.getSound("enemydamage.wav"),
+            res.getSound("enemydeath.wav"),
+            target
+        ));
+    }
+    else {
+        throw ResourceException("Unknown enemy type in loader: " + type);
+    }
+}
 
 std::unique_ptr<Enemy> EnemyFactory::createEnemy(const std::string &type,
     const float x, const float y,
@@ -15,25 +34,9 @@ std::unique_ptr<Enemy> EnemyFactory::createEnemy(const std::string &type,
     std::list<sf::Sound> &playingSounds,
     Entity *target)
 {
-    std::unique_ptr<Enemy> enemy = nullptr;
+    loadPrototype(type, resManager, playingSounds, target);
+    std::unique_ptr<Enemy> newEnemy = std::make_unique<Enemy>(*registry[type]);
 
-    if (type == "Metroid") {
-        enemy.reset(new Enemy(
-            type,
-            20,
-            150,
-            x, y,
-            resManager.getTexture("enemy.png"),
-            resManager.getTexture("enemyAgro.png"),
-            playingSounds,
-            resManager.getSound("enemydamage.wav"),
-            resManager.getSound("enemydeath.wav"),
-            target
-        ));
-    }
-
-    if (enemy)
-        return enemy;
-
-    throw ResourceException("Unknown enemy type: " + type);
+    newEnemy->setPosition(x, y);
+    return newEnemy;
 }

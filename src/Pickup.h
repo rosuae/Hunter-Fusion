@@ -22,6 +22,10 @@ protected:
     std::list<sf::Sound>* activeSounds;
     const sf::SoundBuffer* pickupSound;
 
+    void takeDamage(const int damageAmount) override { health += damageAmount; }
+    void applyGravity(const float deltaTime) override { posY += gravity * deltaTime; }
+    sf::FloatRect doGetBounds() const override { return hitbox; }
+    void doBehavior(float deltaTime, const Map& map) override;
 public:
     Pickup(std::string n, const float x, const float y, sf::Texture& tex, std::list<sf::Sound>& activeSounds_, const sf::SoundBuffer& pickupSound_)
         : Entity(std::move(n), x, y, 0.0f, 400.0f, tex, 20, 20),
@@ -31,24 +35,56 @@ public:
         activeSounds{&activeSounds_},
         pickupSound{&pickupSound_} {}
 
-    virtual void apply(Player& player) = 0;
-    void takeDamage(const int damageAmount) override { health += damageAmount; }
-    void applyGravity(const float deltaTime) override { posY += gravity * deltaTime; }
-    sf::FloatRect doGetBounds() const override { return hitbox; }
-
-    void doBehavior(float deltaTime, const Map& map) override;
-
     ~Pickup() override = default;
+    Pickup(const Pickup &other) = default;
+
+    friend void swap(Pickup &lhs, Pickup &rhs) noexcept {
+        using std::swap;
+        swap(static_cast<Entity &>(lhs), static_cast<Entity &>(rhs));
+        swap(lhs.isGrounded, rhs.isGrounded);
+        swap(lhs.floatTimer, rhs.floatTimer);
+        swap(lhs.basePosY, rhs.basePosY);
+        swap(lhs.activeSounds, rhs.activeSounds);
+        swap(lhs.pickupSound, rhs.pickupSound);
+    }
+
+    virtual void apply(Player& player) = 0;
 };
 
+//
+// Ammo Pickup
+//
+
 class AmmoPickup : public Pickup {
-    const int AMMO_REWARD = 6;
+    int AMMO_REWARD = 6;
 public:
     AmmoPickup(float x, float y, sf::Texture& tex, std::list<sf::Sound>& activeSounds_, const sf::SoundBuffer& pickupSound_);
 
-    std::unique_ptr<Entity> clone() const override;
+    ~AmmoPickup() override = default;
+    AmmoPickup(const AmmoPickup &other) = default;
+
+    friend void swap(AmmoPickup &lhs, AmmoPickup &rhs) noexcept {
+        using std::swap;
+        swap(static_cast<Pickup &>(lhs), static_cast<Pickup &>(rhs));
+        swap(lhs.AMMO_REWARD, rhs.AMMO_REWARD);
+    }
+
+    AmmoPickup& operator=(AmmoPickup other) {
+        Entity::operator=(other);
+        swap(*this, other);
+        return *this;
+    }
+
+    std::unique_ptr<Entity> clone() const override {
+        return std::make_unique<AmmoPickup>(*this);
+    }
+
     void apply(Player& player) override;
 };
+
+//
+//  Pickup factory
+//
 
 enum class PickupType { Ammo, Health };
 

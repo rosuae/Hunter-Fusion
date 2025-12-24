@@ -1,6 +1,5 @@
 #include "Player.h"
 #include "Map.h"
-#include <iostream>
 #include <cmath>
 #include "Portal.h"
 #include "Weapon.h"
@@ -536,10 +535,6 @@ void Player::resetWeaponProjectiles() const {
     if (weapon) weapon->clearProjectiles();
 }
 
-std::unique_ptr<Entity> Player::clone() const {
-    return std::make_unique<Player>(*this);
-}
-
 void Player::checkTierUpgrade() {
     for (auto&[scoreThreshold, skinTexture_, sound, unlocked] : m_availableSkins) {
         if (!unlocked && totalBounty >= scoreThreshold) {
@@ -570,10 +565,6 @@ void Player::changeSkin(const sf::Texture& newTexture) {
 
     applySpriteOriginCorrection();
     sprite.setTextureRect(calculateAnimationRect());
-}
-
-Player::~Player() {
-    std::cout << "Destructor Player\n";
 }
 
 void Player::spawn(const float x, const float y) {

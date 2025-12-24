@@ -23,13 +23,14 @@ Weapon::Weapon(std::string n, std::string projName, const int projDmg, sf::Textu
     projectileDmg{projDmg},
     fireRate{0.5f},
     fireTimer{0.f},
-    reloadDuration{1.f},
+    reloadDuration{1.5f},
     reloadTimer{0.f},
     projectileTex{&tex},
     activeSounds{activeSounds_},
     shootSound{shootSound_},
     reloadSound{reloadSound_}
 {
+    projectiles.reserve(ammoAmount);
     shootSound.setVolume(50); //until volume settings feature
     reloadSound.setVolume(50);
 }
@@ -48,10 +49,8 @@ bool Weapon::tryFire(const Player& player, const sf::Vector2f direction) {
         return false;
     }
     sf::Vector2f spawnPoint = player.getWeaponTipPos();
-    sf::Vector2f calculatedTarget = spawnPoint + direction * 1000.f;
 
-    projectiles.emplace_back(projectileName, projectileDmg, *projectileTex, spawnPoint, calculatedTarget);
-
+    projectiles.emplace_back(projectileName, projectileDmg, *projectileTex, spawnPoint, direction);
     reloada -= 1;
 
     activeSounds.emplace_back(shootSound);
@@ -147,6 +146,3 @@ void Weapon::handleCollisions(const std::vector<std::unique_ptr<Entity> > &targe
                 break;
     }
 }
-
-
-Weapon::~Weapon() { std::cout << "Weapon destructor \n";}

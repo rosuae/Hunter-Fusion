@@ -41,12 +41,16 @@ public:
         sf::Vector2f playerSpawnPosition_,
         std::list<sf::Sound>& activeSounds_,
         const sf::SoundBuffer& activationSound_);
+    ~Portal() override = default;
+
+    Portal (const Portal &other) = default;
 
     friend void swap(Portal &lhs, Portal &rhs) noexcept {
         using std::swap;
         swap(static_cast<Entity &>(lhs), static_cast<Entity &>(rhs));
         swap(lhs.nextMapFile, rhs.nextMapFile);
         swap(lhs.playerSpawnPosition, rhs.playerSpawnPosition);
+        swap(lhs.nextLocation, rhs.nextLocation);
         swap(lhs.activeSounds, rhs.activeSounds);
         swap(lhs.activationSound, rhs.activationSound);
         swap(lhs.frameSize, rhs.frameSize);
@@ -59,19 +63,13 @@ public:
         swap(lhs.isActive, rhs.isActive);
     }
 
-    Portal& operator=(const Portal& other) {
-        if (this != &other) {
-            const std::unique_ptr<Entity> clonedEntity = other.clone();
-            auto* clonedPortal = dynamic_cast<Portal*>(clonedEntity.get());
-            using std::swap;
-            swap(*this, *clonedPortal);
-        }
+    Portal& operator=(Portal other) {
+        Entity::operator=(other);
+        swap(*this, other);
         return *this;
     }
 
-    Portal (const Portal& other);
     std::unique_ptr<Entity> clone() const override;
-    ~Portal() override;
 
     [[nodiscard]]bool isObstacle() const override { return !isActive; }
     [[nodiscard]]const std::pair<std::string, sf::Vector2f>& teleportDestination() const;

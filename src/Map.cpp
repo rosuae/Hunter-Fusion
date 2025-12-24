@@ -484,8 +484,6 @@ void Map::cleanupAndRespawn() {
     }
 }
 
-Map::~Map() { std::cout << "S a apelat destructor Map \n";}
-
 std::pair<float, float> Map::findSpawnLocation(const char symbol) const {
     for (size_t y = 0; y < mapLayout.size(); ++y) {
         for (size_t x = 0; x < mapLayout[y].size(); ++x) {

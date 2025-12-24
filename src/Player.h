@@ -122,16 +122,6 @@ public:
         const sf::SoundBuffer& dodgeSound_,
         std::unique_ptr<Weapon> startingWeapon);
 
-    Player& operator=(const Player& other) {
-        if (this != &other) {
-            const std::unique_ptr<Entity> clonedEntity = other.clone();
-            auto* clonedPlayer = dynamic_cast<Player*>(clonedEntity.get());
-            using std::swap;
-            swap(*this, *clonedPlayer);
-        }
-        return *this;
-    }
-
     Player(const Player &other)
         : Entity(other),
           velocity(other.velocity),
@@ -165,7 +155,9 @@ public:
           activeSounds(other.activeSounds),
           jumpSound(other.jumpSound),
           deathSound(other.deathSound),
-          dodgeSound(other.dodgeSound) {}
+          dodgeSound(other.dodgeSound),
+          m_availableSkins(other.m_availableSkins) {
+    }
 
     friend void swap(Player &lhs, Player &rhs) noexcept {
         using std::swap;
@@ -202,11 +194,20 @@ public:
         swap(lhs.jumpSound, rhs.jumpSound);
         swap(lhs.deathSound, rhs.deathSound);
         swap(lhs.dodgeSound, rhs.dodgeSound);
-
+        swap(lhs.m_availableSkins, rhs.m_availableSkins);
     }
 
-    std::unique_ptr<Entity> clone() const override;
-    ~Player() override;
+    Player& operator=(Player other) {
+        Entity::operator=(other);
+        swap(*this, other);
+        return *this;
+    }
+
+    std::unique_ptr<Entity> clone() const override{
+        return std::make_unique<Player>(*this);
+    }
+
+    ~Player() override = default;
 
     void spawn(float x, float y);
     void resurrect();

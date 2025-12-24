@@ -33,13 +33,19 @@ protected:
 
 public:
     Entity(std::string n, float x, float y, float spd, float grav, sf::Texture& tex, int w, int h);
-    Entity (const Entity& other);
+    virtual ~Entity() = default;
+
+    Entity(const Entity &other) = default;
 
     friend void swap(Entity &lhs, Entity &rhs) noexcept {
         using std::swap;
-        swap(lhs.alive, rhs.alive);
         swap(lhs.name, rhs.name);
+        swap(lhs.alive, rhs.alive);
+        swap(lhs.max_health, rhs.max_health);
         swap(lhs.health, rhs.health);
+        swap(lhs.hitbox, rhs.hitbox);
+        swap(lhs.hitboxWidth, rhs.hitboxWidth);
+        swap(lhs.hitboxHeight, rhs.hitboxHeight);
         swap(lhs.posX, rhs.posX);
         swap(lhs.posY, rhs.posY);
         swap(lhs.speed, rhs.speed);
@@ -48,19 +54,20 @@ public:
         swap(lhs.sprite, rhs.sprite);
     }
 
-    Entity& operator= (const Entity& other) {
-        if (this != &other) {
-            const auto copie = other.clone();
-            using std::swap;
-            swap(*this, *copie);
+    Entity & operator=(const Entity &other) {
+        if (this == &other) {
+            return *this;
         }
+        const auto copy = other.clone();
+        using std::swap;
+        swap(*this, *copy);
         return *this;
     }
 
-    virtual bool isObstacle() const { return false; }
     virtual std::unique_ptr<Entity> clone() const = 0;
+
+    virtual bool isObstacle() const { return false; }
     virtual void draw(sf::RenderWindow& window) const;
-    virtual ~Entity();
 
     void updateHitbox();
     void behavior(float deltaTime, const Map& map);

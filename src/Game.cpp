@@ -52,7 +52,7 @@ void Game::instanceObjects() {
         );
     m_map = std::move(tempMap);
 
-    initPlayerAndPet(playerName, playerWeapon, projectileName);
+    initPlayer(playerName, playerWeapon, projectileName);
 
     m_map->initializeWithExistingPlayer(*m_player);
 
@@ -70,7 +70,7 @@ void Game::instanceObjects() {
     m_lastSpawnPos = m_player->getPos();
 }
 
-void Game::initPlayerAndPet(const std::string& playerName, const std::string& weaponName, const std::string& projName) {
+void Game::initPlayer(const std::string& playerName, const std::string& weaponName, const std::string& projName) {
     auto tempWeapon = std::make_unique<Weapon>(
         weaponName, projName, 50,
         m_resManager.getTexture("projectile.png"), 60,
@@ -393,7 +393,7 @@ void Game::resetGame() {
         );
     m_map = std::move(tempMap);
 
-    initPlayerAndPet(playerName, playerWeapon, projectileName);
+    initPlayer(playerName, playerWeapon, projectileName);
 
     m_lastSpawnPos = m_player->getPos();
 

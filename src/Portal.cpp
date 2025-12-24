@@ -3,7 +3,6 @@
 //
 
 #include "Portal.h"
-#include <iostream>
 #include <utility>
 
 Portal::Portal(const std::string& n,
@@ -46,26 +45,9 @@ Portal::Portal(const std::string& n,
     );
 }
 
-
-Portal::Portal (const Portal& other)
-    : Entity{other},
-    activeSounds{other.activeSounds},
-    activationSound{other.activationSound},
-    currentFrame{other.currentFrame},
-    animationFrameCount{other.animationFrameCount},
-    animationTimer{other.animationTimer},
-    frameDuration{other.frameDuration},
-    facingRight(other.facingRight),
-    isAnimating{other.isAnimating},
-    isActive{other.isActive} {
-    std::cout << "Portal copy constructor \n";
-}
-
 std::unique_ptr<Entity> Portal::clone() const {
     return std::make_unique<Portal>(*this);
 }
-
-Portal::~Portal() {std::cout<<"Portal destructor \n";}
 
 sf::FloatRect Portal::doGetBounds() const {
     return sprite.getTransform().transformRect(hitbox);

@@ -82,8 +82,6 @@ public:
     void placeEntity(Entity& entity, char mapSymbol) const;
     [[nodiscard]]bool isWall (const sf::FloatRect& bounds, bool checkEntities = false) const;
 
-    ~Map();
-
     friend std::ostream& operator<< (std::ostream& out, const Map& m) {
         out << " Nume harta: " << m.MapNume << " Dimensiune Tile: " << TILE_SIZE;
         return out;

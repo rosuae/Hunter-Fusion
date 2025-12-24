@@ -9,21 +9,6 @@ void Projectile::setupSprite(const sf::Texture& tex) {
     sprite.scale(sf::Vector2f(1.f, 1.f));
 }
 
-void Projectile::calculateDirection(const sf::Vector2f playerPos, const sf::Vector2f targetPos) {
-    const float dirX = targetPos.x - playerPos.x;
-    const float dirY = targetPos.y - playerPos.y;
-
-    if (const float length = std::sqrt(dirX * dirX + dirY * dirY); length != 0) {
-        direction.x = dirX / length;
-        direction.y = dirY / length;
-    } else {
-        direction = sf::Vector2f(1.f, 0.f);
-    }
-
-    const sf::Angle angle = sf::radians(std::atan2(direction.y, direction.x));
-    sprite.setRotation(angle);
-}
-
 bool Projectile::tryHit(Entity &target) {
     if (!active || !target.isAlive()) return false;
 
@@ -64,7 +49,7 @@ void Projectile::update(const float deltaTime, const Map& map) {
     sprite.setPosition(position);
 }
 
-Projectile::Projectile(std::string n, const int d, const sf::Texture& tex, const sf::Vector2f playerPos, const sf::Vector2f targetPos):
+Projectile::Projectile(std::string n, const int d, const sf::Texture& tex, const sf::Vector2f playerPos, const sf::Vector2f direction):
     nume{std::move(n)},
     dmg{d},
     speed{2000.f},
@@ -72,11 +57,14 @@ Projectile::Projectile(std::string n, const int d, const sf::Texture& tex, const
     maxDistance{1200.f},
     active{true},
     position{playerPos},
+    direction{direction},
     sprite{tex}
 {
-    calculateDirection(playerPos, targetPos);
     setupSprite(tex);
     sprite.setPosition(position);
+
+    const sf::Angle angle = sf::radians(std::atan2(direction.y, direction.x));
+    sprite.setRotation(angle);
 }
 
 void Projectile::drawProjectile(sf::RenderWindow& window) const{

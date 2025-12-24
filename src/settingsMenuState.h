@@ -12,7 +12,6 @@ class settingsMenuState {
     sf::Sprite SmenuSprite;
     sf::RenderWindow launcher;
 public:
-
     settingsMenuState();
     void SetSettingsLauncher();
 
@@ -24,4 +23,3 @@ public:
         return {width, height};
     }
 };
-

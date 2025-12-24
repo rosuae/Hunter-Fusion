@@ -8,6 +8,7 @@
 #include <memory>
 #include <string>
 #include <list>
+#include <map>
 #include <SFML/Audio.hpp>
 
 class Enemy;
@@ -15,7 +16,8 @@ class ResourceManager;
 class Entity;
 
 class EnemyFactory {
-    static std::unique_ptr<Enemy> metroidPrototype;
+    static std::map<std::string, std::unique_ptr<Enemy>> registry;
+    static void loadPrototype(const std::string& type, ResourceManager& res, std::list<sf::Sound>& sounds, Entity* target);
 public:
     static std::unique_ptr<Enemy> createEnemy(
         const std::string& type,

@@ -30,7 +30,7 @@ class Game {
     void handleInputGameOver(const sf::Event& event);
 
     void instanceObjects();
-    void initPlayerAndPet(const std::string& playerName, const std::string& weaponName, const std::string& projName);
+    void initPlayer(const std::string& playerName, const std::string& weaponName, const std::string& projName);
     void managePetSpawn() const;
     void loadLevel(const std::string& mapFile, sf::Vector2f spawnPos = sf::Vector2f(-1.f, -1.f));
     void loadLevel(const std::pair<std::string, sf::Vector2f>& nextDestination);

@@ -150,8 +150,6 @@ std::unique_ptr<Entity> Pet::clone() const{
     return std::make_unique<Pet>(*this);
 }
 
-Pet::~Pet() { std::cout << "Pet destructor"; }
-
 void Pet::teleport(const float x, const float y) {
     setPosition(x, y);
     updateHitbox();

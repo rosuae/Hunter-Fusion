@@ -1,8 +1,6 @@
 #ifndef OOP_PROJECTILE_H
 #define OOP_PROJECTILE_H
 
-#include <iostream>
-
 #include <SFML/Graphics.hpp>
 
 class Map;
@@ -20,23 +18,22 @@ class Projectile {
     sf::Sprite sprite;
 
     void setupSprite(const sf::Texture& tex);
-    void calculateDirection(sf::Vector2f playerPos, sf::Vector2f targetPos);
 
 public:
-    Projectile(std::string n, int d, const sf::Texture& tex, sf::Vector2f playerPos, sf::Vector2f targetPos);
+    Projectile(std::string n, int d, const sf::Texture& tex, sf::Vector2f playerPos, sf::Vector2f direction);
 
     friend std::ostream& operator<< (std::ostream& out, const Projectile& p) {
         out << " Nume munitie: " << p.nume << " " << "DMG: "<< p.dmg << "\n";
         return out;
     }
 
-    Projectile(const Projectile &other) = default;
+    std::unique_ptr<Projectile> clone() const {
+        return std::make_unique<Projectile>(*this);
+    }
 
     bool tryHit(Entity& target);
     void drawProjectile(sf::RenderWindow& window) const;
     void update (float deltaTime,  const Map& map);
-
-    ~Projectile() = default;
 
     sf::FloatRect getBounds() const;
     [[nodiscard]]bool isActive() const;

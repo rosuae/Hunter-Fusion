@@ -78,6 +78,41 @@ public:
         return out;
     }
 
+    ~Enemy() override{
+            activeEnemyCount--;
+        }
+
+    Enemy(const Enemy &other)
+        : Entity(other),
+          damage(other.damage),
+          bountyScore(other.bountyScore),
+          target(other.target),
+          isMoving(other.isMoving),
+          canDealDamage(other.canDealDamage),
+          state(other.state),
+          detectionRange(other.detectionRange),
+          attackCooldown(other.attackCooldown),
+          currentAttackTimer(other.currentAttackTimer),
+          aggroTimer(other.aggroTimer),
+          patrolTimer(other.patrolTimer),
+          patrolDuration(other.patrolDuration),
+          patrolDirection(other.patrolDirection),
+          frameSize(other.frameSize),
+          currentFrame(other.currentFrame),
+          animationTimer(other.animationTimer),
+          frameDuration(other.frameDuration),
+          animationFrameCount(other.animationFrameCount),
+          alertTexture(other.alertTexture),
+          exclamationSprite(other.exclamationSprite),
+          alertFrameSize(other.alertFrameSize),
+          alertAnimTimer(other.alertAnimTimer),
+          alertActive(other.alertActive),
+          activeSounds(other.activeSounds),
+          hitSound(other.hitSound),
+          deathSound(other.deathSound) {
+        activeEnemyCount++;
+    }
+
     friend void swap(Enemy &lhs, Enemy &rhs) noexcept {
         using std::swap;
         swap(static_cast<Entity &>(lhs), static_cast<Entity &>(rhs));
@@ -109,19 +144,15 @@ public:
         swap(lhs.deathSound, rhs.deathSound);
     }
 
-    Enemy& operator=(const Enemy& other) {
-        if (this != &other) {
-            const std::unique_ptr<Entity> clonedEntity = other.clone();
-            auto* clonedEnemy = dynamic_cast<Enemy*>(clonedEntity.get());
-            using std::swap;
-            swap(*this, *clonedEnemy);
-        }
+    Enemy & operator=(Enemy other) {
+        Entity::operator=(other);
+        swap(*this, other);
         return *this;
     }
 
-    Enemy (const Enemy& other);
-    std::unique_ptr<Entity> clone() const override;
-    ~Enemy() override;
+    std::unique_ptr<Entity> clone() const override{
+        return std::make_unique<Enemy>(*this);
+    }
 
     static int getActiveEnemyCount();
     void grantReward(Player& player) const;
