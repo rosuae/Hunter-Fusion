@@ -64,4 +64,5 @@ The current objective of the game is to accumulate the highest possible Bounty b
   - https://www.youtube.com/watch?v=l2iCYCLi6MU
   - https://manbeardgames.github.io/docs/tutorials/monogame-3-8/collision-detection/aabb-collision/
 
-![metroid-samus-aran-vs-alien-4k-wallpaper-uhdpaper com-572@2@a](https://github.com/user-attachments/assets/b9edee4b-5e42-41d3-9d38-f47047061e10)
+![demo(1)](https://github.com/user-attachments/assets/03ef92c3-77c7-43cc-9de8-c781b5cac81f)
+
