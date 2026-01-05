@@ -338,8 +338,11 @@ void Game::resetGame() {
     }
 
     m_playingSounds.clear();
+    m_camera.reset();
     m_savedMaps.clear();
+    m_map.reset();
     m_pet.reset();
+    m_player.reset();
 
     std::ifstream fin("date.txt");
     if (!fin.is_open()) {
