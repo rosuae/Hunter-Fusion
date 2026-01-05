@@ -4,11 +4,13 @@
 #include "Entity.h"
 #include <SFML/Audio.hpp>
 #include <list>
+#include <optional>
 #include <iostream>
 
 #include "Weapon.h"
 
 class Map;
+class Pet;
 class Weapon;
 
 class Player : public Entity {
@@ -17,6 +19,7 @@ class Player : public Entity {
     float jumpCooldown;
 
     std::unique_ptr<Weapon> weapon;
+    Entity* m_pendingPet = nullptr;
 
     int totalBounty = 0;
     int enemiesDefeated = 0;
@@ -25,22 +28,21 @@ class Player : public Entity {
     float idleTimer;
     float frameDuration;
     float shootingTimer;
-    static constexpr float shootingDuration = 0.3f;
     float damageEffectTimer;
-    static constexpr float damageEffectDuration = 0.3f;
-
-    bool isDodging;
     float dodgeTimer;
     float dodgeCooldownTimer;
     float storedDodgeDir;
 
     bool isRunning;
     bool isJumping;
+    bool isDodging;
     bool facingRight;
     bool facingUp;
     bool isHit;
     bool wasRPressedLastFrame;
     bool isCrouching;
+
+    std::optional<std::pair<std::string, sf::Vector2f>> pendingTeleport;
 
     sf::Vector2i m_frameSize;
     int currentFrame;
@@ -53,6 +55,9 @@ class Player : public Entity {
     sf::Sound jumpSound;
     sf::Sound deathSound;
     sf::Sound dodgeSound;
+
+    static constexpr float shootingDuration = 0.3f;
+    static constexpr float damageEffectDuration = 0.3f;
 
     static constexpr float DEF_SPEED = 800.f;
     static constexpr float DEF_GRAVITY = 2500.f;
@@ -135,12 +140,12 @@ public:
           frameDuration(other.frameDuration),
           shootingTimer(other.shootingTimer),
           damageEffectTimer(other.damageEffectTimer),
-          isDodging(other.isDodging),
           dodgeTimer(other.dodgeTimer),
           dodgeCooldownTimer(other.dodgeCooldownTimer),
           storedDodgeDir(other.storedDodgeDir),
           isRunning(other.isRunning),
           isJumping(other.isJumping),
+          isDodging(other.isDodging),
           facingRight(other.facingRight),
           facingUp(other.facingUp),
           isHit(other.isHit),
@@ -208,18 +213,21 @@ public:
     }
 
     ~Player() override = default;
-
-    void spawn(float x, float y);
+    void spawnAt(float x, float y) override;
     void resurrect();
     void draw(sf::RenderWindow& window) const override;
     void fire(const sf::Vector2f& direction);
-    bool pickupAmmo(int amount) const;
     void processKill(int scoreReward);
+    void collectPet(Pet* pet);
     void addSkinUnlock(int score, const sf::Texture& skinTexture_, const sf::SoundBuffer& sound);
     void checkProjectileCollisions(const std::vector<std::unique_ptr<Entity>>& targets) const;
     void resetWeaponProjectiles() const;
+    void scheduleTeleport(std::string mapName, sf::Vector2f spawnPos) { pendingTeleport = std::make_pair(mapName, spawnPos); }
+    bool pickupAmmo(int amount) const;
 
     sf::Vector2f getWeaponTipPos() const;
+    Entity* takePendingPet();
+    std::optional<std::pair<std::string, sf::Vector2f>> consumeTeleportRequest();
     [[nodiscard]]std::pair<int, int> combatStats() const { return {enemiesDefeated, totalBounty}; }
     [[nodiscard]]int getHealth() const { return health; }
     [[nodiscard]]const Weapon* getWeapon() const { return weapon.get(); }

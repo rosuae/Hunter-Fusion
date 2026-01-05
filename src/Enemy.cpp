@@ -1,5 +1,8 @@
 #include "Enemy.h"
 #include "Player.h"
+#include "Pickup.h"
+#include "GameExceptions.h"
+#include "Game.h"
 #include "Map.h"
 #include <SFML/Audio.hpp>
 #include <cmath>
@@ -17,8 +20,8 @@ Enemy::Enemy(const std::string& n, const int damage_, const int bountyScore_, co
     canDealDamage{false},
     state{EnemyState::Patrolling},
     detectionRange{400.f},
-    attackCooldown{0.3f},
-    currentAttackTimer{0.f},
+    attackCooldown{0.8f},
+    currentAttackTimer{attackCooldown},
     aggroTimer{0.f},
     patrolTimer{0.f},
     patrolDuration{3.f},
@@ -64,60 +67,77 @@ Enemy::Enemy(const std::string& n, const int damage_, const int bountyScore_, co
 }
 
 void Enemy::updateAI(const float deltaTime) {
+    updateAttack(deltaTime);
+    if (aggroTimer > 0.0f) aggroTimer -= deltaTime;
+
     if (!target || !target->isAlive()) {
         state = EnemyState::Patrolling;
     }
 
-    if (aggroTimer > 0.0f) {
-        aggroTimer -= deltaTime;
-    }
-
-    float distToPlayer = 99999.f;
-    if (target) {
-        const float dx = target->getPos().x - posX;
-        const float dy = target->getPos().y - posY;
-        distToPlayer = std::sqrt(dx*dx + dy*dy);
-    }
+    const float distToPlayer = getDistanceToTarget();
+    const bool isTouching = isTouchingTarget();
 
     switch (state) {
         case EnemyState::Patrolling:
-            if (distToPlayer < detectionRange) {
-                state = EnemyState::Chasing;
-            }
-            updatePatrol(deltaTime);
+            processPatrolState(deltaTime, distToPlayer);
             break;
 
         case EnemyState::Chasing:
-            if (distToPlayer > detectionRange * 1.5f && aggroTimer <= 0.0f) {
-                state = EnemyState::Patrolling;
-            }
-            else {
-                if (target && this->getBounds().findIntersection(target->getBounds()).has_value()) {
-                    state = EnemyState::Attacking;
-                    currentAttackTimer = attackCooldown;
-                    canDealDamage = false;
-                }
-                else {
-                    updateChase(deltaTime);
-                }
-            }
+            processChaseState(deltaTime, distToPlayer, isTouching);
             break;
 
         case EnemyState::Attacking:
-            if (currentAttackTimer > 0.0f) {
-                updateAttack(deltaTime);
-                break;
-            }
-            if (target && !this->getBounds().findIntersection(target->getBounds()).has_value()) {
-                state = EnemyState::Chasing;
-                canDealDamage = false;
-                currentAttackTimer = attackCooldown;
-            }
-            else {
-                updateAttack(deltaTime);
-            }
+            processAttackState(isTouching);
             break;
     }
+}
+
+void Enemy::processPatrolState(const float deltaTime, const float distToPlayer) {
+    if (distToPlayer < detectionRange) {
+        state = EnemyState::Chasing;
+        return;
+    }
+    updatePatrol(deltaTime);
+}
+
+void Enemy::processChaseState(const float deltaTime, const float distToPlayer, const bool isTouching) {
+    if (distToPlayer > detectionRange * 1.5f && aggroTimer <= 0.0f) {
+        state = EnemyState::Patrolling;
+        return;
+    }
+
+    if (isTouching) {
+        startAttackSequence();
+        return;
+    }
+
+    updateChase(deltaTime);
+}
+
+void Enemy::processAttackState(const bool isTouching) {
+    if (!isTouching) {
+        state = EnemyState::Chasing;
+    }
+}
+
+void Enemy::startAttackSequence() {
+    if (state != EnemyState::Attacking) {
+        if (currentAttackTimer <= 0.f) {
+            currentAttackTimer = 0.35f;
+            canDealDamage = false;
+        }
+        state = EnemyState::Attacking;
+    }
+}
+
+float Enemy::getDistanceToTarget() const {
+    if (!target) return std::numeric_limits<float>::max();
+    return std::hypot(target->getPos().x - posX, target->getPos().y - posY);
+}
+
+bool Enemy::isTouchingTarget() const {
+    if (!target) return false;
+    return this->getBounds().findIntersection(target->getBounds()).has_value();
 }
 
 void Enemy::updatePatrol(const float deltaTime) {
@@ -152,6 +172,7 @@ void Enemy::updateChase(const float deltaTime) {
 void Enemy::updateAttack(const float deltaTime) {
     if (currentAttackTimer > 0.0f) {
         currentAttackTimer -= deltaTime;
+        canDealDamage = false;
     }
     else {
         canDealDamage = true;
@@ -162,19 +183,44 @@ void Enemy::grantReward(Player& player) const {
     player.processKill(this->bountyScore);
 }
 
-int Enemy::attackPlayer() {
-    if (!isAlive()) return 0;
-    if (!target || !target->isAlive()) return 0;
+void Entity::spawnAt(const float x, const float y) {
+    setPosition(x, y);
+    updateHitbox();
+}
 
-    if (canDealDamage) {
-        if (this->getBounds().findIntersection(target->getBounds()).has_value()) {
-            canDealDamage = false;
-            currentAttackTimer = attackCooldown;
-            return damage;
-        }
+void Enemy::onDeath(Map& map) {
+    if (target && dynamic_cast<Player*>(target)) {
+        auto* p = dynamic_cast<Player*>(target);
+        grantReward(*p);
     }
 
-    return 0;
+    map.onEnemyKilled();
+
+    if (Game::generateRandomInt(1, 100) <= 25) {
+        try {
+            constexpr float groundOffsetY = 40;
+            auto drop = PickupFactory::create(
+                PickupType::Ammo,
+                posX,
+                posY - groundOffsetY,
+                map.getResourceManager(),
+                map.getSoundList()
+            );
+
+            if (drop) {
+                map.spawnEntityAt(std::move(drop));
+            }
+        } catch (const ResourceException& e) {
+            std::cout << "[Drop Error] " << e.what() << std::endl;
+        }
+    }
+}
+
+void Enemy::onCollision(Player &player) {
+    if (this->canDealDamage && this->state == EnemyState::Attacking) {
+        player.tryHit(this->damage);
+        this->resetAttackTimer();
+    }
 }
 
 sf::FloatRect Enemy::doGetBounds() const{
@@ -301,6 +347,11 @@ void Enemy::updateAnimation(const float deltaTime) {
         alertAnimTimer = 0.0f;
         exclamationSprite.setScale({0.f, 0.f});
     }
+}
+
+void Enemy::resetAttackTimer() {
+    canDealDamage = false;
+    currentAttackTimer = attackCooldown;
 }
 
 void Enemy::draw(sf::RenderWindow& window) const {

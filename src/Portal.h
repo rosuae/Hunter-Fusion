@@ -9,6 +9,8 @@
 #include <list>
 #include <SFML/Audio.hpp>
 
+class Player;
+
 class Portal : public Entity {
 
     std::string nextMapFile;
@@ -70,7 +72,8 @@ public:
     }
 
     std::unique_ptr<Entity> clone() const override;
-
+    void onCollision(Player &player) override;
+    int getCollisionPriority() const override { return PRIORITY_PORTAL; }
     [[nodiscard]]bool isObstacle() const override { return !isActive; }
     [[nodiscard]]const std::pair<std::string, sf::Vector2f>& teleportDestination() const;
 };

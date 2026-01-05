@@ -110,7 +110,7 @@ void Game::managePetSpawn() const {
                 nullptr
             );
 
-            tempPet->teleport(x, y);
+            tempPet->spawnAt(x, y);
             m_map->spawnEntityAt(std::move(tempPet));
 
         } catch (const ResourceException& e) {
@@ -133,7 +133,7 @@ void Game::loadLevel(const std::string& mapFile, const sf::Vector2f spawnPos) {
         if (spawnPos.x < 0) {
             m_map->initializeWithPlayer(*m_player);
         } else {
-            m_player->spawn(spawnPos.x, spawnPos.y);
+            m_player->spawnAt(spawnPos.x, spawnPos.y);
             m_map->initializeWithExistingPlayer(*m_player);
         }
 
@@ -178,7 +178,7 @@ void Game::loadLevel(const std::pair<std::string, sf::Vector2f>& nextDestination
         if (spawnPos.x < 0) {
             m_map->initializeWithExistingPlayer(*m_player);
         } else {
-            m_player->spawn(spawnPos.x, spawnPos.y);
+            m_player->spawnAt(spawnPos.x, spawnPos.y);
             m_map->initializeWithExistingPlayer(*m_player);
         }
         if (m_camera) {
@@ -303,26 +303,19 @@ void Game::update(const float deltaTime) {
 }
 
 void Game::handleCollisions() {
-    if (const auto destination = m_map->tryTeleport(m_player->getBounds())) {
-        loadLevel(*destination);
-        return;
-    }
-
     m_map->processProjectileCollisions();
-    m_map->handlePickupCollisions(*m_player);
+    m_map->handleCollisions(*m_player);
 
-    if (const int totalDamage = m_map->processEnemyAttacks();
-        totalDamage > 0 && m_playerDamageCooldown.getElapsedTime().asSeconds() > 1.f) {
-
-        m_player->tryHit(totalDamage);
-        m_playerDamageCooldown.restart();
-    }
-
-    if (!m_pet) {
-        m_pet = m_map->extractPet(m_player->getBounds());
-        if (m_pet) {
+    if (Entity* petPtr = m_player->takePendingPet()) {
+        if (std::unique_ptr<Entity> transferedEntity = m_map->claimEntity(petPtr)) {
+            m_pet.reset(static_cast<Pet*>(transferedEntity.release()));
             m_pet->setOwner(m_player.get());
         }
+    }
+
+    if (const auto dest = m_player->consumeTeleportRequest()) {
+        loadLevel(*dest);
+        return;
     }
 
     m_map->cleanupAndRespawn();

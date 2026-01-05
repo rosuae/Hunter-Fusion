@@ -6,6 +6,7 @@
 #include "EnemyFactory.h"
 
 class Map;
+class Pickup;
 class Player;
 
 enum class EnemyState {
@@ -53,12 +54,19 @@ class Enemy : public Entity{
 
     void takeDamage(int damageAmount) override;
     void doBehavior(float deltaTime, const Map& map) override;
+    void startAttackSequence();
+    float getDistanceToTarget() const;
+    bool isTouchingTarget() const;
+    void processPatrolState(float deltaTime, float distToPlayer);
+    void processChaseState(float deltaTime, float distToPlayer, bool isTouching);
+    void processAttackState(bool isTouching);
     void updateAI(float deltaTime);
     void updatePatrol(float deltaTime);
     void updateChase(float deltaTime);
     void updateAttack(float deltaTime);
     void updatePhysics(float deltaTime, const Map& map);
     void updateAnimation(float deltaTime);
+    void resetAttackTimer();
     void draw(sf::RenderWindow& window) const override;
 
     friend class EnemyFactory;
@@ -156,7 +164,9 @@ public:
 
     static int getActiveEnemyCount();
     void grantReward(Player& player) const;
-    int attackPlayer();
+    void onDeath(Map &map) override;
+    void onCollision(Player &player) override;
+    int getCollisionPriority() const override { return PRIORITY_HAZARD; }
 };
 
 #endif

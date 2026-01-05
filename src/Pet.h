@@ -62,7 +62,8 @@ public:
     std::unique_ptr<Entity> clone() const override;
 
     void setOwner(Entity* owner) { target = owner; }
-    void teleport(float x, float y);
+    void onCollision(Player &player) override;
+    void spawnAt(float x, float y) override;
 };
 
 #endif //OOP_PET_H

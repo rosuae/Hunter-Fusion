@@ -2,6 +2,7 @@
 #include "Map.h"
 #include <cmath>
 #include "Portal.h"
+#include "Pet.h"
 #include "Weapon.h"
 
 Player::Player(const std::string& n, sf::Texture& tex,
@@ -21,12 +22,12 @@ Player::Player(const std::string& n, sf::Texture& tex,
     frameDuration{0.12f},
     shootingTimer{0.f},
     damageEffectTimer{0.f},
-    isDodging{false},
     dodgeTimer{0.f},
     dodgeCooldownTimer{0.f},
     storedDodgeDir{0.f},
     isRunning{false},
     isJumping{false},
+    isDodging{false},
     facingRight{true},
     facingUp{false},
     isHit{false},
@@ -487,6 +488,10 @@ void Player::processKill(const int scoreReward) {
     checkTierUpgrade();
 }
 
+void Player::collectPet(Pet *pet) {
+    m_pendingPet = pet;
+}
+
 void Player::addSkinUnlock(const int score, const sf::Texture& skinTexture_, const sf::SoundBuffer& sound) {
     m_availableSkins.push_back({score, &skinTexture_, &sound, false});
 }
@@ -521,6 +526,18 @@ sf::Vector2f Player::getWeaponTipPos() const {
 
     if (isCrouching) offsetY += facingUp ? 40.f : 50.f;
     return {posX + offsetX, posY + offsetY};
+}
+
+Entity* Player::takePendingPet() {
+    Entity* temp = m_pendingPet;
+    m_pendingPet = nullptr;
+    return temp;
+}
+
+std::optional<std::pair<std::string, sf::Vector2f> > Player::consumeTeleportRequest() {
+    auto temp = pendingTeleport;
+    pendingTeleport = std::nullopt;
+    return temp;
 }
 
 sf::FloatRect Player::doGetBounds() const {
@@ -567,7 +584,7 @@ void Player::changeSkin(const sf::Texture& newTexture) {
     sprite.setTextureRect(calculateAnimationRect());
 }
 
-void Player::spawn(const float x, const float y) {
+void Player::spawnAt(const float x, const float y) {
     setPosition(x, y);
     velocity = {0.f, 0.f};
     isRunning = false;

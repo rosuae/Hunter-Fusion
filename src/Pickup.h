@@ -49,6 +49,9 @@ public:
     }
 
     virtual void apply(Player& player) = 0;
+    void interactWithPlayer(Player &player) override;
+    void onCollision(Player &player) override { this->apply(player); }
+    int getCollisionPriority() const override { return PRIORITY_PICKUP; }
 };
 
 //

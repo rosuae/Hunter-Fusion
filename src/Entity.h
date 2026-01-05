@@ -5,6 +5,7 @@
 #include <string>
 
 class Map;
+class Player;
 
 class Entity {
     virtual sf::FloatRect doGetBounds() const = 0;
@@ -24,6 +25,12 @@ protected:
     float posY;
     float speed;
     float gravity;
+    bool m_needsRemoval = false;
+
+    static constexpr int PRIORITY_HAZARD = 100;
+    static constexpr int PRIORITY_PICKUP = 50;
+    static constexpr int PRIORITY_PORTAL = 10;
+    static constexpr int PRIORITY_NONE = 0;
 
     sf::Texture* texture;
     sf::Sprite sprite;
@@ -67,14 +74,20 @@ public:
     virtual std::unique_ptr<Entity> clone() const = 0;
 
     virtual bool isObstacle() const { return false; }
+    virtual bool isPet() const { return false; }
     virtual void draw(sf::RenderWindow& window) const;
+    virtual void interactWithPlayer(Player&){}
+    virtual void spawnAt(float x, float y);
+    virtual void onDeath(Map&){}
+    virtual void onCollision(Player&){}
+    virtual int getCollisionPriority() const { return PRIORITY_NONE; }
 
     void updateHitbox();
     void behavior(float deltaTime, const Map& map);
     void tryHit(int damageAmount);
 
     bool isAlive() const;
-
+    bool needsRemoval() const { return m_needsRemoval; }
     sf::FloatRect getBounds() const;
     sf::Vector2f getPos() const;
 };

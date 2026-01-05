@@ -3,6 +3,7 @@
 //
 
 #include "Portal.h"
+#include "Player.h"
 #include <utility>
 
 Portal::Portal(const std::string& n,
@@ -43,6 +44,11 @@ Portal::Portal(const std::string& n,
         {static_cast<float>(hitboxWidth),
         static_cast<float>(hitboxHeight)}
     );
+}
+
+void Portal::onCollision(Player &player) {
+    if (!isActive) return;
+    player.scheduleTeleport(nextMapFile, playerSpawnPosition);
 }
 
 std::unique_ptr<Entity> Portal::clone() const {

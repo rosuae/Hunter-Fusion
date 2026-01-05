@@ -10,6 +10,7 @@
 #include "GameExceptions.h"
 #include "EnemyFactory.h"
 #include <random>
+#include <algorithm>
 
 Map::Map(std::string n, const std::string& filePath, ResourceManager& resM, std::list<sf::Sound>& playingSounds_):
     MapNume{std::move(n)},
@@ -116,6 +117,21 @@ Map::Map(std::string n, const std::string& filePath, ResourceManager& resM, std:
     }
 
     generateMapGeometry();
+}
+
+std::unique_ptr<Entity> Map::claimEntity(Entity* entityToClaim) {
+    const auto it = std::find_if(entities.begin(), entities.end(),
+        [entityToClaim](const std::unique_ptr<Entity>& e) {
+            return e.get() == entityToClaim;
+        });
+
+    if (it != entities.end()) {
+        std::unique_ptr<Entity> found = std::move(*it);
+        entities.erase(it);
+
+        return found;
+    }
+    return nullptr;
 }
 
 bool Map::hasPet() const {
@@ -252,18 +268,28 @@ void Map::processProjectileCollisions() const {
     playerTarget->checkProjectileCollisions(entities);
 }
 
-void Map::handlePickupCollisions(Player& player) const {
+void Map::handleCollisions(Player& player) const {
     if (!player.isAlive()) return;
 
+    std::vector<Entity*> collidingEntities;
     const sf::FloatRect playerBounds = player.getBounds();
     for (auto& entity : entities) {
-        if (entity->isAlive()) {
-            if (auto* pickup = dynamic_cast<Pickup*>(entity.get())) {
-                if (pickup->getBounds().findIntersection(playerBounds).has_value()) {
-                    pickup->apply(player);
-                }
-            }
+        if (!entity->isAlive()) continue;
+
+        if (entity->getBounds().findIntersection(playerBounds).has_value()) {
+            collidingEntities.push_back(entity.get());
         }
+    }
+
+    std::sort(collidingEntities.begin(), collidingEntities.end(),
+        [](const Entity* a, const Entity* b) {
+            return a->getCollisionPriority() > b->getCollisionPriority();
+        });
+
+    for (Entity* entity : collidingEntities) {
+        if (!player.isAlive()) break;
+
+        entity->onCollision(player);
     }
 }
 
@@ -326,26 +352,6 @@ std::unique_ptr<Pet> Map::extractPet(const sf::FloatRect& playerBounds) {
     return nullptr;
 }
 
-// void Map::depositPet(std::unique_ptr<Pet> pet) {
-//     if (pet) {
-//         spawnEntityAt(std::move(pet));
-//     }
-// }
-
-int Map::processEnemyAttacks() const {
-    int totalDamage = 0;
-
-    for (const auto& entity : entities) {
-        if (const auto enemyPtr = dynamic_cast<Enemy*>(entity.get())) {
-            if (enemyPtr->isAlive()) {
-                totalDamage += enemyPtr->attackPlayer();
-            }
-        }
-    }
-
-    return totalDamage;
-}
-
 void Map::updateEntities(const float deltaTime) const {
     for (const auto& ent : entities) {
         ent->behavior(deltaTime, *this);
@@ -356,19 +362,6 @@ void Map::drawEntities(sf::RenderWindow& window) const{
     for (const auto& ent : entities) {
         ent->draw(window);
     }
-}
-
-std::optional<std::pair<std::string, sf::Vector2f>> Map::tryTeleport(const sf::FloatRect& playerBounds) const {
-    for (const auto& ent : entities) {
-        if (const auto portalPtr = dynamic_cast<const Portal*>(ent.get())) {
-            if (portalPtr->getBounds().findIntersection(playerBounds).has_value()) {
-                if (!portalPtr->isObstacle()) {
-                    return portalPtr->teleportDestination();
-                }
-            }
-        }
-    }
-    return std::nullopt;
 }
 
 const float Map::TILE_SIZE = 96.0f;
@@ -412,7 +405,7 @@ void Map::initializeWithPlayer(Player& player) {
     auto [x, y] = playerSpawn;
     const float spawnX = x * TILE_SIZE;
     const float spawnY = y * TILE_SIZE;
-    player.spawn(spawnX, spawnY);
+    player.spawnAt(spawnX, spawnY);
 
     if (!hasSpawnedEnemies) {
         spawnEnemies();
@@ -429,58 +422,28 @@ void Map::initializeWithExistingPlayer(Player &player) {
     }
 }
 
-void Map::cleanupAndRespawn() {
-    int deadCount = 0;
+void Map::onEnemyKilled() {
+    m_deadEnemyCount++;
+}
 
-    std::vector<std::unique_ptr<Entity>> drops;
+void Map::cleanupAndRespawn() {
+    const size_t currentCount = entities.size();
+    for (size_t i = 0; i < currentCount; ++i) {
+        if (!entities[i]->isAlive()) {
+            entities[i]->onDeath(*this);
+        }
+    }
 
     std::erase_if(entities, [&](const std::unique_ptr<Entity>& en) {
         if (!en->isAlive()) {
-            if (const auto* enemy = dynamic_cast<Enemy*>(en.get())) {
-                if (playerTarget) {
-                    enemy->grantReward(*playerTarget);
-                    deadCount++;
-                }
-                if (Game::generateRandomInt(1, 100) <= 25) {
-                    try {
-                        constexpr float groundOffsetY = 40;
-                        auto drop = PickupFactory::create(
-                            PickupType::Ammo,
-                            enemy->getPos().x,
-                            enemy->getPos().y - groundOffsetY,
-                            resManager,
-                            playingSounds
-                        );
-
-                        if (drop) {
-                            drops.push_back(std::move(drop));
-                        }
-                    } catch (const ResourceException& e) {
-                        std::cout << "[Drop Error] " << e.what() << std::endl;
-                    }
-                }
-            }
             return true;
         }
-        return false;
+        return en->needsRemoval();
     });
 
-    for (auto& drop : drops) {
-        try {
-            spawnEntityAt(std::move(drop));
-        } catch (const MapEntityException& e) {
-            std::cout << "Could not drop pickup" << e.what();
-        }
-    }
-
-    solidEntitiesCache.clear();
-    for (const auto& ent : entities) {
-        if (ent && ent->isObstacle()) {
-            solidEntitiesCache.push_back(ent.get());
-        }
-    }
-    if (deadCount > 0) {
-        handleEnemyRespawn(deadCount);
+    if (m_deadEnemyCount > 0) {
+        handleEnemyRespawn(m_deadEnemyCount);
+        m_deadEnemyCount = 0;
     }
 }
 
@@ -504,19 +467,11 @@ void Map::placeEntity(Entity& entity, const char mapSymbol) const {
     if (x < 0 || y < 0) {
         if (mapSymbol == 'C' && playerTarget) {
             const sf::Vector2f pPos = playerTarget->getPos();
-            if (auto* pet = dynamic_cast<Pet*>(&entity)) {
-                pet->teleport(pPos.x, pPos.y);
-            }
+            entity.spawnAt(pPos.x, pPos.y);
         }
         return;
     }
-
-    if (auto* pet = dynamic_cast<Pet*>(&entity)) {
-        pet->teleport(x, y);
-    }
-    else if (auto* player = dynamic_cast<Player*>(&entity)) {
-        player->spawn(x, y);
-    }
+    entity.spawnAt(x, y);
 }
 
 bool Map::isWall(const sf::FloatRect& bounds, const bool checkEntities) const {

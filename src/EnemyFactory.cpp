@@ -36,7 +36,7 @@ std::unique_ptr<Enemy> EnemyFactory::createEnemy(const std::string &type,
 {
     loadPrototype(type, resManager, playingSounds, target);
     std::unique_ptr<Enemy> newEnemy = std::make_unique<Enemy>(*registry[type]);
-
+    newEnemy->target = target;
     newEnemy->setPosition(x, y);
     return newEnemy;
 }

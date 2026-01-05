@@ -41,6 +41,7 @@ class Map {
     std::vector<Entity*> solidEntitiesCache;
 
     int maxEnemiesAllowed = 100; // for the moment
+    int m_deadEnemyCount = 0;
     bool hasSpawnedEnemies = false;
 
     bool isWallAt(int x, int y) const;
@@ -56,19 +57,19 @@ public:
     Map(std::string n, const std::string& filePath, ResourceManager& resManager,
         std::list<sf::Sound>& playingSounds_);
 
+    std::unique_ptr<Entity> claimEntity(Entity* entityToClaim);
     bool hasPet() const;
     static float getTileSize() { return TILE_SIZE; }
     void initializeWithPlayer(Player& player);
     void initializeWithExistingPlayer(Player& player);
+    void onEnemyKilled();
     void drawMap(sf::RenderWindow& window) const;
     void drawEntities(sf::RenderWindow& window) const;
     void updateEntities(float deltaTime) const;
     void cleanupAndRespawn();
 
-    int processEnemyAttacks() const;
-
     void processProjectileCollisions() const;
-    void handlePickupCollisions(Player& player) const;
+    void handleCollisions(Player& player) const;
     void spawnAdditionalEnemies(int count);
     void spawnEntityAt(std::unique_ptr<Entity> entity);
     std::pair<float, float> findSpawnLocation(char symbol) const;
@@ -77,8 +78,8 @@ public:
     // void depositPet(std::unique_ptr<Pet> pet);
 
     const std::vector<std::string>& getLayout() const { return mapLayout; }
-    std::optional<std::pair<std::string, sf::Vector2f>> tryTeleport(const sf::FloatRect& playerBounds) const;
-
+    std::list<sf::Sound>& getSoundList() { return playingSounds; }
+    ResourceManager& getResourceManager() const { return resManager; }
     void placeEntity(Entity& entity, char mapSymbol) const;
     [[nodiscard]]bool isWall (const sf::FloatRect& bounds, bool checkEntities = false) const;
 

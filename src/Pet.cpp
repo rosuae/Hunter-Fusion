@@ -7,6 +7,7 @@
 #include <utility>
 
 #include "Map.h"
+#include "Player.h"
 
 Pet::Pet(std::string n, const float x, const float y, sf::Texture& tex, Entity* playerTarget)
     : Entity(std::move(n), x, y, 350.0f, 600.0f, tex, static_cast<int>(tex.getSize().x), static_cast<int>(tex.getSize().y)),
@@ -58,7 +59,7 @@ void Pet::updateAI(const float deltaTime, const Map& map) {
 
     if (distTotal > 1200.0f) {
         const sf::Vector2f targetPos = target->getPos();
-        teleport(targetPos.x, targetPos.y - 50.0f);
+        spawnAt(targetPos.x, targetPos.y - 50.0f);
         return;
     }
 
@@ -150,7 +151,11 @@ std::unique_ptr<Entity> Pet::clone() const{
     return std::make_unique<Pet>(*this);
 }
 
-void Pet::teleport(const float x, const float y) {
+void Pet::onCollision(Player &player) {
+    player.collectPet(this);
+}
+
+void Pet::spawnAt(const float x, const float y) {
     setPosition(x, y);
     updateHitbox();
 }

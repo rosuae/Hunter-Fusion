@@ -61,6 +61,14 @@ void AmmoPickup::apply(Player& player) {
     }
 }
 
+void Pickup::interactWithPlayer(Player &player) {
+    if (!isAlive()) return;
+
+    if (this->getBounds().findIntersection(player.getBounds()).has_value()) {
+        this->apply(player);
+    }
+}
+
 std::unique_ptr<Entity> PickupFactory::create(const PickupType type, float x, float y, ResourceManager &resManager, std::list<sf::Sound> &playingSounds) {
     switch (type) {
         case PickupType::Ammo:
