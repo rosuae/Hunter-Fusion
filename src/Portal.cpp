@@ -98,7 +98,3 @@ void Portal::doBehavior(const float deltaTime, const Map&) {
 void Portal::applyGravity(const float deltaTime) {
     posY += gravity * deltaTime;
 }
-
-const std::pair<std::string, sf::Vector2f>& Portal::teleportDestination() const{
-        return nextLocation;
-}

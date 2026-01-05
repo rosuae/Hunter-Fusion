@@ -76,7 +76,6 @@ public:
     virtual bool isObstacle() const { return false; }
     virtual bool isPet() const { return false; }
     virtual void draw(sf::RenderWindow& window) const;
-    virtual void interactWithPlayer(Player&){}
     virtual void spawnAt(float x, float y);
     virtual void onDeath(Map&){}
     virtual void onCollision(Player&){}

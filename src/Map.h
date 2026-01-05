@@ -74,7 +74,6 @@ public:
     void spawnEntityAt(std::unique_ptr<Entity> entity);
     std::pair<float, float> findSpawnLocation(char symbol) const;
 
-    std::unique_ptr<Pet> extractPet(const sf::FloatRect& playerBounds);
     // void depositPet(std::unique_ptr<Pet> pet);
 
     const std::vector<std::string>& getLayout() const { return mapLayout; }

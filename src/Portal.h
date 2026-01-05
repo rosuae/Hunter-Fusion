@@ -75,7 +75,6 @@ public:
     void onCollision(Player &player) override;
     int getCollisionPriority() const override { return PRIORITY_PORTAL; }
     [[nodiscard]]bool isObstacle() const override { return !isActive; }
-    [[nodiscard]]const std::pair<std::string, sf::Vector2f>& teleportDestination() const;
 };
 
 #endif //OOP_PORTAL_H
