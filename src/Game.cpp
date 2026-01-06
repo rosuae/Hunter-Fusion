@@ -247,9 +247,31 @@ void Game::handleEvents() {
 
 void Game::handleInputMenu(const sf::Event& event) {
     if (const auto* keyPress = event.getIf<sf::Event::KeyPressed>()) {
+        if (keyPress->scancode == sf::Keyboard::Scancode::W ||
+            keyPress->scancode == sf::Keyboard::Scancode::Up) {
+            m_menuSelection--;
+            if (m_menuSelection < 0) m_menuSelection = 2; }
+
+        else if (keyPress->scancode == sf::Keyboard::Scancode::S ||
+                 keyPress->scancode == sf::Keyboard::Scancode::Down) {
+            m_menuSelection++;
+            if (m_menuSelection > 2) m_menuSelection = 0; }
+
         if (keyPress->scancode == sf::Keyboard::Scancode::Enter) {
-            m_state = GameState::Playing;
-            m_clock.restart();
+            if (m_menuSelection == 0) {
+                resetGame();
+                m_isSessionActive = true;
+                m_state = GameState::Playing;
+            }
+            else if (m_menuSelection == 1) {
+                if (m_isSessionActive && m_player && m_player->isAlive()) {
+                    m_state = GameState::Playing;
+                    m_clock.restart();
+                }
+            }
+            else if (m_menuSelection == 2) {
+                m_window.close();
+            }
         }
         else if (keyPress->scancode == sf::Keyboard::Scancode::Escape) {
             m_window.close();
@@ -272,8 +294,8 @@ void Game::handleInputPaused(const sf::Event& event) {
             m_clock.restart();
         }
         else if (keyPress->scancode == sf::Keyboard::Scancode::M) {
-            resetGame();
             m_state = GameState::MainMenu;
+            m_menuSelection = 0;
         }
     }
 }
@@ -284,6 +306,7 @@ void Game::handleInputGameOver(const sf::Event& event) {
             respawnPlayer();
         }
         else if (keyPress->scancode == sf::Keyboard::Scancode::Escape) {
+            m_isSessionActive = false;
             resetGame();
             m_state = GameState::MainMenu;
         }
@@ -425,34 +448,81 @@ void Game::renderUI(sf::RenderWindow& window) {
 
 
     if (m_state == GameState::MainMenu) {
-        m_uiText.setString("HUNTER FUSION\n\n 1k bounty - tier 1 upgrade \n\n 6k bounty - tier 2 upgrade \n\n 10k bounty - tier 3 upgrade \n\nFind the helper animal\n\nStart - ENTER\nQuit - ESCAPE");
-        m_uiText.setCharacterSize(40);
+        m_uiText.setString("HUNTER FUSION");
+        m_uiText.setCharacterSize(60);
         m_uiText.setFillColor(sf::Color::White);
+
+        sf::FloatRect textRect = m_uiText.getLocalBounds();
+        m_uiText.setOrigin({textRect.position.x + textRect.size.x / 2.0f, textRect.position.y + textRect.size.y / 2.0f});
+        m_uiText.setPosition({static_cast<float>(m_width) / 2.0f, static_cast<float>(m_height) * 0.15f});
+        window.draw(m_uiText);
+
+        const std::vector<std::string> options = { "NEW GAME", "CONTINUE", "QUIT" };
+        m_uiText.setCharacterSize(40);
+
+        const float startY = static_cast<float>(m_height) * 0.35f;
+
+        for (int i = 0; i < static_cast<int>(options.size()); ++i) {
+            m_uiText.setString(options[i]);
+
+            if (const bool isContinueOption = i == 1; isContinueOption && (!m_isSessionActive || !m_player || !m_player->isAlive())) {
+                m_uiText.setFillColor(sf::Color(100, 100, 100));
+            }
+            else if (i == m_menuSelection) {
+                m_uiText.setFillColor(sf::Color::Yellow);
+            } else {
+                m_uiText.setFillColor(sf::Color::White);
+            }
+
+            textRect = m_uiText.getLocalBounds();
+            m_uiText.setOrigin({textRect.position.x + textRect.size.x / 2.0f, textRect.position.y + textRect.size.y / 2.0f});
+            m_uiText.setPosition({static_cast<float>(m_width) / 2.0f, startY + i * 60.0f});
+
+            window.draw(m_uiText);
+        }
+
+        m_uiText.setString("1k bounty - tier 1 upgrade \n\n 6k bounty - tier 2 upgrade \n\n 10k bounty - tier 3 upgrade \n\nFind the helper animal");
+        m_uiText.setCharacterSize(30);
+        m_uiText.setFillColor(sf::Color::White);
+
+        textRect = m_uiText.getLocalBounds();
+        m_uiText.setOrigin({textRect.position.x + textRect.size.x / 2.0f, textRect.position.y + textRect.size.y / 2.0f});
+        m_uiText.setPosition({static_cast<float>(m_width) / 2.0f, static_cast<float>(m_height) * 0.75f});
+        window.draw(m_uiText);
+
+        m_uiText.setCharacterSize(20);
+        m_uiText.setFillColor(sf::Color(200, 200, 200));
+        m_uiText.setString("W/S or Arrows to Navigate then Enter to Select");
+
+        textRect = m_uiText.getLocalBounds();
+        m_uiText.setOrigin({textRect.position.x + textRect.size.x / 2.0f, textRect.position.y + textRect.size.y / 2.0f});
+        m_uiText.setPosition({static_cast<float>(m_width) / 2.0f, static_cast<float>(m_height) - 50.0f});
+        window.draw(m_uiText);
     }
     else if (m_state == GameState::Paused) {
         overlay.setFillColor(sf::Color(0, 0, 0, 150));
         window.draw(overlay);
 
-        m_uiText.setString("PAUSED\n\n \n\n 1k bounty - tier 1 \n\n 6k bounty - tier 2 \n\n 10k bounty - tier 3 \n\n Resume - ESCAPE\nMain Menu - M");
+        m_uiText.setString("PAUSED\n\nResume - ESCAPE\nMain Menu - M");
+        m_uiText.setCharacterSize(40);
+        m_uiText.setFillColor(sf::Color::White);
+
+        const sf::FloatRect textRect = m_uiText.getLocalBounds();
+        m_uiText.setOrigin({textRect.position.x + textRect.size.x / 2.0f, textRect.position.y + textRect.size.y / 2.0f});
+        m_uiText.setPosition({static_cast<float>(m_width) / 2.0f, static_cast<float>(m_height) / 2.0f});
+        window.draw(m_uiText);
     }
     else if (m_state == GameState::GameOver) {
         overlay.setFillColor(sf::Color(150, 0, 0, 100));
         window.draw(overlay);
 
         m_uiText.setString("YOU DIED\n\nRetry - R\nMain Menu - Escape");
-    }
+        m_uiText.setCharacterSize(40);
+        m_uiText.setFillColor(sf::Color::White);
 
-    if (m_uiText.getString().getSize() > 0) {
         const sf::FloatRect textRect = m_uiText.getLocalBounds();
-        m_uiText.setOrigin({
-            textRect.position.x + textRect.size.x / 2.0f,
-            textRect.position.y + textRect.size.y / 2.0f
-        });
-        m_uiText.setPosition(sf::Vector2f(
-            static_cast<float>(m_width) / 2.0f,
-            static_cast<float>(m_height) / 2.0f
-        ));
-
+        m_uiText.setOrigin({textRect.position.x + textRect.size.x / 2.0f, textRect.position.y + textRect.size.y / 2.0f});
+        m_uiText.setPosition({static_cast<float>(m_width) / 2.0f, static_cast<float>(m_height) / 2.0f});
         window.draw(m_uiText);
     }
 }

@@ -50,6 +50,8 @@ class Game {
     sf::Text m_uiText;
     sf::RenderWindow m_window;
     std::unique_ptr<Camera> m_camera;
+    int m_menuSelection = 0;
+    bool m_isSessionActive = false;
     unsigned int m_width;
     unsigned int m_height;
 
