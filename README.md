@@ -43,7 +43,7 @@ The current objective of the game is to accumulate the highest possible Bounty b
 - [ ] 2 șabloane de proiectare (design patterns)
 - [ ] o clasă șablon cu sens; minim **2 instanțieri**
   - [ ] preferabil și o funcție șablon (template) cu sens; minim 2 instanțieri
-- [ ] minim 85% din codul propriu să fie C++
+- [x] minim 85% din codul propriu să fie C++
 <!-- - [ ] o specializare pe funcție/clasă șablon -->
 - [ ] tag de `git` pe commit cu **toate bifele**: de exemplu `v0.3` sau `v1.0`
 - [ ] code review #3 2 proiecte

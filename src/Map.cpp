@@ -15,8 +15,8 @@
 Map::Map(std::string n, const std::string& filePath, ResourceManager& resM, std::list<sf::Sound>& playingSounds_):
     MapNume{std::move(n)},
     resManager{resM},
-    tileSprite{resManager.getTexture("tile.png")},
-    tileBackgroundSprite{resManager.getTexture("backgroudtile.png")},
+    tileSprite{resManager.textures().get("tile.png")},
+    tileBackgroundSprite{resManager.textures().get("backgroudtile.png")},
     playingSounds{playingSounds_} {
 
     std::ifstream file(filePath);
@@ -74,12 +74,12 @@ Map::Map(std::string n, const std::string& filePath, ResourceManager& resM, std:
                         "Portal",
                         world.x,
                         world.y,
-                        resManager.getTexture("portal.png"),
+                        resManager.textures().get("portal.png"),
                         fileName,
                         facingRight,
                         gridToWorld(spawnX, spawnY),
                         playingSounds,
-                        resManager.getSound("portalactive.wav")
+                        resManager.sounds().get("portalactive.wav")
                     );
 
                     solidEntitiesCache.push_back(newPortal.get());

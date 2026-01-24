@@ -23,7 +23,7 @@ void Game::instanceObjects() {
     }
 
     try {
-        m_resManager.getTexture("ammo.png");
+        m_resManager.textures().get("ammo.png");
     } catch (const ResourceException& e) {
         std::cout << "Warning: Failed to preload pickup textures: " << e.what() << std::endl;
     }
@@ -62,27 +62,27 @@ void Game::instanceObjects() {
 void Game::initPlayer(const std::string& playerName, const std::string& weaponName, const std::string& projName) {
     auto tempWeapon = std::make_unique<Weapon>(
         weaponName, projName, 50,
-        m_resManager.getTexture("projectile.png"), 60,
-        m_playingSounds, m_resManager.getSound("shoot.wav"), m_resManager.getSound("reload.wav")
+        m_resManager.textures().get("projectile.png"), 60,
+        m_playingSounds, m_resManager.sounds().get("shoot.wav"), m_resManager.sounds().get("reload.wav")
     );
 
     m_player = std::make_unique<Player>(
         playerName,
-        m_resManager.getTexture("samussheet.png"),
+        m_resManager.textures().get("samussheet.png"),
         0.f, 0.f,
         m_playingSounds,
-        m_resManager.getSound("jump.wav"),
-        m_resManager.getSound("final_shot.wav"),
-        m_resManager.getSound("samus_flip.wav"),
+        m_resManager.sounds().get("jump.wav"),
+        m_resManager.sounds().get("final_shot.wav"),
+        m_resManager.sounds().get("samus_flip.wav"),
         std::move(tempWeapon)
     );
 
     m_map->placeEntity(*m_player, 'P');
 
     try {
-        m_player->addSkinUnlock(1000, m_resManager.getTexture("tier1Costume.png"), m_resManager.getSound("tier1.wav"));
-        m_player->addSkinUnlock(6000, m_resManager.getTexture("tier2Costume.png"), m_resManager.getSound("tier1.wav"));
-        m_player->addSkinUnlock(10000, m_resManager.getTexture("tier3Costume.png"), m_resManager.getSound("tier1.wav"));
+        m_player->addSkinUnlock(1000, m_resManager.textures().get("tier1Costume.png"), m_resManager.sounds().get("tier1.wav"));
+        m_player->addSkinUnlock(6000, m_resManager.textures().get("tier2Costume.png"), m_resManager.sounds().get("tier1.wav"));
+        m_player->addSkinUnlock(10000, m_resManager.textures().get("tier3Costume.png"), m_resManager.sounds().get("tier1.wav"));
     }
     catch (const ResourceException& e) {
         std::cout << "Warning: Could not load upgrade skins: " << e.what() << "\n";
@@ -106,7 +106,7 @@ void Game::managePetSpawn() const {
             auto tempPet = std::make_unique<Pet>(
                 "Companion",
                 0.0f, 0.0f,
-                m_resManager.getTexture("helperanimal.png"),
+                m_resManager.textures().get("helperanimal.png"),
                 nullptr
             );
 
@@ -194,7 +194,7 @@ void Game::loadLevel(const std::pair<std::string, sf::Vector2f>& nextDestination
 
 Game::Game() :
     m_resManager{ResourceManager::Instance()},
-    m_uiText{m_resManager.getFont("Metroid-Fusion.ttf")},
+    m_uiText{m_resManager.fonts().get("Metroid-Fusion.ttf")},
     m_width{},
     m_height{} {
     settings.SetSettingsLauncher();
@@ -331,7 +331,7 @@ void Game::handleCollisions() {
 
     if (Entity* petPtr = m_player->takePendingPet()) {
         if (std::unique_ptr<Entity> transferedEntity = m_map->claimEntity(petPtr)) {
-            m_pet.reset(static_cast<Pet*>(transferedEntity.release()));
+            m_pet.reset(dynamic_cast<Pet*>(transferedEntity.release()));
             m_pet->setOwner(m_player.get());
         }
     }
@@ -476,7 +476,7 @@ void Game::renderUI(sf::RenderWindow& window) {
 
             textRect = m_uiText.getLocalBounds();
             m_uiText.setOrigin({textRect.position.x + textRect.size.x / 2.0f, textRect.position.y + textRect.size.y / 2.0f});
-            m_uiText.setPosition({static_cast<float>(m_width) / 2.0f, startY + i * 60.0f});
+            m_uiText.setPosition({static_cast<float>(m_width) / 2.0f, startY + static_cast<float>(i) * 60.0f});
 
             window.draw(m_uiText);
         }

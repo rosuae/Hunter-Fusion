@@ -11,10 +11,10 @@
 
 Hud::Hud(const Player& player, ResourceManager& resManager) :
     m_player{player},
-    m_backgroundSprite{resManager.getTexture("hud.png")},
-    m_healthText{resManager.getFont("Metroid-Fusion.ttf")},
-    m_ammoText{resManager.getFont("Metroid-Fusion.ttf")},
-    m_scoreText{resManager.getFont("Metroid-Fusion.ttf")},
+    m_backgroundSprite{resManager.textures().get("hud.png")},
+    m_healthText{resManager.fonts().get("Metroid-Fusion.ttf")},
+    m_ammoText{resManager.fonts().get("Metroid-Fusion.ttf")},
+    m_scoreText{resManager.fonts().get("Metroid-Fusion.ttf")},
     m_barMaxWidth{483.f},
     m_barHeight{13.f},
     m_minimapSprite{m_minimapTexture.getTexture()},

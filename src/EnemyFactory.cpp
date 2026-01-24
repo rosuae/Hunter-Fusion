@@ -15,11 +15,11 @@ void EnemyFactory::loadPrototype(const std::string& type, ResourceManager& res, 
     if (type == "Metroid") {
         registry[type].reset(new Enemy(
             "Metroid", 20, 150, 0, 0,
-            res.getTexture("enemy.png"),
-            res.getTexture("enemyAgro.png"),
+            res.textures().get("enemy.png"),
+            res.textures().get("enemyAgro.png"),
             sounds,
-            res.getSound("enemydamage.wav"),
-            res.getSound("enemydeath.wav"),
+            res.sounds().get("enemydamage.wav"),
+            res.sounds().get("enemydeath.wav"),
             target
         ));
     }
@@ -37,6 +37,7 @@ std::unique_ptr<Enemy> EnemyFactory::createEnemy(const std::string &type,
     loadPrototype(type, resManager, playingSounds, target);
     std::unique_ptr<Enemy> newEnemy = std::make_unique<Enemy>(*registry[type]);
     newEnemy->target = target;
+    newEnemy->activeSounds = &playingSounds;
     newEnemy->setPosition(x, y);
     return newEnemy;
 }

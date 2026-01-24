@@ -3,7 +3,7 @@
 
 #include <SFML/Graphics.hpp>
 #include <SFML/Audio.hpp>
-#include <unordered_map>
+#include "ResourceHolder.h"
 
 class ResourceManager {
 public:
@@ -13,20 +13,16 @@ public:
 
     void cleanup();
 
-    sf::Texture& getTexture(const std::string& texture_name);
-    sf::SoundBuffer& getSound(const std::string& sound_name);
-    sf::Font& getFont(const std::string& font_name);
+    ResourceHolder<sf::Texture>& textures() { return m_textureHolder; }
+    ResourceHolder<sf::SoundBuffer>& sounds() { return m_soundHolder; }
+    ResourceHolder<sf::Font>& fonts() { return m_fontHolder; }
 
 private:
     ResourceManager();
 
-    void loadTextures(const std::string& path, const std::string& texture_name);
-    void loadSounds(const std::string& path, const std::string& sound_path);
-    void loadFonts(const std::string& path, const std::string& font_name);
-
-    std::unordered_map<std::string, sf::Texture> m_textures;
-    std::unordered_map<std::string, sf::SoundBuffer> m_sounds;
-    std::unordered_map<std::string, sf::Font> m_fonts;
+    ResourceHolder<sf::Texture> m_textureHolder;
+    ResourceHolder<sf::SoundBuffer> m_soundHolder;
+    ResourceHolder<sf::Font> m_fontHolder;
 };
 
 #endif //OOP_RESOURCEMANAGER_H

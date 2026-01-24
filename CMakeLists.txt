@@ -92,6 +92,7 @@ add_executable(${MAIN_EXECUTABLE_NAME}
         src/EnemyFactory.h
         src/Pickup.cpp
         src/Pickup.h
+        src/ResourceHolder.h
 )
 
 # NOTE: Add all defined targets (e.g. executables, libraries, etc. )

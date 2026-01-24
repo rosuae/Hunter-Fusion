@@ -69,7 +69,7 @@ void Pickup::onCollision(Player &player) {
 std::unique_ptr<Entity> PickupFactory::create(const PickupType type, float x, float y, ResourceManager &resManager, std::list<sf::Sound> &playingSounds) {
     switch (type) {
         case PickupType::Ammo:
-            return std::make_unique<AmmoPickup>(x, y, resManager.getTexture("ammo.png"), playingSounds, resManager.getSound("pickupammo.wav"));
+            return std::make_unique<AmmoPickup>(x, y, resManager.textures().get("ammo.png"), playingSounds, resManager.sounds().get("pickupammo.wav"));
         default:
             return nullptr;
     }
