@@ -4,6 +4,7 @@
 #include "GameExceptions.h"
 #include "Game.h"
 #include "Map.h"
+#include "Utils.h"
 #include <SFML/Audio.hpp>
 #include <cmath>
 
@@ -17,15 +18,8 @@ Enemy::Enemy(const std::string& n, const int damage_, const int bountyScore_, co
     bountyScore{bountyScore_},
     target{target_},
     isMoving{false},
-    canDealDamage{false},
-    state{EnemyState::Patrolling},
+    strategy{std::make_unique<PatrolStrategy>()},
     detectionRange{400.f},
-    attackCooldown{0.8f},
-    currentAttackTimer{attackCooldown},
-    aggroTimer{0.f},
-    patrolTimer{0.f},
-    patrolDuration{3.f},
-    patrolDirection{1.f},
     currentFrame{0},
     animationTimer{0.f},
     frameDuration{0.1f},
@@ -66,68 +60,74 @@ Enemy::Enemy(const std::string& n, const int damage_, const int bountyScore_, co
     exclamationSprite.setScale({0.f, 0.f});
 }
 
+Enemy::Enemy(const Enemy &other)
+    : Entity(other),
+      damage(other.damage),
+      bountyScore(other.bountyScore),
+      target(other.target),
+      isMoving(other.isMoving),
+      detectionRange(other.detectionRange),
+      frameSize(other.frameSize),
+      currentFrame(other.currentFrame),
+      animationTimer(other.animationTimer),
+      frameDuration(other.frameDuration),
+      animationFrameCount(other.animationFrameCount),
+      alertTexture(other.alertTexture),
+      exclamationSprite(other.exclamationSprite),
+      alertFrameSize(other.alertFrameSize),
+      alertAnimTimer(other.alertAnimTimer),
+      alertActive(other.alertActive),
+      activeSounds(other.activeSounds),
+      hitSound(other.hitSound),
+      deathSound(other.deathSound) {
+    
+    if (other.strategy) {
+        strategy = other.strategy->clone();
+    } else {
+        strategy = std::make_unique<PatrolStrategy>();
+    }
+    
+    activeEnemyCount++;
+}
+
+void swap(Enemy &lhs, Enemy &rhs) noexcept {
+    using std::swap;
+    swap(static_cast<Entity &>(lhs), static_cast<Entity &>(rhs));
+    swap(lhs.damage, rhs.damage);
+    swap(lhs.bountyScore, rhs.bountyScore);
+    swap(lhs.target, rhs.target);
+    swap(lhs.isMoving, rhs.isMoving);
+    swap(lhs.strategy, rhs.strategy);
+    swap(lhs.detectionRange, rhs.detectionRange);
+    swap(lhs.frameSize, rhs.frameSize);
+    swap(lhs.currentFrame, rhs.currentFrame);
+    swap(lhs.animationTimer, rhs.animationTimer);
+    swap(lhs.frameDuration, rhs.frameDuration);
+    swap(lhs.animationFrameCount, rhs.animationFrameCount);
+    swap(lhs.alertTexture, rhs.alertTexture);
+    swap(lhs.exclamationSprite, rhs.exclamationSprite);
+    swap(lhs.alertFrameSize, rhs.alertFrameSize);
+    swap(lhs.alertAnimTimer, rhs.alertAnimTimer);
+    swap(lhs.alertActive, rhs.alertActive);
+    swap(lhs.activeSounds, rhs.activeSounds);
+    swap(lhs.hitSound, rhs.hitSound);
+    swap(lhs.deathSound, rhs.deathSound);
+}
+
 void Enemy::updateAI(const float deltaTime) {
-    updateAttack(deltaTime);
-    if (aggroTimer > 0.0f) aggroTimer -= deltaTime;
-
     if (!target || !target->isAlive()) {
-        state = EnemyState::Patrolling;
-    }
-
-    const float distToPlayer = getDistanceToTarget();
-    const bool isTouching = isTouchingTarget();
-
-    switch (state) {
-        case EnemyState::Patrolling:
-            processPatrolState(deltaTime, distToPlayer);
-            break;
-
-        case EnemyState::Chasing:
-            processChaseState(deltaTime, distToPlayer, isTouching);
-            break;
-
-        case EnemyState::Attacking:
-            processAttackState(isTouching);
-            break;
-    }
-}
-
-void Enemy::processPatrolState(const float deltaTime, const float distToPlayer) {
-    if (distToPlayer < detectionRange) {
-        state = EnemyState::Chasing;
-        return;
-    }
-    updatePatrol(deltaTime);
-}
-
-void Enemy::processChaseState(const float deltaTime, const float distToPlayer, const bool isTouching) {
-    if (distToPlayer > detectionRange * 1.5f && aggroTimer <= 0.0f) {
-        state = EnemyState::Patrolling;
-        return;
-    }
-
-    if (isTouching) {
-        startAttackSequence();
-        return;
-    }
-
-    updateChase(deltaTime);
-}
-
-void Enemy::processAttackState(const bool isTouching) {
-    if (!isTouching) {
-        state = EnemyState::Chasing;
-    }
-}
-
-void Enemy::startAttackSequence() {
-    if (state != EnemyState::Attacking) {
-        if (currentAttackTimer <= 0.f) {
-            currentAttackTimer = 0.35f;
-            canDealDamage = false;
+        if (!strategy || strategy->isChasing() || strategy->isAttacking()) {
+            setStrategy(std::make_unique<PatrolStrategy>());
         }
-        state = EnemyState::Attacking;
     }
+    
+    if (strategy) {
+        strategy->update(*this, deltaTime);
+    }
+}
+
+void Enemy::setStrategy(std::unique_ptr<EnemyStrategy> newStrategy) {
+    strategy = std::move(newStrategy);
 }
 
 float Enemy::getDistanceToTarget() const {
@@ -140,44 +140,19 @@ bool Enemy::isTouchingTarget() const {
     return this->getBounds().findIntersection(target->getBounds()).has_value();
 }
 
-void Enemy::updatePatrol(const float deltaTime) {
-    patrolTimer += deltaTime;
-    isMoving = true;
-
-    if (patrolTimer >= patrolDuration) {
-        patrolTimer = 0.0f;
-        patrolDirection *= -1.0f;
-    }
-
-    posX += speed * 0.5f * patrolDirection * deltaTime;
-
-    if (patrolDirection > 0) sprite.setScale({1.f, 1.f});
-    else sprite.setScale({-1.f, 1.f});
+sf::Vector2f Enemy::getTargetPos() const {
+    if (target) return target->getPos();
+    return {posX, posY};
 }
 
-void Enemy::updateChase(const float deltaTime) {
-    if (const float diffX = target->getPos().x - posX; std::abs(diffX) > 5.0f) {
-        isMoving = true;
-
-        if (diffX < 0) {
-            posX -= speed * deltaTime;
-            sprite.setScale({-1.f, 1.f});
-        } else {
-            posX += speed * deltaTime;
-            sprite.setScale({1.f, 1.f});
+void Enemy::tryDealDamageToTarget(const int dmgAmount) const {
+    if (target && isTouchingTarget()) {
+        if (auto* playerPtr = dynamic_cast<Player*>(target)) {
+            playerPtr->tryHit(dmgAmount);
         }
     }
 }
 
-void Enemy::updateAttack(const float deltaTime) {
-    if (currentAttackTimer > 0.0f) {
-        currentAttackTimer -= deltaTime;
-        canDealDamage = false;
-    }
-    else {
-        canDealDamage = true;
-    }
-}
 
 void Enemy::grantReward(Player& player) const {
     player.processKill(this->bountyScore);
@@ -196,7 +171,7 @@ void Enemy::onDeath(Map& map) {
 
     map.onEnemyKilled();
 
-    if (Game::generateRandomInt(1, 100) <= 25) {
+    if (Utils::getRandom<int>(1, 100) <= 25) {
         try {
             constexpr float groundOffsetY = 40;
             auto drop = PickupFactory::create(
@@ -216,20 +191,21 @@ void Enemy::onDeath(Map& map) {
     }
 }
 
-void Enemy::onCollision(Player &player) {
-    if (this->canDealDamage && this->state == EnemyState::Attacking) {
-        player.tryHit(this->damage);
-        this->resetAttackTimer();
-    }
-}
+// void Enemy::onCollision(Player &player) {
+//     if (this->canDealDamage && this->state == EnemyState::Attacking) {
+//         player.tryHit(this->damage);
+//         this->resetAttackTimer();
+//     }
+// }
+// i can use this later on if implementing a knockback
 
 sf::FloatRect Enemy::doGetBounds() const{
     return hitbox;
 }
 
 void Enemy::takeDamage(const int damageAmount) {
-    state = EnemyState::Chasing;
-    aggroTimer = 5.0f;
+    setStrategy(std::make_unique<ChaseStrategy>(5.0f));
+
     const bool wasAlive = this->isAlive();
     health -= damageAmount;
     checkDeath();
@@ -260,10 +236,10 @@ void Enemy::doBehavior(const float deltaTime, const Map& map) {
 void Enemy::updatePhysics(const float deltaTime, const Map &map) {
     updateHitbox();
     if (map.isWall(hitbox, true)) {
-        if (state == EnemyState::Patrolling) {
-            patrolDirection *= -1.f;
-            patrolTimer = 0.0f;
+        if (strategy) {
+            strategy->onWallCollision(*this);
         }
+
         const float dir = sprite.getScale().x > 0.f ? 1.f : -1.f;
         posX -= speed * dir * deltaTime;
         updateHitbox();
@@ -281,7 +257,10 @@ void Enemy::updatePhysics(const float deltaTime, const Map &map) {
 }
 
 void Enemy::updateAnimation(const float deltaTime) {
-    if (state == EnemyState::Attacking) {
+    const bool attacking = strategy && strategy->isAttacking();
+    const bool chasing = strategy && strategy->isChasing();
+
+    if (attacking) {
         currentFrame = animationFrameCount - 1;
         animationTimer = 0.0f;
         const int rectLeft = currentFrame * frameSize.x;
@@ -310,13 +289,13 @@ void Enemy::updateAnimation(const float deltaTime) {
     constexpr float padding = 5.f;
 
     float yCorrection = 0.f;
-    if (state == EnemyState::Attacking) {
+    if (attacking) {
         yCorrection = -5.f;
     }
 
     exclamationSprite.setPosition({posX, headTopY - padding - halfAlertHeight + yCorrection});
 
-    bool shouldShowAlert = (state == EnemyState::Chasing || state == EnemyState::Attacking);
+    bool shouldShowAlert = (chasing || attacking);
 
     if (shouldShowAlert) {
         if (!alertActive) {
@@ -333,11 +312,11 @@ void Enemy::updateAnimation(const float deltaTime) {
 
         exclamationSprite.setScale({scale, scale});
 
-        if (state == EnemyState::Chasing) {
+        if (chasing) {
             exclamationSprite.setTextureRect(sf::IntRect({0, 0},
                                             {alertFrameSize.x, alertFrameSize.y}));
         }
-        else if (state == EnemyState::Attacking) {
+        else if (attacking) {
             exclamationSprite.setTextureRect(sf::IntRect({0, alertFrameSize.y},
                                             {alertFrameSize.x, alertFrameSize.y}));
         }
@@ -349,16 +328,11 @@ void Enemy::updateAnimation(const float deltaTime) {
     }
 }
 
-void Enemy::resetAttackTimer() {
-    canDealDamage = false;
-    currentAttackTimer = attackCooldown;
-}
-
 void Enemy::draw(sf::RenderWindow& window) const {
     if (!alive) return;
     window.draw(sprite);
 
-    if (state == EnemyState::Chasing || state == EnemyState::Attacking) {
+    if (strategy && (strategy->isChasing() || strategy->isAttacking())) {
         window.draw(exclamationSprite);
     }
 }

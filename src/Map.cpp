@@ -9,6 +9,7 @@
 #include "ResourceManager.h"
 #include "GameExceptions.h"
 #include "EnemyFactory.h"
+#include "Utils.h"
 #include <random>
 #include <algorithm>
 
@@ -235,7 +236,7 @@ void Map::spawnEnemies() {
 
             int enemyIndex = 0;
             if (enemies.size() > 1) {
-                enemyIndex = Game::generateRandomInt(0, static_cast<int>(enemies.size()) - 1);
+                enemyIndex = Utils::getRandom<int>(0, static_cast<int>(enemies.size()) - 1);
             }
             const auto&[fst, snd] = enemies[enemyIndex];
             std::unique_ptr newEnemy = EnemyFactory::createEnemy(
@@ -300,7 +301,7 @@ void Map::spawnAdditionalEnemies(const int count) {
         try {
             int enemyIndex = 0;
             if (enemies.size() > 1) {
-                enemyIndex = Game::generateRandomInt(0, static_cast<int>(enemies.size()) - 1);
+                enemyIndex = Utils::getRandom<int>(0, static_cast<int>(enemies.size()) - 1);
             }
             std::string enemyName = enemies[enemyIndex].first;
             auto [x, y] = generateRandomEnemySpawn();
@@ -362,7 +363,7 @@ std::pair<float, float> Map::generateRandomEnemySpawn() const{
             {-999.f, -999.f});
     }
 
-    const int randomIndex = Game::generateRandomInt(0, static_cast<int>(enemySpawns.size()) - 1);
+    const int randomIndex = Utils::getRandom<int>(0, static_cast<int>(enemySpawns.size()) - 1);
     auto [x, y] = enemySpawns[randomIndex];
 
     float spawnX = x * TILE_SIZE;

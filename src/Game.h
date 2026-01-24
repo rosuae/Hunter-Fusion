@@ -71,5 +71,4 @@ public:
     Game();
     ~Game();
     void run();
-    static int generateRandomInt(int min, int max);
 };

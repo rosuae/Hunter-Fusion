@@ -4,16 +4,11 @@
 #include "Weapon.h"
 #include "Entity.h"
 #include "EnemyFactory.h"
+#include "EnemyStrategies.h"
 
 class Map;
 class Pickup;
 class Player;
-
-enum class EnemyState {
-    Patrolling,
-    Chasing,
-    Attacking
-};
 
 class Enemy : public Entity{
     int damage;
@@ -21,17 +16,11 @@ class Enemy : public Entity{
     static int activeEnemyCount;
     Entity* target;
     bool isMoving;
-    bool canDealDamage;
-    EnemyState state;
+    
+    std::unique_ptr<EnemyStrategy> strategy;
+
     float detectionRange;
-    float attackCooldown;
-    float currentAttackTimer;
-    float aggroTimer;
-
-    float patrolTimer;
-    float patrolDuration;
-    float patrolDirection;
-
+    
     sf::Vector2i frameSize;
     int currentFrame;
     float animationTimer;
@@ -54,19 +43,10 @@ class Enemy : public Entity{
 
     void takeDamage(int damageAmount) override;
     void doBehavior(float deltaTime, const Map& map) override;
-    void startAttackSequence();
-    float getDistanceToTarget() const;
-    bool isTouchingTarget() const;
-    void processPatrolState(float deltaTime, float distToPlayer);
-    void processChaseState(float deltaTime, float distToPlayer, bool isTouching);
-    void processAttackState(bool isTouching);
+    
     void updateAI(float deltaTime);
-    void updatePatrol(float deltaTime);
-    void updateChase(float deltaTime);
-    void updateAttack(float deltaTime);
     void updatePhysics(float deltaTime, const Map& map);
     void updateAnimation(float deltaTime);
-    void resetAttackTimer();
     void draw(sf::RenderWindow& window) const override;
 
     friend class EnemyFactory;
@@ -90,67 +70,9 @@ public:
             activeEnemyCount--;
         }
 
-    Enemy(const Enemy &other)
-        : Entity(other),
-          damage(other.damage),
-          bountyScore(other.bountyScore),
-          target(other.target),
-          isMoving(other.isMoving),
-          canDealDamage(other.canDealDamage),
-          state(other.state),
-          detectionRange(other.detectionRange),
-          attackCooldown(other.attackCooldown),
-          currentAttackTimer(other.currentAttackTimer),
-          aggroTimer(other.aggroTimer),
-          patrolTimer(other.patrolTimer),
-          patrolDuration(other.patrolDuration),
-          patrolDirection(other.patrolDirection),
-          frameSize(other.frameSize),
-          currentFrame(other.currentFrame),
-          animationTimer(other.animationTimer),
-          frameDuration(other.frameDuration),
-          animationFrameCount(other.animationFrameCount),
-          alertTexture(other.alertTexture),
-          exclamationSprite(other.exclamationSprite),
-          alertFrameSize(other.alertFrameSize),
-          alertAnimTimer(other.alertAnimTimer),
-          alertActive(other.alertActive),
-          activeSounds(other.activeSounds),
-          hitSound(other.hitSound),
-          deathSound(other.deathSound) {
-        activeEnemyCount++;
-    }
+    Enemy(const Enemy &other);
 
-    friend void swap(Enemy &lhs, Enemy &rhs) noexcept {
-        using std::swap;
-        swap(static_cast<Entity &>(lhs), static_cast<Entity &>(rhs));
-        swap(lhs.damage, rhs.damage);
-        swap(lhs.bountyScore, rhs.bountyScore);
-        swap(lhs.target, rhs.target);
-        swap(lhs.isMoving, rhs.isMoving);
-        swap(lhs.canDealDamage, rhs.canDealDamage);
-        swap(lhs.state, rhs.state);
-        swap(lhs.detectionRange, rhs.detectionRange);
-        swap(lhs.attackCooldown, rhs.attackCooldown);
-        swap(lhs.currentAttackTimer, rhs.currentAttackTimer);
-        swap(lhs.aggroTimer, rhs.aggroTimer);
-        swap(lhs.patrolTimer, rhs.patrolTimer);
-        swap(lhs.patrolDuration, rhs.patrolDuration);
-        swap(lhs.patrolDirection, rhs.patrolDirection);
-        swap(lhs.frameSize, rhs.frameSize);
-        swap(lhs.currentFrame, rhs.currentFrame);
-        swap(lhs.animationTimer, rhs.animationTimer);
-        swap(lhs.frameDuration, rhs.frameDuration);
-        swap(lhs.animationFrameCount, rhs.animationFrameCount);
-        swap(lhs.alertTexture, rhs.alertTexture);
-        swap(lhs.exclamationSprite, rhs.exclamationSprite);
-        swap(lhs.alertFrameSize, rhs.alertFrameSize);
-        swap(lhs.alertAnimTimer, rhs.alertAnimTimer);
-        swap(lhs.alertActive, rhs.alertActive);
-        swap(lhs.activeSounds, rhs.activeSounds);
-        swap(lhs.hitSound, rhs.hitSound);
-        swap(lhs.deathSound, rhs.deathSound);
-    }
+    friend void swap(Enemy &lhs, Enemy &rhs) noexcept;
 
     Enemy & operator=(Enemy other) {
         Entity::operator=(other);
@@ -165,8 +87,22 @@ public:
     static int getActiveEnemyCount();
     void grantReward(Player& player) const;
     void onDeath(Map &map) override;
-    void onCollision(Player &player) override;
+    // void onCollision(Player &player) override;
     int getCollisionPriority() const override { return PRIORITY_HAZARD; }
+
+    void setStrategy(std::unique_ptr<EnemyStrategy> newStrategy);
+    
+    float getDistanceToTarget() const;
+    bool isTouchingTarget() const;
+    float getDetectionRange() const { return detectionRange; }
+    sf::Vector2f getTargetPos() const;
+    float getSpeed() const { return speed; }
+    int getDamage() const { return damage; }
+
+    void setMoving(const bool moving) { isMoving = moving; }
+    void setX(const float x) { posX = x; }
+    void setScale(float x, float y) { sprite.setScale({x, y}); }
+    void tryDealDamageToTarget(int dmgAmount) const;
 };
 
 #endif
