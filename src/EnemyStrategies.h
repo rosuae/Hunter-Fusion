@@ -48,7 +48,7 @@ public:
     void update(Enemy& enemy, float deltaTime) override;
     std::unique_ptr<EnemyStrategy> clone() const override;
     
-    bool canAttack() const { return canDealDamage; }
+    // bool canAttack() const { return canDealDamage; }
     void resetAttack();
     bool isAttacking() const override { return true; }
 };
