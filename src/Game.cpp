@@ -8,6 +8,7 @@
 #include "Camera.h"
 #include "ResourceManager.h"
 #include "GameExceptions.h"
+#include "Utils.h"
 #include <fstream>
 #include <random>
 
@@ -525,9 +526,4 @@ void Game::renderUI(sf::RenderWindow& window) {
         m_uiText.setPosition({static_cast<float>(m_width) / 2.0f, static_cast<float>(m_height) / 2.0f});
         window.draw(m_uiText);
     }
-}
-
-int Game::generateRandomInt(const int min, const int max) {
-    static std::mt19937 gen(std::random_device{}());
-    return std::uniform_int_distribution(min, max)(gen);
 }
