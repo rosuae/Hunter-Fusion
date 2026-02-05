@@ -14,6 +14,7 @@ class Pet;
 class Weapon;
 
 class Player : public Entity {
+    static int s_highScore;
     sf::Vector2f velocity;
     float maxJump;
     float jumpCooldown;
@@ -231,6 +232,10 @@ public:
     [[nodiscard]]std::pair<int, int> combatStats() const { return {enemiesDefeated, totalBounty}; }
     [[nodiscard]]int getHealth() const { return health; }
     [[nodiscard]]const Weapon* getWeapon() const { return weapon.get(); }
+
+    static int getHighScore();
+    static void loadHighScore();
+    static void saveHighScore();
 };
 
 #endif

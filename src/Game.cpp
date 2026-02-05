@@ -8,7 +8,6 @@
 #include "Camera.h"
 #include "ResourceManager.h"
 #include "GameExceptions.h"
-#include "Utils.h"
 #include <fstream>
 #include <random>
 
@@ -201,6 +200,7 @@ Game::Game() :
     settings.SetSettingsLauncher();
     m_width = settings.GetResolution().x;
     m_height = settings.GetResolution().y;
+    Player::loadHighScore();
 }
 
 Game::~Game() {
@@ -510,8 +510,17 @@ void Game::renderUI(sf::RenderWindow& window) {
 
         const sf::FloatRect textRect = m_uiText.getLocalBounds();
         m_uiText.setOrigin({textRect.position.x + textRect.size.x / 2.0f, textRect.position.y + textRect.size.y / 2.0f});
-        m_uiText.setPosition({static_cast<float>(m_width) / 2.0f, static_cast<float>(m_height) / 2.0f});
+        m_uiText.setPosition({static_cast<float>(m_width) / 2.0f, static_cast<float>(m_height) / 2.0f - 40.0f});
         window.draw(m_uiText);
+
+        if (const int hs = Player::getHighScore(); hs > 0) {
+            m_uiText.setString("Highest Bounty Obtained  " + std::to_string(hs));
+            m_uiText.setFillColor(sf::Color::Red);
+            const sf::FloatRect hsRect = m_uiText.getLocalBounds();
+            m_uiText.setOrigin({hsRect.position.x + hsRect.size.x / 2.0f, hsRect.position.y + hsRect.size.y / 2.0f});
+            m_uiText.setPosition({static_cast<float>(m_width) / 2.0f, static_cast<float>(m_height) / 2.0f + 100.0f});
+            window.draw(m_uiText);
+        }
     }
     else if (m_state == GameState::GameOver) {
         overlay.setFillColor(sf::Color(150, 0, 0, 100));

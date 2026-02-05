@@ -1,9 +1,28 @@
 #include "Player.h"
+#include "Enemy.h"
 #include "Map.h"
 #include <cmath>
-#include "Portal.h"
 #include "Pet.h"
-#include "Weapon.h"
+#include <fstream>
+#include <algorithm>
+
+int Player::s_highScore = 0;
+
+int Player::getHighScore() {
+    return s_highScore;
+}
+
+void Player::loadHighScore() {
+    if (std::ifstream fin("highscore.txt"); fin.is_open()) {
+        fin >> s_highScore;
+    }
+}
+
+void Player::saveHighScore() {
+    if (std::ofstream fout("highscore.txt"); fout.is_open()) {
+        fout << s_highScore;
+    }
+}
 
 Player::Player(const std::string& n, sf::Texture& tex,
     const float posx_, const float posy_,
@@ -482,9 +501,11 @@ void Player::takeDamage(const int damageAmount) {
 }
 
 void Player::processKill(const int scoreReward) {
-    enemiesDefeated++;
     totalBounty += scoreReward;
-
+    if (totalBounty > s_highScore) {
+        s_highScore = totalBounty;
+        saveHighScore();
+    }
     checkTierUpgrade();
 }
 

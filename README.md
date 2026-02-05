@@ -34,7 +34,6 @@ The current objective of the game is to accumulate the highest possible Bounty b
 - Drops based on Player luck
 - Option to change the game volume
 - Better game state system
-- Save highest previous bounty
 - Save and Load game feature
 
 ## Known Bugs:
